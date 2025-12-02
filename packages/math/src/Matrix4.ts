@@ -98,6 +98,17 @@ export class Matrix4 {
     return m;
   }
 
+  static rotationX(angle: number): Matrix4 {
+    const m = new Matrix4();
+    const c = Math.cos(angle);
+    const s = Math.sin(angle);
+    m._data[5] = c;
+    m._data[6] = s;
+    m._data[9] = -s;
+    m._data[10] = c;
+    return m;
+  }
+
   static rotationY(angle: number): Matrix4 {
     const m = new Matrix4();
     const c = Math.cos(angle);
@@ -106,6 +117,17 @@ export class Matrix4 {
     m._data[2] = s;
     m._data[8] = -s;
     m._data[10] = c;
+    return m;
+  }
+
+  static rotationZ(angle: number): Matrix4 {
+    const m = new Matrix4();
+    const c = Math.cos(angle);
+    const s = Math.sin(angle);
+    m._data[0] = c;
+    m._data[1] = s;
+    m._data[4] = -s;
+    m._data[5] = c;
     return m;
   }
 
