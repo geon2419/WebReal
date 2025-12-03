@@ -4,8 +4,9 @@ import {
   VertexColorMaterial,
   Mesh,
   Scene,
+  PerspectiveCamera,
 } from "@web-real-3d/core";
-import { Matrix4, Vector3 } from "@web-real-3d/math";
+import { Vector3 } from "@web-real-3d/math";
 import GUI from "lil-gui";
 
 type FaceColors = [
@@ -81,6 +82,15 @@ async function main() {
     const material = new VertexColorMaterial({ faceColors });
     const mesh = new Mesh(geometry, material);
     scene.add(mesh);
+
+    const camera = new PerspectiveCamera({
+      fov: params.fov,
+      near: 0.1,
+      far: 100,
+    });
+    camera.position.set(0, 2, params.cameraDistance);
+    camera.lookAt(new Vector3(0, 0, 0));
+    camera.updateAspect(canvas);
 
     const vertexShaderModule = device.createShaderModule({
       label: "Cube Vertex Shader",
@@ -182,23 +192,17 @@ async function main() {
       mesh.rotation.set(params.rotationX, params.rotationY, params.rotationZ);
       mesh.scale.set(params.scale, params.scale, params.scale);
 
+      // Update camera from params
+      camera.fov = params.fov;
+      camera.position.set(0, 2, params.cameraDistance);
+
       // Update scene graph world matrices
       scene.updateMatrixWorld();
 
-      const aspect = canvas.width / canvas.height;
-      const fovRad = (params.fov * Math.PI) / 180;
-
-      // Projection Matrix
-      const projection = Matrix4.perspective(fovRad, aspect, 0.1, 100);
-
-      // View Matrix
-      const eye = new Vector3(0, 2, params.cameraDistance);
-      const target = new Vector3(0, 0, 0);
-      const up = new Vector3(0, 1, 0);
-      const view = Matrix4.lookAt(eye, target, up);
-
-      // MVP Matrix
-      const mvp = projection.multiply(view).multiply(mesh.worldMatrix);
+      // MVP Matrix using camera
+      const mvp = camera.projectionMatrix
+        .multiply(camera.viewMatrix)
+        .multiply(mesh.worldMatrix);
 
       device.queue.writeBuffer(
         uniformBuffer,
@@ -238,6 +242,7 @@ async function main() {
 
     window.addEventListener("beforeunload", () => {
       resizeObserver.disconnect();
+      camera.dispose();
       gui.destroy();
       vertexBuffer.destroy();
       indexBuffer.destroy();
