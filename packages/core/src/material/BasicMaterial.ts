@@ -6,7 +6,6 @@ export interface BasicMaterialOptions {
 
 export class BasicMaterial implements Material {
   readonly type = "basic";
-
   /** RGB color (0-1 range) */
   readonly color: [number, number, number];
 
@@ -82,10 +81,7 @@ fn main(input: FragmentInput) -> @location(0) vec4f {
     };
   }
 
-  /**
-   * Returns the uniform buffer data for this material.
-   * Layout: mat4x4f (64 bytes) + vec4f color (16 bytes) = 80 bytes
-   */
+  // Layout: mat4x4f (64 bytes) + vec4f color (16 bytes) = 80 bytes
   getUniformBufferSize(): number {
     return 80;
   }

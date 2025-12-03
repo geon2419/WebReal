@@ -30,10 +30,6 @@ export class VertexColorMaterial implements Material {
     }
   }
 
-  /**
-   * Expands face colors to per-vertex colors.
-   * Each face color is duplicated for all vertices of that face.
-   */
   private expandFaceColors(
     faceColors: [number, number, number][],
     verticesPerFace: number
@@ -131,10 +127,7 @@ fn main(input: FragmentInput) -> @location(0) vec4f {
     };
   }
 
-  /**
-   * Returns the uniform buffer size for this material.
-   * Only needs MVP matrix (64 bytes).
-   */
+  // Only needs MVP matrix (64 bytes).
   getUniformBufferSize(): number {
     return 64;
   }
