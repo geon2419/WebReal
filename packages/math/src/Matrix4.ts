@@ -1,9 +1,9 @@
-import { Vector3 } from './Vector3.js';
+import { Vector3 } from "./Vector3.js";
 
 /**
  * 4x4 Matrix Class
  * Column-major order (compatible with WebGPU/OpenGL)
- * 
+ *
  * Memory Layout:
  * [m0  m4  m8   m12]   [col0.x  col1.x  col2.x  col3.x]
  * [m1  m5  m9   m13] = [col0.y  col1.y  col2.y  col3.y]
@@ -16,10 +16,7 @@ export class Matrix4 {
   constructor() {
     // Initialize to identity matrix.
     this._data = new Float32Array([
-      1, 0, 0, 0,
-      0, 1, 0, 0,
-      0, 0, 1, 0,
-      0, 0, 0, 1,
+      1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1,
     ]);
   }
 
@@ -28,12 +25,7 @@ export class Matrix4 {
   }
 
   identity(): this {
-    this._data.set([
-      1, 0, 0, 0,
-      0, 1, 0, 0,
-      0, 0, 1, 0,
-      0, 0, 0, 1,
-    ]);
+    this._data.set([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]);
     return this;
   }
 
@@ -131,16 +123,29 @@ export class Matrix4 {
     return m;
   }
 
-  static perspective(fovY: number, aspect: number, near: number, far: number): Matrix4 {
+  static perspective(
+    fovY: number,
+    aspect: number,
+    near: number,
+    far: number
+  ): Matrix4 {
     const m = new Matrix4();
+    // Focal length
     const f = 1.0 / Math.tan(fovY / 2);
+    // Depth range
     const rangeInv = 1.0 / (near - far);
 
+    // X Scale
     m._data[0] = f / aspect;
+    // Y Scale
     m._data[5] = f;
+    // Z Transform
     m._data[10] = far * rangeInv;
+    // Perspective divide
     m._data[11] = -1;
+    // Z Offset
     m._data[14] = near * far * rangeInv;
+    // Homogeneous coordinate
     m._data[15] = 0;
 
     return m;
@@ -148,7 +153,6 @@ export class Matrix4 {
 
   /**
    * Creates a view matrix that transforms world coordinates to camera coordinates.
-   *
    * @param eye - Camera position in world space
    * @param target - Point the camera is looking at
    * @param up - Up direction vector (typically (0, 1, 0))
