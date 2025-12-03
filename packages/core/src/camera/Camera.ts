@@ -6,7 +6,9 @@ export abstract class Camera extends Object3D {
   protected _up: Vector3 = new Vector3(0, 1, 0);
 
   get viewMatrix(): Matrix4 {
-    return Matrix4.lookAt(this.position, this._target, this._up);
+    const e = this.worldMatrix.data;
+    const worldPosition = new Vector3(e[12], e[13], e[14]);
+    return Matrix4.lookAt(worldPosition, this._target, this._up);
   }
 
   abstract get projectionMatrix(): Matrix4;
