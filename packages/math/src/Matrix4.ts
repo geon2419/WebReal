@@ -106,8 +106,8 @@ export class Matrix4 {
     const c = Math.cos(angle);
     const s = Math.sin(angle);
     m._data[0] = c;
-    m._data[2] = s;
-    m._data[8] = -s;
+    m._data[2] = -s;
+    m._data[8] = s;
     m._data[10] = c;
     return m;
   }
@@ -166,8 +166,25 @@ export class Matrix4 {
    * );
    */
   static lookAt(eye: Vector3, target: Vector3, up: Vector3): Matrix4 {
-    const zAxis = eye.sub(target).normalize();
-    const xAxis = up.cross(zAxis).normalize();
+    const forward = eye.sub(target);
+
+    // Edge case: eye and target are at the same position
+    if (forward.length < 1e-6) {
+      return new Matrix4();
+    }
+
+    const zAxis = forward.normalize();
+    let xAxis = up.cross(zAxis);
+
+    // Edge case: up vector is parallel to the viewing direction
+    if (xAxis.length < 1e-6) {
+      const altUp =
+        Math.abs(zAxis.y) < 0.9 ? new Vector3(0, 1, 0) : new Vector3(1, 0, 0);
+      xAxis = altUp.cross(zAxis).normalize();
+    } else {
+      xAxis = xAxis.normalize();
+    }
+
     const yAxis = zAxis.cross(xAxis);
 
     const m = new Matrix4();
