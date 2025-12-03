@@ -3,9 +3,11 @@ export { BoxGeometry, type Geometry } from "./geometry";
 export {
   type Material,
   type VertexBufferLayout,
-  BasicMaterial,
   type BasicMaterialOptions,
-  VertexColorMaterial,
   type VertexColorMaterialOptions,
+  BasicMaterial,
+  VertexColorMaterial,
 } from "./material";
+export { Object3D } from "./Object3D";
+export { Scene } from "./Scene";
 export { Mesh } from "./Mesh";

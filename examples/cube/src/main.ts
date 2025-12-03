@@ -3,6 +3,7 @@ import {
   BoxGeometry,
   VertexColorMaterial,
   Mesh,
+  Scene,
 } from "@web-real-3d/core";
 import { Matrix4, Vector3 } from "@web-real-3d/math";
 import GUI from "lil-gui";
@@ -75,9 +76,11 @@ async function main() {
       [1.0, 0.3, 1.0], // Right - Magenta
       [0.3, 1.0, 1.0], // Left - Cyan
     ];
+    const scene = new Scene();
     const geometry = new BoxGeometry(2, 2, 2);
     const material = new VertexColorMaterial({ faceColors });
     const mesh = new Mesh(geometry, material);
+    scene.add(mesh);
 
     const vertexShaderModule = device.createShaderModule({
       label: "Cube Vertex Shader",
@@ -169,12 +172,18 @@ async function main() {
       entries: [{ binding: 0, resource: { buffer: uniformBuffer } }],
     });
 
-    let accumulatedRotation = 0;
-
     engine.run((deltaTime: number) => {
+      // Update mesh transform from params
       if (params.autoRotate) {
-        accumulatedRotation += deltaTime * params.rotationSpeed;
+        params.rotationX += deltaTime * params.rotationSpeed * 0.5;
+        params.rotationY += deltaTime * params.rotationSpeed;
       }
+
+      mesh.rotation.set(params.rotationX, params.rotationY, params.rotationZ);
+      mesh.scale.set(params.scale, params.scale, params.scale);
+
+      // Update scene graph world matrices
+      scene.updateMatrixWorld();
 
       const aspect = canvas.width / canvas.height;
       const fovRad = (params.fov * Math.PI) / 180;
@@ -188,21 +197,8 @@ async function main() {
       const up = new Vector3(0, 1, 0);
       const view = Matrix4.lookAt(eye, target, up);
 
-      // Model Matrix
-      const rotX = Matrix4.rotationX(
-        params.rotationX + (params.autoRotate ? accumulatedRotation * 0.5 : 0)
-      );
-      const rotY = Matrix4.rotationY(
-        params.rotationY + (params.autoRotate ? accumulatedRotation : 0)
-      );
-      const rotZ = Matrix4.rotationZ(params.rotationZ);
-      const scale = Matrix4.scaling(
-        new Vector3(params.scale, params.scale, params.scale)
-      );
-      const model = rotZ.multiply(rotY).multiply(rotX).multiply(scale);
-
       // MVP Matrix
-      const mvp = projection.multiply(view).multiply(model);
+      const mvp = projection.multiply(view).multiply(mesh.worldMatrix);
 
       device.queue.writeBuffer(
         uniformBuffer,

@@ -60,7 +60,7 @@ export class Vector3 {
 
   normalize(): Vector3 {
     const len = this.length;
-    
+
     if (len === 0) {
       return new Vector3();
     }
