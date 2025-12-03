@@ -1,0 +1,76 @@
+import type { Geometry } from "./geometry/Geometry";
+import type { Material } from "./material/Material";
+import { VertexColorMaterial } from "./material/VertexColorMaterial";
+
+export class Mesh {
+  public readonly geometry: Geometry;
+  public material: Material;
+
+  constructor(geometry: Geometry, material: Material) {
+    this.geometry = geometry;
+    this.material = material;
+  }
+
+  get indices(): Uint16Array {
+    return this.geometry.indices;
+  }
+
+  get vertexCount(): number {
+    return this.geometry.vertexCount;
+  }
+
+  get indexCount(): number {
+    return this.geometry.indexCount;
+  }
+
+  /**
+   * Returns interleaved vertex data based on the material type.
+   */
+  getInterleavedVertices(): Float32Array {
+    const { positions, normals } = this.geometry;
+    const vertexCount = this.geometry.vertexCount;
+
+    switch (this.material.type) {
+      case "vertexColor": {
+        const colors = (this.material as VertexColorMaterial).colors;
+        const data = new Float32Array(vertexCount * 6);
+
+        for (let i = 0; i < vertexCount; i++) {
+          const posOffset = i * 3;
+          const dataOffset = i * 6;
+
+          data[dataOffset] = positions[posOffset];
+          data[dataOffset + 1] = positions[posOffset + 1];
+          data[dataOffset + 2] = positions[posOffset + 2];
+
+          data[dataOffset + 3] = colors[posOffset];
+          data[dataOffset + 4] = colors[posOffset + 1];
+          data[dataOffset + 5] = colors[posOffset + 2];
+        }
+
+        return data;
+      }
+
+      case "basic":
+      default: {
+        // Default: interleave position + normal
+        const data = new Float32Array(vertexCount * 6);
+
+        for (let i = 0; i < vertexCount; i++) {
+          const offset = i * 3;
+          const dataOffset = i * 6;
+
+          data[dataOffset] = positions[offset];
+          data[dataOffset + 1] = positions[offset + 1];
+          data[dataOffset + 2] = positions[offset + 2];
+
+          data[dataOffset + 3] = normals[offset];
+          data[dataOffset + 4] = normals[offset + 1];
+          data[dataOffset + 5] = normals[offset + 2];
+        }
+
+        return data;
+      }
+    }
+  }
+}

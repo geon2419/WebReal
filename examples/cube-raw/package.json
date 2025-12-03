@@ -1,0 +1,13 @@
+{
+  "name": "@examples/cube-raw",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite"
+  },
+  "dependencies": {
+    "@web-real-3d/core": "*",
+    "@web-real-3d/math": "*",
+    "lil-gui": "^0.19.2"
+  }
+}
