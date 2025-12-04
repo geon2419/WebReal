@@ -92,7 +92,7 @@ export class FrustumGeometry implements Geometry {
     const invProjView = projViewMatrix.inverse();
 
     // NDC corners (WebGPU uses Z range [0, 1])
-    // Near plane (z = 0)
+    
     const frustumNdcCorners = [
       // Near plane (z = 0)
       [-1, -1, 0], // near bottom-left
@@ -210,7 +210,7 @@ export class FrustumGeometry implements Geometry {
       matrixData[15];
 
     // Perspective divide
-    const invW = 1.0 / worldW;
+    const invW = Math.abs(worldW) > 1e-10 ? 1.0 / worldW : 1.0;
     return [worldX * invW, worldY * invW, worldZ * invW];
   }
 }
