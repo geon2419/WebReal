@@ -11,7 +11,11 @@ export interface FrustumColors {
 
 /**
  * Geometry for visualizing a camera's view frustum as wireframe lines.
- * Generates 12 line segments (24 vertices) representing the 8 corners of the frustum.
+ * Generates 16 line segments (32 vertices) representing:
+ * - 4 edges of the near plane
+ * - 4 edges of the far plane  
+ * - 4 connecting edges between near and far planes
+ * - 4 cone lines from camera position to near plane corners
  * Supports different colors for near, far, and side edges.
  *
  * The frustum is computed by unprojecting NDC corners through the inverse
