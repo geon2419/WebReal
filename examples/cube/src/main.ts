@@ -1,5 +1,6 @@
 import {
   Engine,
+  Renderer,
   BoxGeometry,
   VertexColorMaterial,
   Mesh,
@@ -34,13 +35,14 @@ async function main() {
 
   try {
     const engine = await Engine.create({ canvas });
-    const device = engine.device;
+    const renderer = new Renderer(engine);
+    renderer.setClearColor(0.1, 0.1, 0.1);
 
     const params: CubeParams = {
       rotationX: 0,
       rotationY: 0,
       rotationZ: 0,
-      autoRotate: true,
+      autoRotate: false,
       rotationSpeed: 1.0,
       scale: 1.0,
       cameraDistance: 5.0,
@@ -77,6 +79,7 @@ async function main() {
       [1.0, 0.3, 1.0], // Right - Magenta
       [0.3, 1.0, 1.0], // Left - Cyan
     ];
+
     const scene = new Scene();
     const geometry = new BoxGeometry(2, 2, 2);
     const material = new VertexColorMaterial({ faceColors });
@@ -92,96 +95,6 @@ async function main() {
     camera.lookAt(new Vector3(0, 0, 0));
     camera.updateAspect(canvas);
 
-    const vertexShaderModule = device.createShaderModule({
-      label: "Cube Vertex Shader",
-      code: material.getVertexShader(),
-    });
-
-    const fragmentShaderModule = device.createShaderModule({
-      label: "Cube Fragment Shader",
-      code: material.getFragmentShader(),
-    });
-
-    let depthTexture = device.createTexture({
-      label: "Depth Texture",
-      size: [canvas.width, canvas.height],
-      format: "depth24plus",
-      usage: GPUTextureUsage.RENDER_ATTACHMENT,
-    });
-
-    const resizeObserver = new ResizeObserver(() => {
-      depthTexture.destroy();
-      depthTexture = device.createTexture({
-        label: "Depth Texture",
-        size: [canvas.width, canvas.height],
-        format: "depth24plus",
-        usage: GPUTextureUsage.RENDER_ATTACHMENT,
-      });
-    });
-    resizeObserver.observe(canvas);
-
-    const pipeline = device.createRenderPipeline({
-      label: "Cube Pipeline",
-      layout: "auto",
-      vertex: {
-        module: vertexShaderModule,
-        entryPoint: "main",
-        buffers: [material.getVertexBufferLayout()],
-      },
-      fragment: {
-        module: fragmentShaderModule,
-        entryPoint: "main",
-        targets: [{ format: engine.format }],
-      },
-      primitive: {
-        topology: "triangle-list",
-        cullMode: "back",
-        frontFace: "ccw",
-      },
-      depthStencil: {
-        format: "depth24plus",
-        depthWriteEnabled: true,
-        depthCompare: "less",
-      },
-    });
-
-    const vertices = mesh.getInterleavedVertices();
-    const indices = mesh.indices;
-
-    const vertexBuffer = device.createBuffer({
-      label: "Cube Vertex Buffer",
-      size: vertices.byteLength,
-      usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
-    });
-    device.queue.writeBuffer(
-      vertexBuffer,
-      0,
-      vertices as Float32Array<ArrayBuffer>
-    );
-
-    const indexBuffer = device.createBuffer({
-      label: "Cube Index Buffer",
-      size: indices.byteLength,
-      usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST,
-    });
-    device.queue.writeBuffer(
-      indexBuffer,
-      0,
-      indices as Uint16Array<ArrayBuffer>
-    );
-
-    const uniformBuffer = device.createBuffer({
-      label: "Uniform Buffer",
-      size: 64,
-      usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
-    });
-
-    const bindGroup = device.createBindGroup({
-      label: "Cube Bind Group",
-      layout: pipeline.getBindGroupLayout(0),
-      entries: [{ binding: 0, resource: { buffer: uniformBuffer } }],
-    });
-
     engine.run((deltaTime: number) => {
       // Update mesh transform from params
       if (params.autoRotate) {
@@ -196,58 +109,14 @@ async function main() {
       camera.fov = params.fov;
       camera.position.set(0, 2, params.cameraDistance);
 
-      // Update scene graph world matrices
-      scene.updateMatrixWorld();
-
-      // MVP Matrix using camera
-      const mvp = camera.projectionMatrix
-        .multiply(camera.viewMatrix)
-        .multiply(mesh.worldMatrix);
-
-      device.queue.writeBuffer(
-        uniformBuffer,
-        0,
-        mvp.data as Float32Array<ArrayBuffer>
-      );
-
-      const commandEncoder = device.createCommandEncoder();
-      const textureView = engine.context.getCurrentTexture().createView();
-
-      const renderPass = commandEncoder.beginRenderPass({
-        colorAttachments: [
-          {
-            view: textureView,
-            clearValue: { r: 0.1, g: 0.1, b: 0.1, a: 1.0 },
-            loadOp: "clear",
-            storeOp: "store",
-          },
-        ],
-        depthStencilAttachment: {
-          view: depthTexture.createView(),
-          depthClearValue: 1.0,
-          depthLoadOp: "clear",
-          depthStoreOp: "store",
-        },
-      });
-
-      renderPass.setPipeline(pipeline);
-      renderPass.setBindGroup(0, bindGroup);
-      renderPass.setVertexBuffer(0, vertexBuffer);
-      renderPass.setIndexBuffer(indexBuffer, "uint16");
-      renderPass.drawIndexed(mesh.indexCount);
-      renderPass.end();
-
-      device.queue.submit([commandEncoder.finish()]);
+      // Render scene
+      renderer.render(scene, camera);
     });
 
     window.addEventListener("beforeunload", () => {
-      resizeObserver.disconnect();
       camera.dispose();
       gui.destroy();
-      vertexBuffer.destroy();
-      indexBuffer.destroy();
-      uniformBuffer.destroy();
-      depthTexture.destroy();
+      renderer.dispose();
       engine.dispose();
     });
   } catch (error) {
