@@ -1,4 +1,4 @@
-import { Matrix4, Vector3 } from "@web-real-3d/math";
+import { Matrix4, Vector3 } from "@web-real/math";
 
 export class Object3D {
   public readonly position: Vector3 = new Vector3(0, 0, 0);

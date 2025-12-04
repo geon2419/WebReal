@@ -6,8 +6,8 @@ import {
   Mesh,
   Scene,
   PerspectiveCamera,
-} from "@web-real-3d/core";
-import { Vector3 } from "@web-real-3d/math";
+} from "@web-real/core";
+import { Vector3 } from "@web-real/math";
 import GUI from "lil-gui";
 
 type FaceColors = [

@@ -1,4 +1,4 @@
-import { Matrix4 } from "@web-real-3d/math";
+import { Matrix4 } from "@web-real/math";
 import { Camera } from "./Camera";
 
 export interface PerspectiveCameraOptions {

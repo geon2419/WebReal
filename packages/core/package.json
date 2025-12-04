@@ -1,16 +1,16 @@
 {
-  "name": "@web-real-3d/core",
+  "name": "@web-real/core",
   "type": "module",
-  "main": "dist/web-real-3d-core.cjs",
-  "module": "dist/web-real-3d-core.mjs",
+  "main": "dist/web-real-core.cjs",
+  "module": "dist/web-real-core.mjs",
   "types": "dist/types/index.d.ts",
   "files": ["dist"],
   "sideEffects": false,
   "exports": {
     ".": {
       "types": "./dist/types/index.d.ts",
-      "import": "./dist/web-real-3d-core.mjs",
-      "require": "./dist/web-real-3d-core.cjs"
+      "import": "./dist/web-real-core.mjs",
+      "require": "./dist/web-real-core.cjs"
     }
   },
   "scripts": {

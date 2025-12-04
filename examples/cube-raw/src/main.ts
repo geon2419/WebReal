@@ -1,5 +1,5 @@
-import { Engine } from "@web-real-3d/core";
-import { Matrix4, Vector3 } from "@web-real-3d/math";
+import { Engine } from "@web-real/core";
+import { Matrix4, Vector3 } from "@web-real/math";
 import GUI from "lil-gui";
 
 import cubeVertShader from "./shaders/cube.vert.wgsl?raw";

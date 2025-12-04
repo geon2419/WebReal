@@ -1,6 +1,6 @@
 import type { Geometry } from "./Geometry";
 import type { PerspectiveCamera } from "../camera/PerspectiveCamera";
-import { Matrix4 } from "@web-real-3d/math";
+import { Matrix4 } from "@web-real/math";
 
 export interface FrustumColors {
   near?: [number, number, number];
@@ -13,7 +13,7 @@ export interface FrustumColors {
  * Geometry for visualizing a camera's view frustum as wireframe lines.
  * Generates 16 line segments (32 vertices) representing:
  * - 4 edges of the near plane
- * - 4 edges of the far plane  
+ * - 4 edges of the far plane
  * - 4 connecting edges between near and far planes
  * - 4 cone lines from camera position to near plane corners
  * Supports different colors for near, far, and side edges.
@@ -92,7 +92,7 @@ export class FrustumGeometry implements Geometry {
     const invProjView = projViewMatrix.inverse();
 
     // NDC corners (WebGPU uses Z range [0, 1])
-    
+
     const frustumNdcCorners = [
       // Near plane (z = 0)
       [-1, -1, 0], // near bottom-left

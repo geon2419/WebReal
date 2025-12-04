@@ -1,16 +1,16 @@
 {
-  "name": "@web-real-3d/math",
+  "name": "@web-real/math",
   "type": "module",
-  "main": "dist/web-real-3d-math.cjs",
-  "module": "dist/web-real-3d-math.mjs",
+  "main": "dist/web-real-math.cjs",
+  "module": "dist/web-real-math.mjs",
   "types": "dist/types/index.d.ts",
   "files": ["dist"],
   "sideEffects": false,
   "exports": {
     ".": {
       "types": "./dist/types/index.d.ts",
-      "import": "./dist/web-real-3d-math.mjs",
-      "require": "./dist/web-real-3d-math.cjs"
+      "import": "./dist/web-real-math.mjs",
+      "require": "./dist/web-real-math.cjs"
     }
   },
   "scripts": {

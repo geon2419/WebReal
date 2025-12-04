@@ -1,4 +1,4 @@
-import { Matrix4, Vector3 } from "@web-real-3d/math";
+import { Matrix4, Vector3 } from "@web-real/math";
 import { Object3D } from "../Object3D";
 
 export abstract class Camera extends Object3D {
