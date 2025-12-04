@@ -12,4 +12,5 @@ export interface Material {
   getVertexShader(): string;
   getFragmentShader(): string;
   getVertexBufferLayout(): VertexBufferLayout;
+  getUniformBufferSize(): number;
 }

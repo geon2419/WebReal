@@ -1,4 +1,5 @@
 export { Engine, type EngineOptions } from "./Engine";
+export { Renderer } from "./Renderer";
 export { BoxGeometry, type Geometry } from "./geometry";
 export {
   type Material,
