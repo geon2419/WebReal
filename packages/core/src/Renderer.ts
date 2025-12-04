@@ -10,6 +10,7 @@ interface MeshGPUResources {
   indexBuffer: GPUBuffer;
   uniformBuffer: GPUBuffer;
   bindGroup: GPUBindGroup;
+  materialType: string;
 }
 
 /**
@@ -136,6 +137,14 @@ export class Renderer {
     pipeline: GPURenderPipeline
   ): MeshGPUResources {
     let resources = this.meshBuffers.get(mesh);
+    const currentMaterialType = mesh.material.type;
+    
+    if (resources && resources.materialType !== currentMaterialType) {
+      resources.vertexBuffer.destroy();
+      resources.indexBuffer.destroy();
+      resources.uniformBuffer.destroy();
+      resources = undefined;
+    }
 
     if (!resources) {
       const vertexData = mesh.getInterleavedVertices();
@@ -180,7 +189,13 @@ export class Renderer {
         ],
       });
 
-      resources = { vertexBuffer, indexBuffer, uniformBuffer, bindGroup };
+      resources = {
+        vertexBuffer,
+        indexBuffer,
+        uniformBuffer,
+        bindGroup,
+        materialType: currentMaterialType,
+      };
       this.meshBuffers.set(mesh, resources);
       this.trackedMeshes.add(mesh);
     }
