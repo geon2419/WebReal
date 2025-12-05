@@ -85,6 +85,7 @@ export class Mesh extends Object3D {
       }
 
       case "basic":
+      case "blinnPhong":
       default: {
         // Default: interleave position + normal
         const data = new Float32Array(vertexCount * 6);
