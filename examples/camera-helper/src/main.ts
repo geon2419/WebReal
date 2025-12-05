@@ -153,22 +153,16 @@ async function main() {
     // Use OrbitCameraController to control the Observer camera
     const orbitController = new OrbitCameraController(
       observerCamera,
+    const radius = Math.sqrt(
+      params.observerX ** 2 + params.observerY ** 2 + params.observerZ ** 2
+    );
+    const orbitController = new OrbitCameraController(
+      observerCamera,
       canvasObserver,
       {
-        radius: Math.sqrt(
-          params.observerX ** 2 + params.observerY ** 2 + params.observerZ ** 2
-        ),
+        radius,
         theta: Math.atan2(params.observerX, params.observerZ),
-        phi: Math.acos(
-          Math.max(-1, Math.min(1,
-            params.observerY /
-              Math.sqrt(
-                params.observerX ** 2 +
-                  params.observerY ** 2 +
-                  params.observerZ ** 2
-              )
-          ))
-        ),
+        phi: Math.acos(params.observerY / radius),
       }
     );
 
