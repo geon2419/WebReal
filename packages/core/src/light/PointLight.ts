@@ -35,9 +35,10 @@ export class PointLight extends Light {
 
   /**
    * Returns attenuation factors based on the attenuation type.
-   * The factors are used in the shader as: attenuation = 1 / (constant + linear*d + quadratic*d²)
-   * For 'linear' and 'quadratic' types, a custom calculation is used in the shader.
-   * @returns Tuple of [constant, linear, quadratic] factors, plus attenuation type encoded as number
+   * The returned tuple is used by the shader to determine attenuation based on the selected type.
+   * For 'linear' and 'quadratic', the shader uses custom falloff formulas; for 'physical', an inverse-square-like formula is used.
+   * See the shader implementation (e.g., BlinnPhongMaterial.ts) for details on how these values are used.
+   * @returns Tuple of [range, parameter, unused, attenuation type code] for use in the shader.
    */
   getAttenuationFactors(): [number, number, number, number] {
     // Encode attenuation type: 0 = linear, 1 = quadratic, 2 = physical
