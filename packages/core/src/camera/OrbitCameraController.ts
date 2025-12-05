@@ -167,7 +167,7 @@ export class OrbitCameraController {
 
     // Update angles
     this._theta -= deltaX * this.rotateSpeed;
-    this.phi -= deltaY * this.rotateSpeed; // Constraints applied via setter (inverted)
+    this.phi += deltaY * this.rotateSpeed; // Constraints applied via setter (standard: dragging down tilts down)
 
     this.previousMouseX = event.clientX;
     this.previousMouseY = event.clientY;

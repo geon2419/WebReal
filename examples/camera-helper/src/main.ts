@@ -124,14 +124,14 @@ async function main() {
       far: params.mainFar,
     });
 
-    // OrbitCameraController로 Main 카메라 제어
+    // Control Main camera with OrbitCameraController
     const mainOrbitController = new OrbitCameraController(
       mainCamera,
       canvasMain,
       {
         radius: params.mainDistance,
         theta: 0,
-        phi: Math.PI / 2, // 정면에서 시작
+        phi: Math.PI / 2, // Start from the front
       }
     );
 
@@ -150,7 +150,7 @@ async function main() {
       far: 100,
     });
 
-    // OrbitCameraController로 Observer 카메라 제어
+    // Use OrbitCameraController to control the Observer camera
     const orbitController = new OrbitCameraController(
       observerCamera,
       canvasObserver,
@@ -193,10 +193,10 @@ async function main() {
       );
       mainCubeMesh.scale.set(params.scale, params.scale, params.scale);
 
-      // Update observer camera (OrbitController가 position과 lookAt 관리)
+      // Update observer camera (OrbitController manages position and lookAt)
       observerCamera.fov = params.observerFov;
 
-      // Update main camera (OrbitController가 position과 lookAt 관리)
+      // Update main camera (OrbitController manages position and lookAt)
       mainCamera.fov = params.mainFov;
       mainCamera.near = params.mainNear;
       mainCamera.far = params.mainFar;
