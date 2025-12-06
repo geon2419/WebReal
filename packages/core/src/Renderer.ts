@@ -471,8 +471,8 @@ export class Renderer {
           const uniformData = new ArrayBuffer(material.getUniformBufferSize());
           const dataView = new DataView(uniformData);
 
-          // Call the user-provided callback to write custom uniform data
-          material.writeUniformData(dataView, 64);
+          // Call the user-provided callback to write custom uniform data to the local buffer
+          material.writeUniformData(dataView, 0);
 
           // Write the custom uniform data to GPU (starting at offset 64, after MVP)
           const customDataSize = material.getUniformBufferSize() - 64;
