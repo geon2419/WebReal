@@ -4,6 +4,10 @@ export {
   type PerspectiveCameraOptions,
 } from "./PerspectiveCamera";
 export {
+  OrthographicCamera,
+  type OrthographicCameraOptions,
+} from "./OrthographicCamera";
+export {
   CameraFrustumHelper,
   type CameraFrustumHelperOptions,
 } from "./CameraFrustumHelper";

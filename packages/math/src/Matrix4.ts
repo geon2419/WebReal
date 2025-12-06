@@ -254,6 +254,34 @@ export class Matrix4 {
     return m;
   }
 
+  static orthographic(
+    left: number,
+    right: number,
+    bottom: number,
+    top: number,
+    near: number,
+    far: number
+  ): Matrix4 {
+    const m = new Matrix4();
+    const e = m._data;
+
+    // Orthographic projection for WebGPU depth range [0, 1]
+    e[0] = 2 / (right - left);
+    e[5] = 2 / (top - bottom);
+    e[10] = 1 / (far - near);
+    e[12] = -(right + left) / (right - left);
+    e[13] = -(top + bottom) / (top - bottom);
+    e[14] = -near / (far - near);
+    e[15] = 1;
+
+    // Reset any remaining terms to zero (matrix starts as identity)
+    e[1] = e[2] = e[3] = 0;
+    e[4] = e[6] = e[7] = 0;
+    e[8] = e[9] = e[11] = 0;
+
+    return m;
+  }
+
   /**
    * Creates a view matrix that transforms world coordinates to camera coordinates.
    * @param eye - Camera position in world space
