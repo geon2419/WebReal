@@ -4,10 +4,30 @@ import type { Geometry } from "./Geometry";
 export type PlaneOrientation = "XY" | "XZ" | "YZ";
 
 export interface PlaneGeometryOptions {
+  /**
+   * The width of the plane.
+   * @default 1
+   */
   width?: number;
+  /**
+   * The height of the plane.
+   * @default 1
+   */
   height?: number;
+  /**
+   * Number of segmented faces along the width of the plane. Must be >= 1.
+   * @default 1
+   */
   widthSegments?: number;
+  /**
+   * Number of segmented faces along the height of the plane. Must be >= 1.
+   * @default 1
+   */
   heightSegments?: number;
+  /**
+   * The orientation of the plane: "XY", "XZ", or "YZ".
+   * @default "XY"
+   */
   orientation?: PlaneOrientation;
 }
 
