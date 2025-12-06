@@ -6,8 +6,8 @@
     "dev": "vite"
   },
   "dependencies": {
-    "@web-real/core": "*",
-    "@web-real/math": "*",
-    "lil-gui": "^0.19.2"
+    "@web-real/core": "workspace:*",
+    "@web-real/math": "workspace:*",
+    "lil-gui": "^0.21.0"
   }
 }

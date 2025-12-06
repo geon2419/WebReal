@@ -14,9 +14,8 @@
     }
   },
   "scripts": {
-    "build": "rimraf dist && tsc -p tsconfig.build.json && vite build --config vite.config.ts",
-    "test": "vitest run --config vitest.config.ts",
-    "test:watch": "vitest watch --config vitest.config.ts",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "prebuild": "rm -rf dist",
+    "build": "tsc -p tsconfig.build.json && vite build --config vite.config.ts",
+    "test": "vitest run --config vitest.config.ts"
   }
 }
