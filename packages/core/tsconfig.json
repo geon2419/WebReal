@@ -16,7 +16,11 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
     "rootDir": "src",
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "baseUrl": ".",
+    "paths": {
+      "@web-real/math": ["../math/src/index.ts"]
+    }
   },
   "include": ["src"],
   "references": []
