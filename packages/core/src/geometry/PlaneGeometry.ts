@@ -79,8 +79,8 @@ export class PlaneGeometry implements Geometry {
 
     this.width = width;
     this.height = height;
-    this.widthSegments = widthSegments;
-    this.heightSegments = heightSegments;
+    this.widthSegments = Math.max(1, widthSegments);
+    this.heightSegments = Math.max(1, heightSegments);
     this.orientation = orientation;
 
     const { positions, normals, uvs, indices, vertexCount, indexCount } =
