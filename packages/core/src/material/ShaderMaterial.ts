@@ -112,6 +112,11 @@ export class ShaderMaterial implements Material {
 
     // Default uniform buffer size: MVP (64) + color (16) = 80 bytes
     this._uniformBufferSize = options.uniformBufferSize ?? 80;
+    if (this._uniformBufferSize < 64) {
+      throw new Error(
+        `ShaderMaterial uniformBufferSize must be at least 64 bytes for the MVP matrix. Got: ${this._uniformBufferSize}`
+      );
+    }
 
     this._primitiveTopology = options.primitiveTopology ?? "triangle-list";
 
