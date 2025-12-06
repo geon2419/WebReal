@@ -61,8 +61,22 @@ export class Matrix4 {
     return this;
   }
 
+  rotateX(angle: number): this {
+    const r = Matrix4.rotationX(angle);
+    const result = this.multiply(r);
+    this._data.set(result._data);
+    return this;
+  }
+
   rotateY(angle: number): this {
     const r = Matrix4.rotationY(angle);
+    const result = this.multiply(r);
+    this._data.set(result._data);
+    return this;
+  }
+
+  rotateZ(angle: number): this {
+    const r = Matrix4.rotationZ(angle);
     const result = this.multiply(r);
     this._data.set(result._data);
     return this;

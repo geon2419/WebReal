@@ -13,3 +13,4 @@ export {
   LineColorMaterial,
   type LineColorMaterialOptions,
 } from "./LineColorMaterial";
+export { ShaderMaterial, type ShaderMaterialOptions } from "./ShaderMaterial";

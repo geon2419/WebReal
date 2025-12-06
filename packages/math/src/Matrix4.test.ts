@@ -51,6 +51,18 @@ describe("Matrix4", () => {
     });
   });
 
+  describe("rotateX", () => {
+    it("should rotate by π/2 correctly (right-handed coordinate system)", () => {
+      const m = new Matrix4().rotateX(Math.PI / 2);
+      // Right-handed X rotation: [1, 0, 0], [0, cos, sin], [0, -sin, cos]
+      expect(m.data[0]).toBeCloseTo(1);
+      expect(m.data[5]).toBeCloseTo(0); // cos(π/2)
+      expect(m.data[6]).toBeCloseTo(1); // sin(π/2)
+      expect(m.data[9]).toBeCloseTo(-1); // -sin(π/2)
+      expect(m.data[10]).toBeCloseTo(0); // cos(π/2)
+    });
+  });
+
   describe("rotateY", () => {
     it("should rotate by π/2 correctly (right-handed coordinate system)", () => {
       const m = new Matrix4().rotateY(Math.PI / 2);
@@ -59,6 +71,18 @@ describe("Matrix4", () => {
       expect(m.data[2]).toBeCloseTo(-1); // -sin(π/2)
       expect(m.data[8]).toBeCloseTo(1); // sin(π/2)
       expect(m.data[10]).toBeCloseTo(0); // cos(π/2)
+    });
+  });
+
+  describe("rotateZ", () => {
+    it("should rotate by π/2 correctly (right-handed coordinate system)", () => {
+      const m = new Matrix4().rotateZ(Math.PI / 2);
+      // Right-handed Z rotation: [cos, sin, 0], [-sin, cos, 0], [0, 0, 1]
+      expect(m.data[0]).toBeCloseTo(0); // cos(π/2)
+      expect(m.data[1]).toBeCloseTo(1); // sin(π/2)
+      expect(m.data[4]).toBeCloseTo(-1); // -sin(π/2)
+      expect(m.data[5]).toBeCloseTo(0); // cos(π/2)
+      expect(m.data[10]).toBeCloseTo(1);
     });
   });
 
@@ -89,6 +113,18 @@ describe("Matrix4", () => {
     });
   });
 
+  describe("static rotationX", () => {
+    it("should create correct rotation matrix (right-handed)", () => {
+      const m = Matrix4.rotationX(Math.PI / 2);
+      // Right-handed X rotation: [1, 0, 0], [0, cos, sin], [0, -sin, cos]
+      expect(m.data[0]).toBeCloseTo(1);
+      expect(m.data[5]).toBeCloseTo(0); // cos(π/2)
+      expect(m.data[6]).toBeCloseTo(1); // sin(π/2)
+      expect(m.data[9]).toBeCloseTo(-1); // -sin(π/2)
+      expect(m.data[10]).toBeCloseTo(0); // cos(π/2)
+    });
+  });
+
   describe("static rotationY", () => {
     it("should create correct rotation matrix (right-handed)", () => {
       const m = Matrix4.rotationY(Math.PI / 2);
@@ -97,6 +133,41 @@ describe("Matrix4", () => {
       expect(m.data[2]).toBeCloseTo(-1); // -sin(π/2)
       expect(m.data[8]).toBeCloseTo(1); // sin(π/2)
       expect(m.data[10]).toBeCloseTo(0); // cos(π/2)
+    });
+  });
+
+  describe("static rotationZ", () => {
+    it("should create correct rotation matrix (right-handed)", () => {
+      const m = Matrix4.rotationZ(Math.PI / 2);
+      // Right-handed Z rotation: [cos, sin, 0], [-sin, cos, 0], [0, 0, 1]
+      expect(m.data[0]).toBeCloseTo(0); // cos(π/2)
+      expect(m.data[1]).toBeCloseTo(1); // sin(π/2)
+      expect(m.data[4]).toBeCloseTo(-1); // -sin(π/2)
+      expect(m.data[5]).toBeCloseTo(0); // cos(π/2)
+      expect(m.data[10]).toBeCloseTo(1);
+    });
+  });
+
+  describe("static orthographic", () => {
+    it("should create valid orthographic matrix", () => {
+      const m = Matrix4.orthographic(-10, 10, -10, 10, 0.1, 100);
+      // Check scale factors
+      expect(m.data[0]).toBeCloseTo(2 / 20); // 2/(right-left)
+      expect(m.data[5]).toBeCloseTo(2 / 20); // 2/(top-bottom)
+      expect(m.data[10]).toBeCloseTo(1 / (100 - 0.1)); // 1/(far-near)
+      // Check translation
+      expect(m.data[12]).toBeCloseTo(0); // -(right+left)/(right-left)
+      expect(m.data[13]).toBeCloseTo(0); // -(top+bottom)/(top-bottom)
+      expect(m.data[14]).toBeCloseTo(-0.1 / (100 - 0.1)); // -near/(far-near)
+      expect(m.data[15]).toBeCloseTo(1);
+    });
+
+    it("should handle asymmetric frustum", () => {
+      const m = Matrix4.orthographic(-5, 15, -8, 12, 1, 50);
+      expect(m.data[0]).toBeCloseTo(2 / 20);
+      expect(m.data[5]).toBeCloseTo(2 / 20);
+      expect(m.data[12]).toBeCloseTo(-10 / 20); // -(15-5)/(15+5)
+      expect(m.data[13]).toBeCloseTo(-4 / 20); // -(12-8)/(12+8)
     });
   });
 

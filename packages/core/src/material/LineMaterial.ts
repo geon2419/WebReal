@@ -51,4 +51,17 @@ export class LineMaterial implements Material {
   getPrimitiveTopology(): GPUPrimitiveTopology {
     return "line-list";
   }
+
+  /**
+   * Writes material-specific uniform data (color) to the buffer.
+   * MVP matrix should be written separately at offset 0.
+   * @param buffer - DataView of the uniform buffer
+   * @param offset - Byte offset to start writing (default: 64, after MVP matrix)
+   */
+  writeUniformData(buffer: DataView, offset: number = 64): void {
+    buffer.setFloat32(offset, this.color.r, true);
+    buffer.setFloat32(offset + 4, this.color.g, true);
+    buffer.setFloat32(offset + 8, this.color.b, true);
+    buffer.setFloat32(offset + 12, this.color.a, true);
+  }
 }

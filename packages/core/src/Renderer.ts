@@ -3,9 +3,7 @@ import type { Engine } from "./Engine";
 import type { Scene } from "./Scene";
 import type { Camera } from "./camera/Camera";
 import type { Material } from "./material/Material";
-import { BasicMaterial } from "./material/BasicMaterial";
 import { BlinnPhongMaterial } from "./material/BlinnPhongMaterial";
-import { LineMaterial } from "./material/LineMaterial";
 import { Mesh } from "./Mesh";
 import { DirectionalLight } from "./light/DirectionalLight";
 import { PointLight } from "./light/PointLight";
@@ -286,18 +284,8 @@ export class Renderer {
         mvpMatrix.data as Float32Array<ArrayBuffer>
       );
 
-      // Write material-specific data (if any)
-      if (
-        material instanceof BasicMaterial ||
-        material instanceof LineMaterial
-      ) {
-        const colorData = material.color.toFloat32Array();
-        this.device.queue.writeBuffer(
-          resources.uniformBuffer,
-          64,
-          colorData as Float32Array<ArrayBuffer>
-        );
-      } else if (material instanceof BlinnPhongMaterial) {
+      // Write material-specific data using writeUniformData method
+      if (material instanceof BlinnPhongMaterial) {
         // Write model matrix at offset 64
         this.device.queue.writeBuffer(
           resources.uniformBuffer,
@@ -464,6 +452,30 @@ export class Renderer {
           240,
           cameraPosData as Float32Array<ArrayBuffer>
         );
+      } else if (material.writeUniformData) {
+        // For materials that implement writeUniformData (BasicMaterial, LineMaterial, ShaderMaterial, etc.)
+        // Use pre-allocated buffer from material if available, otherwise allocate temporarily
+        const uniformData =
+          "getUniformDataBuffer" in material &&
+          typeof material.getUniformDataBuffer === "function"
+            ? material.getUniformDataBuffer()
+            : new ArrayBuffer(material.getUniformBufferSize());
+        const dataView = new DataView(uniformData);
+
+        // Call material's writeUniformData method
+        material.writeUniformData(dataView, 64);
+
+        // Write the uniform data to GPU (starting at offset 64, after MVP)
+        const customDataSize = material.getUniformBufferSize() - 64;
+        if (customDataSize > 0) {
+          this.device.queue.writeBuffer(
+            resources.uniformBuffer,
+            64,
+            uniformData,
+            64, // source offset - read from offset 64 where material wrote its data
+            customDataSize // size to copy
+          );
+        }
       }
 
       passEncoder.setPipeline(pipeline);
