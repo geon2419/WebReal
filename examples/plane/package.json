@@ -1,0 +1,13 @@
+{
+  "name": "@examples/plane",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite"
+  },
+  "dependencies": {
+    "@web-real/core": "*",
+    "@web-real/math": "*",
+    "lil-gui": "^0.19.2"
+  }
+}

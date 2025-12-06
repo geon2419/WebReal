@@ -4,6 +4,9 @@ export {
   BoxGeometry,
   FrustumGeometry,
   type FrustumColors,
+  PlaneGeometry,
+  type PlaneGeometryOptions,
+  type PlaneOrientation,
   type Geometry,
 } from "./geometry";
 export {
