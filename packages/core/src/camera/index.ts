@@ -4,9 +4,17 @@ export {
   type PerspectiveCameraOptions,
 } from "./PerspectiveCamera";
 export {
-  CameraFrustumHelper,
-  type CameraFrustumHelperOptions,
-} from "./CameraFrustumHelper";
+  OrthographicCamera,
+  type OrthographicCameraOptions,
+} from "./OrthographicCamera";
+export {
+  PerspectiveCameraHelper,
+  type PerspectiveCameraHelperOptions,
+} from "./PerspectiveCameraHelper";
+export {
+  OrthographicCameraHelper,
+  type OrthographicCameraHelperOptions,
+} from "./OrthographicCameraHelper";
 export {
   OrbitCameraController,
   type OrbitCameraControllerOptions,

@@ -36,6 +36,14 @@
         "lil-gui": "^0.21.0",
       },
     },
+    "examples/orthographic-camera-helper": {
+      "name": "@examples/orthographic-camera-helper",
+      "dependencies": {
+        "@web-real/core": "workspace:*",
+        "@web-real/math": "workspace:*",
+        "lil-gui": "^0.21.0",
+      },
+    },
     "examples/plane": {
       "name": "@examples/plane",
       "dependencies": {
@@ -120,6 +128,8 @@
     "@examples/cube": ["@examples/cube@workspace:examples/cube"],
 
     "@examples/cube-raw": ["@examples/cube-raw@workspace:examples/cube-raw"],
+
+    "@examples/orthographic-camera-helper": ["@examples/orthographic-camera-helper@workspace:examples/orthographic-camera-helper"],
 
     "@examples/plane": ["@examples/plane@workspace:examples/plane"],
 

@@ -1,5 +1,5 @@
 import type { Geometry } from "./Geometry";
-import type { PerspectiveCamera } from "../camera/PerspectiveCamera";
+import type { Camera } from "../camera/Camera";
 import { Color, Matrix4 } from "@web-real/math";
 
 export interface FrustumColors {
@@ -34,7 +34,7 @@ export class FrustumGeometry implements Geometry {
     cone: Color;
   };
 
-  constructor(camera: PerspectiveCamera, colors: FrustumColors = {}) {
+  constructor(camera: Camera, colors: FrustumColors = {}) {
     // Normals are not used for line rendering
     this._normals = new Float32Array(0);
     // Non-indexed rendering for lines
@@ -89,9 +89,9 @@ export class FrustumGeometry implements Geometry {
 
   /**
    * Updates the frustum geometry based on camera parameters.
-   * Call this when camera fov, aspect, near, or far changes.
+   * Call this when camera projection parameters change.
    */
-  update(camera: PerspectiveCamera): void {
+  update(camera: Camera): void {
     // Get the inverse of projection * view matrix
     const projViewMatrix = camera.projectionMatrix.multiply(camera.viewMatrix);
     const invProjView = projViewMatrix.inverse();

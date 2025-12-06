@@ -1,5 +1,6 @@
 import { Vector3 } from "@web-real/math";
 import { Camera } from "./Camera";
+import { OrthographicCamera } from "./OrthographicCamera";
 
 export interface OrbitCameraControllerOptions {
   /** Target point for rotation */
@@ -18,10 +19,16 @@ export interface OrbitCameraControllerOptions {
   minPhi?: number;
   /** Maximum vertical angle (radians) */
   maxPhi?: number;
+  /** Minimum zoom (for OrthographicCamera) */
+  minZoom?: number;
+  /** Maximum zoom (for OrthographicCamera) */
+  maxZoom?: number;
   /** Rotation speed */
   rotateSpeed?: number;
   /** Zoom speed */
   zoomSpeed?: number;
+  /** Pan speed */
+  panSpeed?: number;
 }
 
 export class OrbitCameraController {
@@ -39,13 +46,17 @@ export class OrbitCameraController {
   private maxRadius: number;
   private minPhi: number;
   private maxPhi: number;
+  private minZoom: number;
+  private maxZoom: number;
 
   // Sensitivity
   private rotateSpeed: number;
   private zoomSpeed: number;
+  private panSpeed: number;
 
   // Mouse state
   private isDragging = false;
+  private isPanning = false;
   private previousMouseX = 0;
   private previousMouseY = 0;
 
@@ -67,6 +78,17 @@ export class OrbitCameraController {
     // Initialize spherical coordinates
     this._target = options.target?.clone() ?? new Vector3(0, 0, 0);
     this._radius = options.radius ?? 5;
+
+    // Warn if radius is negative and convert to absolute value
+    if (this._radius < 0) {
+      console.warn(
+        `OrbitCameraController: negative radius ${
+          this._radius
+        } converted to ${Math.abs(this._radius)}`
+      );
+      this._radius = Math.abs(this._radius);
+    }
+
     this._theta = options.theta ?? 0;
     this._phi = options.phi ?? Math.PI / 4; // 45 degrees
 
@@ -75,10 +97,13 @@ export class OrbitCameraController {
     this.maxRadius = options.maxRadius ?? 100;
     this.minPhi = options.minPhi ?? 0.01; // Nearly vertical above
     this.maxPhi = options.maxPhi ?? Math.PI - 0.01; // Nearly vertical below
+    this.minZoom = options.minZoom ?? 0.1;
+    this.maxZoom = options.maxZoom ?? 10;
 
     // Sensitivity
     this.rotateSpeed = options.rotateSpeed ?? 0.005;
     this.zoomSpeed = options.zoomSpeed ?? 0.1;
+    this.panSpeed = options.panSpeed ?? 1.0;
 
     // Bind event handlers
     this.onMouseDownBound = this.onMouseDown.bind(this);
@@ -148,26 +173,55 @@ export class OrbitCameraController {
 
     this.camera.position.set(x, y, z);
     this.camera.lookAt(this._target);
+
+    // Update world matrix immediately so camera helpers get correct position
+    this.camera.updateWorldMatrix(false, false);
   }
 
   private onMouseDown(event: MouseEvent): void {
-    // Handle left-click only
-    if (event.button !== 0) return;
-
-    this.isDragging = true;
-    this.previousMouseX = event.clientX;
-    this.previousMouseY = event.clientY;
+    // Handle left-click for rotation
+    if (event.button === 0) {
+      this.isDragging = true;
+      this.previousMouseX = event.clientX;
+      this.previousMouseY = event.clientY;
+    }
+    // Handle right-click for panning
+    else if (event.button === 2) {
+      this.isPanning = true;
+      this.previousMouseX = event.clientX;
+      this.previousMouseY = event.clientY;
+    }
   }
 
   private onMouseMove(event: MouseEvent): void {
-    if (!this.isDragging) return;
+    if (!this.isDragging && !this.isPanning) return;
 
     const deltaX = event.clientX - this.previousMouseX;
     const deltaY = event.clientY - this.previousMouseY;
 
-    // Update angles
-    this._theta -= deltaX * this.rotateSpeed;
-    this.phi += deltaY * this.rotateSpeed; // Constraints applied via setter (standard: dragging down tilts down)
+    if (this.isDragging) {
+      // Update angles for rotation
+      this._theta -= deltaX * this.rotateSpeed;
+      this.phi += deltaY * this.rotateSpeed; // Constraints applied via setter (standard: dragging down tilts down)
+    } else if (this.isPanning) {
+      // Calculate camera coordinate system vectors
+      const forward = this._target.sub(this.camera.position).normalize();
+      const right = this.camera.up.cross(forward).normalize();
+      const up = forward.cross(right).normalize();
+
+      // Calculate pan offset with radius scaling and aspect ratio consideration
+      const panX = (deltaX * this.panSpeed * this._radius) / this.canvas.width;
+      const panY = (deltaY * this.panSpeed * this._radius) / this.canvas.height;
+
+      const panOffset = right.scale(panX).add(up.scale(panY));
+
+      // Update target position
+      this._target.set(
+        this._target.x + panOffset.x,
+        this._target.y + panOffset.y,
+        this._target.z + panOffset.z
+      );
+    }
 
     this.previousMouseX = event.clientX;
     this.previousMouseY = event.clientY;
@@ -177,14 +231,26 @@ export class OrbitCameraController {
 
   private onMouseUp(): void {
     this.isDragging = false;
+    this.isPanning = false;
   }
 
   private onWheel(event: WheelEvent): void {
     event.preventDefault();
 
-    // Zoom in/out
     const delta = event.deltaY > 0 ? 1 : -1;
-    this.radius *= 1 + delta * this.zoomSpeed; // Constraints applied via setter
+
+    // Handle zoom differently based on camera type
+    if (this.camera instanceof OrthographicCamera) {
+      // For orthographic cameras, adjust the zoom property (slower zoom speed)
+      const newZoom = this.camera.zoom * (1 - delta * this.zoomSpeed * 0.1);
+      this.camera.zoom = Math.max(
+        this.minZoom,
+        Math.min(this.maxZoom, newZoom)
+      );
+    } else {
+      // For perspective cameras, adjust the radius (distance)
+      this.radius *= 1 + delta * this.zoomSpeed; // Constraints applied via setter
+    }
 
     this.update();
   }

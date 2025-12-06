@@ -1,4 +1,4 @@
-import type { PerspectiveCamera } from "./PerspectiveCamera";
+import type { OrthographicCamera } from "./OrthographicCamera";
 import { Color } from "@web-real/math";
 import {
   FrustumGeometry,
@@ -7,7 +7,7 @@ import {
 import { LineColorMaterial } from "../material/LineColorMaterial";
 import { Mesh } from "../Mesh";
 
-export interface CameraFrustumHelperOptions {
+export interface OrthographicCameraHelperOptions {
   /** Color for the near plane edges. Default: yellow */
   nearColor?: Color;
   /** Color for the far plane edges. Default: orange */
@@ -19,7 +19,7 @@ export interface CameraFrustumHelperOptions {
 }
 
 /**
- * A helper class that visualizes a PerspectiveCamera's view frustum.
+ * A helper class that visualizes an OrthographicCamera's view frustum.
  * Useful for debugging camera setup and understanding the visible area.
  *
  * Different colors are used for different parts of the frustum:
@@ -30,8 +30,15 @@ export interface CameraFrustumHelperOptions {
  *
  * @example
  * ```typescript
- * const debugCamera = new PerspectiveCamera(60, 1.5, 0.1, 100);
- * const helper = new CameraFrustumHelper(debugCamera, {
+ * const debugCamera = new OrthographicCamera({
+ *   left: -10,
+ *   right: 10,
+ *   top: 10,
+ *   bottom: -10,
+ *   near: 0.1,
+ *   far: 100,
+ * });
+ * const helper = new OrthographicCameraHelper(debugCamera, {
  *   nearColor: Color.GREEN,
  *   farColor: Color.RED,
  *   sideColor: Color.BLUE,
@@ -40,18 +47,18 @@ export interface CameraFrustumHelperOptions {
  * scene.add(helper);
  *
  * // Update when camera parameters change
- * debugCamera.fov = 90;
+ * debugCamera.zoom = 2;
  * helper.update();
  * ```
  */
-export class CameraFrustumHelper extends Mesh {
-  private readonly camera: PerspectiveCamera;
+export class OrthographicCameraHelper extends Mesh {
+  private readonly camera: OrthographicCamera;
   private readonly frustumGeometry: FrustumGeometry;
   private readonly lineColorMaterial: LineColorMaterial;
 
   constructor(
-    camera: PerspectiveCamera,
-    options: CameraFrustumHelperOptions = {}
+    camera: OrthographicCamera,
+    options: OrthographicCameraHelperOptions = {}
   ) {
     const frustumColors: FrustumColors = {
       near: options.nearColor ?? new Color(1, 1, 0),
@@ -74,7 +81,7 @@ export class CameraFrustumHelper extends Mesh {
 
   /**
    * Updates the frustum geometry when camera parameters change.
-   * Call this after modifying camera's fov, aspect, near, or far.
+   * Call this after modifying camera's zoom, left, right, top, bottom, near, or far.
    */
   update(): void {
     this.frustumGeometry.update(this.camera);

@@ -8,6 +8,9 @@ export interface PerspectiveCameraOptions {
   far?: number;
 }
 
+/**
+ * Perspective camera with adjustable field of view and clipping planes.
+ */
 export class PerspectiveCamera extends Camera {
   public fov: number;
   public aspect: number;
@@ -33,6 +36,9 @@ export class PerspectiveCamera extends Camera {
     return Matrix4.perspective(fovRad, this.aspect, this.near, this.far);
   }
 
+  /**
+   * Aligns the aspect ratio with the canvas and tracks resizing.
+   */
   updateAspect(canvas: HTMLCanvasElement): this {
     this.disposeResizeObserver();
 
@@ -47,6 +53,9 @@ export class PerspectiveCamera extends Camera {
     return this;
   }
 
+  /**
+   * Stops observing canvas size changes.
+   */
   disposeResizeObserver(): void {
     if (this._resizeObserver) {
       this._resizeObserver.disconnect();
@@ -54,6 +63,9 @@ export class PerspectiveCamera extends Camera {
     }
   }
 
+  /**
+   * Releases any resources owned by the camera.
+   */
   dispose(): void {
     this.disposeResizeObserver();
   }

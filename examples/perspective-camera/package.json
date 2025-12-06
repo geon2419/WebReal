@@ -1,5 +1,5 @@
 {
-  "name": "@examples/camera-helper",
+  "name": "@examples/perspective-camera",
   "private": true,
   "type": "module",
   "scripts": {

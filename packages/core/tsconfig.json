@@ -16,7 +16,8 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
     "rootDir": "src",
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "baseUrl": ".",
   },
   "include": ["src"],
   "references": []

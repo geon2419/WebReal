@@ -6,7 +6,7 @@ import {
   Mesh,
   Scene,
   PerspectiveCamera,
-  CameraFrustumHelper,
+  PerspectiveCameraHelper,
   OrbitCameraController,
 } from "@web-real/core";
 import { Color } from "@web-real/math";
@@ -29,12 +29,11 @@ interface Params {
   mainFov: number;
   mainNear: number;
   mainFar: number;
-  mainDistance: number;
   showFrustum: boolean;
 }
 
 function createGUI(params: Params): GUI {
-  const gui = new GUI({ title: "Camera Helper Demo" });
+  const gui = new GUI({ title: "Perspective Camera Demo" });
 
   const cubeFolder = gui.addFolder("Cube");
   cubeFolder.add(params, "autoRotate").name("Auto Rotate");
@@ -49,7 +48,6 @@ function createGUI(params: Params): GUI {
 
   const mainFolder = gui.addFolder("Main Camera (Right)");
   mainFolder.add(params, "showFrustum").name("Show Frustum");
-  mainFolder.add(params, "mainDistance", 2, 8).name("Distance");
   mainFolder.add(params, "mainFov", 30, 120).name("FOV");
   mainFolder.add(params, "mainNear", 0.1, 2).name("Near Plane");
   mainFolder.add(params, "mainFar", 2, 10).name("Far Plane");
@@ -91,7 +89,6 @@ async function main() {
       mainFov: 60,
       mainNear: 0.5,
       mainFar: 5,
-      mainDistance: 4,
       showFrustum: true,
     };
 
@@ -129,19 +126,20 @@ async function main() {
       mainCamera,
       canvasMain,
       {
-        radius: params.mainDistance,
+        radius: 4,
         theta: 0,
         phi: Math.PI / 2, // Start from the front
       }
     );
 
-    const cameraFrustumHelper = new CameraFrustumHelper(mainCamera, {
+    // Create frustum helper AFTER orbit controller so camera is in correct position
+    const perspectiveCameraHelper = new PerspectiveCameraHelper(mainCamera, {
       nearColor: Color.GREEN,
       farColor: Color.RED,
       sideColor: Color.YELLOW,
       coneColor: Color.fromHex("#8080ff"), // Light blue
     });
-    sceneObserver.add(cameraFrustumHelper);
+    sceneObserver.add(perspectiveCameraHelper);
 
     const observerCamera = new PerspectiveCamera({
       fov: params.observerFov,
@@ -197,8 +195,8 @@ async function main() {
       mainCamera.far = params.mainFar;
 
       // Update frustum helper
-      cameraFrustumHelper.update();
-      cameraFrustumHelper.visible = params.showFrustum;
+      perspectiveCameraHelper.update();
+      perspectiveCameraHelper.visible = params.showFrustum;
 
       // Render both views
       rendererObserver.render(sceneObserver, observerCamera);
