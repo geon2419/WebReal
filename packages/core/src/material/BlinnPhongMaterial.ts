@@ -5,6 +5,7 @@ import { ShaderLib } from "../shaders";
 export interface BlinnPhongMaterialOptions {
   color?: [number, number, number] | Color;
   shininess?: number;
+  wireframe?: boolean;
 }
 
 export class BlinnPhongMaterial implements Material {
@@ -13,12 +14,15 @@ export class BlinnPhongMaterial implements Material {
   readonly color: Color;
   /** Shininess exponent for specular highlight (higher = sharper) */
   shininess: number;
+  /** Whether to render in wireframe mode */
+  wireframe: boolean;
 
   constructor(options: BlinnPhongMaterialOptions = {}) {
     this.color = options.color
       ? Color.from(options.color)
       : new Color(1.0, 1.0, 1.0);
     this.shininess = options.shininess ?? 32.0;
+    this.wireframe = options.wireframe ?? false;
   }
 
   getVertexShader(): string {
@@ -54,7 +58,7 @@ export class BlinnPhongMaterial implements Material {
   }
 
   getPrimitiveTopology(): GPUPrimitiveTopology {
-    return "triangle-list";
+    return this.wireframe ? "line-list" : "triangle-list";
   }
 
   /**

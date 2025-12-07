@@ -4,15 +4,24 @@ import { VertexColorMaterial } from "./material/VertexColorMaterial";
 import { Object3D } from "./Object3D";
 
 export class Mesh extends Object3D {
-  public readonly geometry: Geometry;
+  private _geometry: Geometry;
   public material: Material;
   /** Set to true when geometry data changes and GPU buffers need to be updated */
   public needsUpdate: boolean = false;
 
   constructor(geometry: Geometry, material: Material) {
     super();
-    this.geometry = geometry;
+    this._geometry = geometry;
     this.material = material;
+  }
+
+  get geometry(): Geometry {
+    return this._geometry;
+  }
+
+  set geometry(value: Geometry) {
+    this._geometry = value;
+    this.needsUpdate = true;
   }
 
   get indices(): Uint16Array {
@@ -25,6 +34,34 @@ export class Mesh extends Object3D {
 
   get indexCount(): number {
     return this.geometry.indexCount;
+  }
+
+  /**
+   * Generates wireframe indices from triangle indices.
+   * Converts each triangle (a, b, c) to three line segments (a-b, b-c, c-a).
+   * @returns Uint16Array of wireframe indices
+   */
+  getWireframeIndices(): Uint16Array {
+    const triangleIndices = this.geometry.indices;
+    const triangleCount = triangleIndices.length / 3;
+    const wireframeIndices = new Uint16Array(triangleCount * 6);
+
+    for (let i = 0; i < triangleCount; i++) {
+      const offset = i * 3;
+      const a = triangleIndices[offset];
+      const b = triangleIndices[offset + 1];
+      const c = triangleIndices[offset + 2];
+
+      const wireOffset = i * 6;
+      wireframeIndices[wireOffset] = a;
+      wireframeIndices[wireOffset + 1] = b;
+      wireframeIndices[wireOffset + 2] = b;
+      wireframeIndices[wireOffset + 3] = c;
+      wireframeIndices[wireOffset + 4] = c;
+      wireframeIndices[wireOffset + 5] = a;
+    }
+
+    return wireframeIndices;
   }
 
   /**

@@ -16,6 +16,8 @@ interface MeshGPUResources {
   uniformBuffer: GPUBuffer;
   bindGroup: GPUBindGroup;
   materialType: string;
+  topology: GPUPrimitiveTopology;
+  indexCount: number;
 }
 
 /**
@@ -166,11 +168,14 @@ export class Renderer {
   ): MeshGPUResources {
     let resources = this.meshBuffers.get(mesh);
     const currentMaterialType = mesh.material.type;
+    const currentTopology = mesh.material.getPrimitiveTopology();
 
-    // Invalidate resources if material type changed or mesh needs update
+    // Invalidate resources if material type, topology changed, or mesh needs update
     if (
       resources &&
-      (resources.materialType !== currentMaterialType || mesh.needsUpdate)
+      (resources.materialType !== currentMaterialType ||
+        resources.topology !== currentTopology ||
+        mesh.needsUpdate)
     ) {
       resources.vertexBuffer.destroy();
       resources.indexBuffer.destroy();
@@ -192,7 +197,11 @@ export class Renderer {
         vertexData as Float32Array<ArrayBuffer>
       );
 
-      const indexData = mesh.indices;
+      // Use wireframe indices if topology is line-list, otherwise use regular indices
+      const indexData =
+        currentTopology === "line-list"
+          ? mesh.getWireframeIndices()
+          : mesh.indices;
       const indexBuffer = this.device.createBuffer({
         label: "Mesh Index Buffer",
         size: indexData.byteLength,
@@ -267,6 +276,8 @@ export class Renderer {
         uniformBuffer,
         bindGroup,
         materialType: currentMaterialType,
+        topology: currentTopology,
+        indexCount: indexData.length,
       };
       this.meshBuffers.set(mesh, resources);
       this.trackedMeshes.add(mesh);
@@ -635,9 +646,9 @@ export class Renderer {
       passEncoder.setVertexBuffer(0, resources.vertexBuffer);
 
       // Use draw() for non-indexed geometry (e.g., lines), drawIndexed() otherwise
-      if (mesh.indexCount > 0) {
+      if (resources.indexCount > 0) {
         passEncoder.setIndexBuffer(resources.indexBuffer, "uint16");
-        passEncoder.drawIndexed(mesh.indexCount);
+        passEncoder.drawIndexed(resources.indexCount);
       } else {
         passEncoder.draw(mesh.vertexCount);
       }
