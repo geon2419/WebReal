@@ -110,7 +110,9 @@ export class Raycaster {
 
     if (recursive) {
       for (const child of object.children) {
-        this._intersectObject(child, intersections);
+        this.intersectObject(child, recursive).forEach((intersection) => {
+          intersections.push(intersection);
+        });
       }
     }
 
@@ -204,11 +206,6 @@ export class Raycaster {
       if (intersection) {
         const { t, point, faceNormal } = intersection;
 
-        // Check distance constraints
-        if (t < this.near || t > this.far) {
-          continue;
-        }
-
         // Transform point and normal back to world space
         const worldPoint = mesh.worldMatrix.transformPoint(point);
         const worldNormal = mesh.worldMatrix
@@ -217,6 +214,11 @@ export class Raycaster {
 
         // Calculate distance in world space
         const distance = this.ray.origin.sub(worldPoint).length;
+
+        // Check distance constraints in world space
+        if (distance < this.near || distance > this.far) {
+          continue;
+        }
 
         // Calculate UV if available
         let uv: Vector2 | undefined = undefined;
