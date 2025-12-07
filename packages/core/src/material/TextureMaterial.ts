@@ -59,10 +59,11 @@ export class TextureMaterial implements Material {
     return "triangle-list";
   }
 
-  /**
-   * Gets the texture for binding.
-   */
   getTexture(): Texture {
     return this.texture;
+  }
+
+  getTextures(): Texture[] {
+    return [this.texture];
   }
 }

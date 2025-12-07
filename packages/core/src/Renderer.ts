@@ -4,6 +4,7 @@ import type { Scene } from "./Scene";
 import type { Camera } from "./camera/Camera";
 import type { Material } from "./material/Material";
 import { BlinnPhongMaterial } from "./material/BlinnPhongMaterial";
+import { ParallaxMaterial } from "./material/ParallaxMaterial";
 import { Mesh } from "./Mesh";
 import { DirectionalLight } from "./light/DirectionalLight";
 import { PointLight } from "./light/PointLight";
@@ -218,8 +219,27 @@ export class Renderer {
         },
       ];
 
-      // Add texture and sampler for TextureMaterial
-      if (mesh.material.type === "texture") {
+      // Add texture and sampler for materials with texture support
+      if (mesh.material.getTextures) {
+        const textures = mesh.material.getTextures();
+
+        if (textures.length > 0) {
+          // Use shared sampler for all textures (binding 1)
+          bindGroupEntries.push({
+            binding: 1,
+            resource: textures[0].gpuSampler,
+          });
+
+          // Bind each texture starting from binding 2
+          textures.forEach((texture, index) => {
+            bindGroupEntries.push({
+              binding: 2 + index,
+              resource: texture.gpuTexture.createView(),
+            });
+          });
+        }
+      } else if (mesh.material.type === "texture") {
+        // Legacy single texture support (backwards compatibility)
         const textureMaterial = mesh.material as any; // TextureMaterial
         const texture = textureMaterial.getTexture();
 
@@ -495,6 +515,95 @@ export class Renderer {
           240,
           cameraPosData as Float32Array<ArrayBuffer>
         );
+      } else if (material instanceof ParallaxMaterial) {
+        // Write model matrix at offset 64
+        this.device.queue.writeBuffer(
+          resources.uniformBuffer,
+          64,
+          mesh.worldMatrix.data as Float32Array<ArrayBuffer>
+        );
+
+        // Write camera position at offset 128 (vec4f: xyz = position, w unused)
+        const cameraWorldMatrix = camera.worldMatrix.data;
+        const cameraPosData = new Float32Array([
+          cameraWorldMatrix[12],
+          cameraWorldMatrix[13],
+          cameraWorldMatrix[14],
+          0, // w unused
+        ]);
+        this.device.queue.writeBuffer(
+          resources.uniformBuffer,
+          128,
+          cameraPosData as Float32Array<ArrayBuffer>
+        );
+
+        // Write material params at offset 144 (vec4f: x=depthScale, y=normalScale, z=useNormalMap, w=shininess)
+        const materialParams = new Float32Array([
+          material.depthScale,
+          material.normalScale,
+          material.normal ? 1 : 0,
+          material.shininess,
+        ]);
+        this.device.queue.writeBuffer(
+          resources.uniformBuffer,
+          144,
+          materialParams as Float32Array<ArrayBuffer>
+        );
+
+        // Write light data
+        let light: Light | undefined;
+        scene.traverse((obj) => {
+          if (
+            (obj instanceof DirectionalLight || obj instanceof PointLight) &&
+            !light
+          ) {
+            light = obj;
+          }
+        });
+
+        if (light instanceof PointLight) {
+          light.updateWorldMatrix(true, false);
+          // Write light position at offset 160 (vec4f: xyz = position, w unused)
+          const lightPosData = new Float32Array([
+            light.worldMatrix.data[12],
+            light.worldMatrix.data[13],
+            light.worldMatrix.data[14],
+            0, // w unused
+          ]);
+          this.device.queue.writeBuffer(
+            resources.uniformBuffer,
+            160,
+            lightPosData as Float32Array<ArrayBuffer>
+          );
+
+          // Write light color at offset 176 (vec4f: rgb = color, a = intensity)
+          const lightColorData = new Float32Array([
+            light.color.r,
+            light.color.g,
+            light.color.b,
+            light.intensity,
+          ]);
+          this.device.queue.writeBuffer(
+            resources.uniformBuffer,
+            176,
+            lightColorData as Float32Array<ArrayBuffer>
+          );
+        } else {
+          // Default light values
+          const defaultLightPos = new Float32Array([2, 2, 3, 0]);
+          const defaultLightColor = new Float32Array([1, 1, 1, 1]);
+
+          this.device.queue.writeBuffer(
+            resources.uniformBuffer,
+            160,
+            defaultLightPos as Float32Array<ArrayBuffer>
+          );
+          this.device.queue.writeBuffer(
+            resources.uniformBuffer,
+            176,
+            defaultLightColor as Float32Array<ArrayBuffer>
+          );
+        }
       } else if (material.writeUniformData) {
         // For materials that implement writeUniformData (BasicMaterial, LineMaterial, ShaderMaterial, etc.)
         // Use pre-allocated buffer from material if available, otherwise allocate temporarily

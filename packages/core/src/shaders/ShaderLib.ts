@@ -22,6 +22,10 @@ import lineColorFrag from "./lineColor/lineColor.frag.wgsl";
 import textureVert from "./texture/texture.vert.wgsl";
 import textureFrag from "./texture/texture.frag.wgsl";
 
+// Parallax shader
+import parallaxVert from "./parallax/parallax.vert.wgsl";
+import parallaxFrag from "./parallax/parallax.frag.wgsl";
+
 export interface ShaderSource {
   vertex: string;
   fragment: string;
@@ -51,6 +55,10 @@ const shaders: Record<string, ShaderSource> = {
   texture: {
     vertex: textureVert,
     fragment: textureFrag,
+  },
+  parallax: {
+    vertex: parallaxVert,
+    fragment: parallaxFrag,
   },
 };
 

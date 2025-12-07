@@ -18,12 +18,14 @@ export {
   type LineMaterialOptions,
   type LineColorMaterialOptions,
   type TextureMaterialOptions,
+  type ParallaxMaterialOptions,
   BasicMaterial,
   BlinnPhongMaterial,
   VertexColorMaterial,
   LineMaterial,
   LineColorMaterial,
   TextureMaterial,
+  ParallaxMaterial,
 } from "./material";
 export { ShaderLib, type ShaderSource } from "./shaders";
 export * from "./camera";

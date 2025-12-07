@@ -1,3 +1,5 @@
+import type { Texture } from "../Texture";
+
 export interface VertexBufferLayout {
   arrayStride: number;
   attributes: {
@@ -20,4 +22,9 @@ export interface Material {
    * @param offset - Byte offset to start writing (typically 64, after MVP matrix)
    */
   writeUniformData?(buffer: DataView, offset?: number): void;
+  /**
+   * Optional method to get textures for multi-texture materials.
+   * @returns Array of Texture objects to be bound to the shader
+   */
+  getTextures?(): Texture[];
 }
