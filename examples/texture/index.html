@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Texture Example - WebReal</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+        background: #1a1a1a;
+        color: #fff;
+        overflow: hidden;
+      }
+
+      #canvas {
+        display: block;
+        width: 100vw;
+        height: 100vh;
+      }
+
+      #info {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        background: rgba(0, 0, 0, 0.8);
+        padding: 20px;
+        border-radius: 8px;
+        font-size: 14px;
+        line-height: 1.6;
+        pointer-events: none;
+        max-width: 300px;
+      }
+
+      #info h2 {
+        margin: 0 0 10px 0;
+        font-size: 18px;
+        font-weight: 600;
+        color: #4a90e2;
+      }
+
+      #info p {
+        margin: 5px 0;
+        color: #ccc;
+      }
+
+      #info .highlight {
+        color: #4a90e2;
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="canvas"></canvas>
+    <div id="info">
+      <h2>🎨 Texture Mapping</h2>
+      <p>A simple texture mapping example using WebGPU.</p>
+      <p class="highlight">• Textured Plane (XZ orientation)</p>
+      <p class="highlight">• Textured Rotating Cube</p>
+      <p>Drag to rotate camera • Scroll to zoom</p>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
+      

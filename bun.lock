@@ -65,8 +65,17 @@
         "@web-real/core": "workspace:*",
         "@web-real/math": "workspace:*",
       },
+    },
+    "examples/texture": {
+      "name": "@examples/texture",
+      "dependencies": {
+        "@web-real/core": "workspace:*",
+        "@web-real/math": "workspace:*",
+      },
       "devDependencies": {
-        "vite": "^7.2.6",
+        "@webgpu/types": "^0.1.66",
+        "typescript": "~5.9.3",
+        "vite": "^7.2.2",
       },
     },
     "packages/core": {
@@ -145,6 +154,8 @@
     "@examples/point-light": ["@examples/point-light@workspace:examples/point-light"],
 
     "@examples/raycaster": ["@examples/raycaster@workspace:examples/raycaster"],
+
+    "@examples/texture": ["@examples/texture@workspace:examples/texture"],
 
     "@rollup/rollup-android-arm-eabi": ["@rollup/rollup-android-arm-eabi@4.53.3", "", { "os": "android", "cpu": "arm" }, "sha512-mRSi+4cBjrRLoaal2PnqH82Wqyb+d3HsPUN/W+WslCXsZsyHa9ZeQQX/pQsZaVIWDkPcpV6jJ+3KLbTbgnwv8w=="],
 

@@ -1,0 +1,12 @@
+{
+  "name": "@examples/texture",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite"
+  },
+  "dependencies": {
+    "@web-real/core": "workspace:*",
+    "@web-real/math": "workspace:*"
+  }
+}
