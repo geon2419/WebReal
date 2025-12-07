@@ -17,8 +17,8 @@ struct FragmentInput {
   @location(0) uv: vec2f,
   @location(1) worldPosition: vec3f,
   @location(2) worldNormal: vec3f,
-  @location(3) tangent: vec3f,
-  @location(4) bitangent: vec3f,
+  @location(3) worldTangent: vec3f,
+  @location(4) worldBitangent: vec3f,
   @location(5) viewDir: vec3f,
 }
 
@@ -95,8 +95,8 @@ fn generateNormalFromDepth(uv: vec2f, texelSize: vec2f) -> vec3f {
 @fragment
 fn main(input: FragmentInput) -> @location(0) vec4f {
   // Construct TBN matrix (tangent space to world space)
-  let T = normalize(input.tangent);
-  let B = normalize(input.bitangent);
+  let T = normalize(input.worldTangent);
+  let B = normalize(input.worldBitangent);
   let N = normalize(input.worldNormal);
   let TBN = mat3x3f(T, B, N);
   

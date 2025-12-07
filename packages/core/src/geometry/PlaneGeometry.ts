@@ -1,4 +1,5 @@
 import type { Geometry } from "./Geometry";
+import { TangentCalculator } from "./TangentCalculator";
 
 /** Plane orientation options */
 export type PlaneOrientation = "XY" | "XZ" | "YZ";
@@ -59,6 +60,8 @@ export class PlaneGeometry implements Geometry {
   private readonly _normals: Float32Array;
   private readonly _indices: Uint16Array;
   private readonly _uvs: Float32Array;
+  private readonly _tangents: Float32Array;
+  private readonly _bitangents: Float32Array;
   private readonly _vertexCount: number;
   private readonly _indexCount: number;
 
@@ -92,6 +95,16 @@ export class PlaneGeometry implements Geometry {
     this._indices = indices;
     this._vertexCount = vertexCount;
     this._indexCount = indexCount;
+
+    // Calculate tangents and bitangents
+    const { tangents, bitangents } = TangentCalculator.calculate(
+      positions,
+      normals,
+      uvs,
+      indices
+    );
+    this._tangents = tangents;
+    this._bitangents = bitangents;
   }
 
   get positions(): Float32Array {
@@ -108,6 +121,14 @@ export class PlaneGeometry implements Geometry {
 
   get uvs(): Float32Array {
     return this._uvs;
+  }
+
+  get tangents(): Float32Array {
+    return this._tangents;
+  }
+
+  get bitangents(): Float32Array {
+    return this._bitangents;
   }
 
   get vertexCount(): number {

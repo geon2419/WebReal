@@ -1,9 +1,12 @@
 import type { Geometry } from "./Geometry";
+import { TangentCalculator } from "./TangentCalculator";
 
 export class BoxGeometry implements Geometry {
   private readonly _positions: Float32Array;
   private readonly _normals: Float32Array;
   private readonly _uvs: Float32Array;
+  private readonly _tangents: Float32Array;
+  private readonly _bitangents: Float32Array;
   private readonly _indices: Uint16Array;
   private readonly _vertexCount: number;
   private readonly _indexCount: number;
@@ -31,6 +34,16 @@ export class BoxGeometry implements Geometry {
     this._indices = indices;
     this._vertexCount = positions.length / 3;
     this._indexCount = indices.length;
+
+    // Calculate tangents and bitangents
+    const { tangents, bitangents } = TangentCalculator.calculate(
+      positions,
+      normals,
+      uvs,
+      indices
+    );
+    this._tangents = tangents;
+    this._bitangents = bitangents;
   }
 
   get positions(): Float32Array {
@@ -43,6 +56,14 @@ export class BoxGeometry implements Geometry {
 
   get uvs(): Float32Array {
     return this._uvs;
+  }
+
+  get tangents(): Float32Array {
+    return this._tangents;
+  }
+
+  get bitangents(): Float32Array {
+    return this._bitangents;
   }
 
   get indices(): Uint16Array {

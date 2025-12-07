@@ -230,7 +230,7 @@ export class Renderer {
 
       // Add texture and sampler for materials with texture support
       if (mesh.material.getTextures) {
-        const textures = mesh.material.getTextures();
+        const textures = mesh.material.getTextures(this.device);
 
         if (textures.length > 0) {
           // Use shared sampler for all textures (binding 1)
@@ -527,41 +527,24 @@ export class Renderer {
           cameraPosData as Float32Array<ArrayBuffer>
         );
       } else if (material instanceof ParallaxMaterial) {
-        // Write model matrix at offset 64
-        this.device.queue.writeBuffer(
-          resources.uniformBuffer,
-          64,
-          mesh.worldMatrix.data as Float32Array<ArrayBuffer>
-        );
+        // ParallaxMaterial uses writeUniformData with camera position and light
+        const uniformData = new ArrayBuffer(material.getUniformBufferSize());
+        const dataView = new DataView(uniformData);
 
-        // Write camera position at offset 128 (vec4f: xyz = position, w unused)
+        // Write model matrix at offset 64
+        for (let i = 0; i < 16; i++) {
+          dataView.setFloat32(64 + i * 4, mesh.worldMatrix.data[i], true);
+        }
+
+        // Get camera position
         const cameraWorldMatrix = camera.worldMatrix.data;
         const cameraPosData = new Float32Array([
           cameraWorldMatrix[12],
           cameraWorldMatrix[13],
           cameraWorldMatrix[14],
-          0, // w unused
         ]);
-        this.device.queue.writeBuffer(
-          resources.uniformBuffer,
-          128,
-          cameraPosData as Float32Array<ArrayBuffer>
-        );
 
-        // Write material params at offset 144 (vec4f: x=depthScale, y=normalScale, z=useNormalMap, w=shininess)
-        const materialParams = new Float32Array([
-          material.depthScale,
-          material.normalScale,
-          material.normal ? 1 : 0,
-          material.shininess,
-        ]);
-        this.device.queue.writeBuffer(
-          resources.uniformBuffer,
-          144,
-          materialParams as Float32Array<ArrayBuffer>
-        );
-
-        // Write light data
+        // Find light in scene
         let light: Light | undefined;
         scene.traverse((obj) => {
           if (
@@ -572,47 +555,18 @@ export class Renderer {
           }
         });
 
-        if (light instanceof PointLight) {
-          light.updateWorldMatrix(true, false);
-          // Write light position at offset 160 (vec4f: xyz = position, w unused)
-          const lightPosData = new Float32Array([
-            light.worldMatrix.data[12],
-            light.worldMatrix.data[13],
-            light.worldMatrix.data[14],
-            0, // w unused
-          ]);
-          this.device.queue.writeBuffer(
-            resources.uniformBuffer,
-            160,
-            lightPosData as Float32Array<ArrayBuffer>
-          );
+        // Call material's writeUniformData method
+        material.writeUniformData(dataView, 64, cameraPosData, light);
 
-          // Write light color at offset 176 (vec4f: rgb = color, a = intensity)
-          const lightColorData = new Float32Array([
-            light.color.r,
-            light.color.g,
-            light.color.b,
-            light.intensity,
-          ]);
+        // Write the uniform data to GPU (starting at offset 64, after MVP)
+        const customDataSize = material.getUniformBufferSize() - 64;
+        if (customDataSize > 0) {
           this.device.queue.writeBuffer(
             resources.uniformBuffer,
-            176,
-            lightColorData as Float32Array<ArrayBuffer>
-          );
-        } else {
-          // Default light values
-          const defaultLightPos = new Float32Array([2, 2, 3, 0]);
-          const defaultLightColor = new Float32Array([1, 1, 1, 1]);
-
-          this.device.queue.writeBuffer(
-            resources.uniformBuffer,
-            160,
-            defaultLightPos as Float32Array<ArrayBuffer>
-          );
-          this.device.queue.writeBuffer(
-            resources.uniformBuffer,
-            176,
-            defaultLightColor as Float32Array<ArrayBuffer>
+            64,
+            uniformData,
+            64, // source offset - read from offset 64
+            customDataSize // size to copy
           );
         }
       } else if (material.writeUniformData) {

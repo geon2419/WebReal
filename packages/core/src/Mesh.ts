@@ -104,6 +104,57 @@ export class Mesh extends Object3D {
         return data;
       }
 
+      case "parallax": {
+        // Parallax material needs positions + normals + UVs + tangents + bitangents
+        if (!uvs) {
+          throw new Error(
+            "ParallaxMaterial requires geometry with UV coordinates"
+          );
+        }
+        const { tangents, bitangents } = this.geometry;
+        if (!tangents || !bitangents) {
+          throw new Error(
+            "ParallaxMaterial requires geometry with tangents and bitangents. " +
+              "Ensure your geometry class calculates and provides these attributes."
+          );
+        }
+
+        // position(3) + normal(3) + uv(2) + tangent(3) + bitangent(3) = 14 floats
+        const data = new Float32Array(vertexCount * 14);
+
+        for (let i = 0; i < vertexCount; i++) {
+          const posOffset = i * 3;
+          const uvOffset = i * 2;
+          const dataOffset = i * 14;
+
+          // position
+          data[dataOffset] = positions[posOffset];
+          data[dataOffset + 1] = positions[posOffset + 1];
+          data[dataOffset + 2] = positions[posOffset + 2];
+
+          // normal
+          data[dataOffset + 3] = normals[posOffset];
+          data[dataOffset + 4] = normals[posOffset + 1];
+          data[dataOffset + 5] = normals[posOffset + 2];
+
+          // uv
+          data[dataOffset + 6] = uvs[uvOffset];
+          data[dataOffset + 7] = uvs[uvOffset + 1];
+
+          // tangent
+          data[dataOffset + 8] = tangents[posOffset];
+          data[dataOffset + 9] = tangents[posOffset + 1];
+          data[dataOffset + 10] = tangents[posOffset + 2];
+
+          // bitangent
+          data[dataOffset + 11] = bitangents[posOffset];
+          data[dataOffset + 12] = bitangents[posOffset + 1];
+          data[dataOffset + 13] = bitangents[posOffset + 2];
+        }
+
+        return data;
+      }
+
       case "vertexColor": {
         const colors = (this.material as VertexColorMaterial).colors;
         const data = new Float32Array(vertexCount * 6);

@@ -17,6 +17,8 @@ struct VertexInput {
   @location(0) position: vec3f,
   @location(1) normal: vec3f,
   @location(2) uv: vec2f,
+  @location(3) tangent: vec3f,
+  @location(4) bitangent: vec3f,
 }
 
 struct VertexOutput {
@@ -24,8 +26,8 @@ struct VertexOutput {
   @location(0) uv: vec2f,
   @location(1) worldPosition: vec3f,
   @location(2) worldNormal: vec3f,
-  @location(3) tangent: vec3f,
-  @location(4) bitangent: vec3f,
+  @location(3) worldTangent: vec3f,
+  @location(4) worldBitangent: vec3f,
   @location(5) viewDir: vec3f,
 }
 
@@ -43,34 +45,15 @@ fn main(input: VertexInput) -> VertexOutput {
   let worldNormal = normalize((uniforms.modelMatrix * vec4f(input.normal, 0.0)).xyz);
   output.worldNormal = worldNormal;
   
-  // Calculate tangent and bitangent for TBN matrix
-  // Use dFdx/dFdy alternative: derive from UV and position
-  // Simplified tangent calculation - assumes plane-like geometry
-  let edge1 = vec3f(1.0, 0.0, 0.0);
-  let edge2 = vec3f(0.0, 1.0, 0.0);
+  // Transform tangent and bitangent to world space
+  let worldTangent = normalize((uniforms.modelMatrix * vec4f(input.tangent, 0.0)).xyz);
+  let worldBitangent = normalize((uniforms.modelMatrix * vec4f(input.bitangent, 0.0)).xyz);
   
-  let deltaUV1 = vec2f(1.0, 0.0);
-  let deltaUV2 = vec2f(0.0, 1.0);
-  
-  let f = 1.0 / (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
-  
-  var tangent = vec3f(
-    f * (deltaUV2.y * edge1.x - deltaUV1.y * edge2.x),
-    f * (deltaUV2.y * edge1.y - deltaUV1.y * edge2.y),
-    f * (deltaUV2.y * edge1.z - deltaUV1.y * edge2.z)
-  );
-  
-  // Gram-Schmidt orthogonalize
-  tangent = normalize(tangent - dot(tangent, worldNormal) * worldNormal);
-  
-  // Calculate bitangent
-  let bitangent = cross(worldNormal, tangent);
-  
-  output.tangent = tangent;
-  output.bitangent = bitangent;
+  output.worldTangent = worldTangent;
+  output.worldBitangent = worldBitangent;
   
   // Calculate view direction in world space
-  output.viewDir = normalize(uniforms.cameraPos - worldPos);
+  output.viewDir = normalize(uniforms.cameraPos.xyz - worldPos);
   
   return output;
 }

@@ -6,3 +6,4 @@ export {
   type PlaneGeometryOptions,
   type PlaneOrientation,
 } from "./PlaneGeometry";
+export { TangentCalculator } from "./TangentCalculator";

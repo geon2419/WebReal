@@ -24,7 +24,8 @@ export interface Material {
   writeUniformData?(buffer: DataView, offset?: number): void;
   /**
    * Optional method to get textures for multi-texture materials.
+   * @param device - Optional GPUDevice for creating default/dummy textures
    * @returns Array of Texture objects to be bound to the shader
    */
-  getTextures?(): Texture[];
+  getTextures?(device?: GPUDevice): Texture[];
 }
