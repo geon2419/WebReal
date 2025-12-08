@@ -12,3 +12,4 @@ export {
 } from "./PlaneGeometry";
 export { SphereGeometry, type SphereGeometryOptions } from "./SphereGeometry";
 export { TangentCalculator } from "./TangentCalculator";
+export { computeBoundingBox, computeBoundingSphere } from "./BoundingUtils";
