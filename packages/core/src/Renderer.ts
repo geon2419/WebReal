@@ -2,13 +2,8 @@ import { Color } from "@web-real/math";
 import type { Engine } from "./Engine";
 import type { Scene } from "./Scene";
 import type { Camera } from "./camera/Camera";
-import type { Material } from "./material/Material";
-import { BlinnPhongMaterial } from "./material/BlinnPhongMaterial";
-import { ParallaxMaterial } from "./material/ParallaxMaterial";
+import type { Material, RenderContext } from "./material/Material";
 import { Mesh } from "./Mesh";
-import { DirectionalLight } from "./light/DirectionalLight";
-import { PointLight } from "./light/PointLight";
-import { Light } from "./light/Light";
 
 interface MeshGPUResources {
   vertexBuffer: GPUBuffer;
@@ -272,39 +267,6 @@ export class Renderer {
   }
 
   /**
-   * Finds the first light in the scene.
-   * @param scene - The scene to search for lights.
-   * @returns The first DirectionalLight or PointLight found, or undefined.
-   */
-  private findFirstLight(scene: Scene): Light | undefined {
-    let light: Light | undefined;
-    scene.traverse((obj) => {
-      if (
-        (obj instanceof DirectionalLight || obj instanceof PointLight) &&
-        !light
-      ) {
-        light = obj;
-      }
-    });
-    return light;
-  }
-
-  /**
-   * Extracts the camera position from the camera's world matrix.
-   * @param camera - The camera to get the position from.
-   * @returns Float32Array containing [x, y, z, 0].
-   */
-  private getCameraPosition(camera: Camera): Float32Array {
-    const cameraWorldMatrix = camera.worldMatrix.data;
-    return new Float32Array([
-      cameraWorldMatrix[12],
-      cameraWorldMatrix[13],
-      cameraWorldMatrix[14],
-      0,
-    ]);
-  }
-
-  /**
    * Sets the clear color for the render pass.
    * @param color - Color instance or RGBA tuple [r, g, b] or [r, g, b, a].
    * @returns This renderer for chaining.
@@ -365,6 +327,7 @@ export class Renderer {
       const pipeline = this.getOrCreatePipeline(material);
       const resources = this.getOrCreateMeshBuffers(mesh, pipeline);
 
+      // Compute MVP(Model, View, Projection) matrix
       const mvpMatrix = camera.projectionMatrix
         .multiply(camera.viewMatrix)
         .multiply(mesh.worldMatrix);
@@ -377,189 +340,14 @@ export class Renderer {
       );
 
       // Write material-specific data using writeUniformData method
-      if (material instanceof BlinnPhongMaterial) {
-        // Write model matrix at offset 64
-        this.device.queue.writeBuffer(
-          resources.uniformBuffer,
-          64,
-          mesh.worldMatrix.data as Float32Array<ArrayBuffer>
-        );
+      if (material.writeUniformData) {
+        // Create render context for materials that need it
+        const renderContext: RenderContext = {
+          camera,
+          scene,
+          mesh,
+        };
 
-        // Write normal matrix at offset 128 (inverse transpose of model matrix)
-        // This correctly transforms normals even with non-uniform scaling
-        const normalMatrix = mesh.worldMatrix.inverse().transpose();
-        this.device.queue.writeBuffer(
-          resources.uniformBuffer,
-          128,
-          normalMatrix.data as Float32Array<ArrayBuffer>
-        );
-
-        // Write colorAndShininess at offset 192 (rgb = color, a = shininess)
-        const colorAndShininessData = new Float32Array([
-          material.color.r,
-          material.color.g,
-          material.color.b,
-          material.shininess,
-        ]);
-        this.device.queue.writeBuffer(
-          resources.uniformBuffer,
-          192,
-          colorAndShininessData as Float32Array<ArrayBuffer>
-        );
-
-        // Write light data: offset 208 (lightPosition), 224 (lightColor), 256 (lightParams), 272 (lightTypes)
-        const light = this.findFirstLight(scene);
-
-        if (light) {
-          if (light instanceof DirectionalLight) {
-            // Directional light: xyz = direction
-            const lightPositionData = new Float32Array([
-              light.direction.x,
-              light.direction.y,
-              light.direction.z,
-              0,
-            ]);
-            this.device.queue.writeBuffer(
-              resources.uniformBuffer,
-              208,
-              lightPositionData as Float32Array<ArrayBuffer>
-            );
-
-            // Light params: not used for directional light
-            const lightParamsData = new Float32Array([0, 0, 0, 0]);
-            this.device.queue.writeBuffer(
-              resources.uniformBuffer,
-              256,
-              lightParamsData as Float32Array<ArrayBuffer>
-            );
-
-            // Light types: x = 0 (directional), y = 0 (unused)
-            const lightTypesData = new Float32Array([0, 0, 0, 0]);
-            this.device.queue.writeBuffer(
-              resources.uniformBuffer,
-              272,
-              lightTypesData as Float32Array<ArrayBuffer>
-            );
-          } else if (light instanceof PointLight) {
-            // Point light: xyz = world position
-            light.updateWorldMatrix(true, false);
-            const lightPositionData = new Float32Array([
-              light.worldMatrix.data[12],
-              light.worldMatrix.data[13],
-              light.worldMatrix.data[14],
-              0,
-            ]);
-            this.device.queue.writeBuffer(
-              resources.uniformBuffer,
-              208,
-              lightPositionData as Float32Array<ArrayBuffer>
-            );
-
-            // Light params: x = range, y = attenuation param
-            const attenuationFactors = light.getAttenuationFactors();
-            const lightParamsData = new Float32Array([
-              attenuationFactors[0], // range
-              attenuationFactors[1], // param
-              0,
-              0,
-            ]);
-            this.device.queue.writeBuffer(
-              resources.uniformBuffer,
-              256,
-              lightParamsData as Float32Array<ArrayBuffer>
-            );
-
-            // Light types: x = 1 (point), y = attenuation type
-            const lightTypesData = new Float32Array([
-              1, // light type: point
-              attenuationFactors[3], // attenuation type
-              0,
-              0,
-            ]);
-            this.device.queue.writeBuffer(
-              resources.uniformBuffer,
-              272,
-              lightTypesData as Float32Array<ArrayBuffer>
-            );
-          }
-
-          // Light color (common for all light types)
-          const lightColorData = new Float32Array([
-            light.color.r,
-            light.color.g,
-            light.color.b,
-            light.intensity,
-          ]);
-          this.device.queue.writeBuffer(
-            resources.uniformBuffer,
-            224,
-            lightColorData as Float32Array<ArrayBuffer>
-          );
-        } else {
-          // Default light if none in scene (directional from above)
-          const defaultLightPosition = new Float32Array([0, -1, 0, 0]);
-          const defaultLightColor = new Float32Array([1, 1, 1, 1]);
-          const defaultLightParams = new Float32Array([0, 0, 0, 0]);
-          const defaultLightTypes = new Float32Array([0, 0, 0, 0]); // directional
-          this.device.queue.writeBuffer(
-            resources.uniformBuffer,
-            208,
-            defaultLightPosition as Float32Array<ArrayBuffer>
-          );
-          this.device.queue.writeBuffer(
-            resources.uniformBuffer,
-            224,
-            defaultLightColor as Float32Array<ArrayBuffer>
-          );
-          this.device.queue.writeBuffer(
-            resources.uniformBuffer,
-            256,
-            defaultLightParams as Float32Array<ArrayBuffer>
-          );
-          this.device.queue.writeBuffer(
-            resources.uniformBuffer,
-            272,
-            defaultLightTypes as Float32Array<ArrayBuffer>
-          );
-        }
-
-        // Write camera position at offset 240
-        const cameraPosData = this.getCameraPosition(camera);
-        this.device.queue.writeBuffer(
-          resources.uniformBuffer,
-          240,
-          cameraPosData as Float32Array<ArrayBuffer>
-        );
-      } else if (material instanceof ParallaxMaterial) {
-        // ParallaxMaterial uses writeUniformData with camera position and light
-        const uniformData = new ArrayBuffer(material.getUniformBufferSize());
-        const dataView = new DataView(uniformData);
-
-        // Write model matrix at offset 64
-        for (let i = 0; i < 16; i++) {
-          dataView.setFloat32(64 + i * 4, mesh.worldMatrix.data[i], true);
-        }
-
-        // Get camera position and light
-        const cameraPosData = this.getCameraPosition(camera);
-        const light = this.findFirstLight(scene);
-
-        // Call material's writeUniformData method
-        material.writeUniformData(dataView, 64, cameraPosData, light);
-
-        // Write the uniform data to GPU (starting at offset 64, after MVP)
-        const customDataSize = material.getUniformBufferSize() - 64;
-        if (customDataSize > 0) {
-          this.device.queue.writeBuffer(
-            resources.uniformBuffer,
-            64,
-            uniformData,
-            64, // source offset - read from offset 64
-            customDataSize // size to copy
-          );
-        }
-      } else if (material.writeUniformData) {
-        // For materials that implement writeUniformData (BasicMaterial, LineMaterial, ShaderMaterial, etc.)
         // Use pre-allocated buffer from material if available, otherwise allocate temporarily
         const uniformData =
           "getUniformDataBuffer" in material &&
@@ -569,7 +357,7 @@ export class Renderer {
         const dataView = new DataView(uniformData);
 
         // Call material's writeUniformData method
-        material.writeUniformData(dataView, 64);
+        material.writeUniformData(dataView, 64, renderContext);
 
         // Write the uniform data to GPU (starting at offset 64, after MVP)
         const customDataSize = material.getUniformBufferSize() - 64;

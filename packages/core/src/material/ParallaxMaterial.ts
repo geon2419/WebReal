@@ -1,7 +1,8 @@
-import type { Material, VertexBufferLayout } from "./Material";
+import type { Material, VertexBufferLayout, RenderContext } from "./Material";
 import { ShaderLib } from "../shaders";
 import { Texture } from "../Texture";
 import { PointLight } from "../light/PointLight";
+import { DirectionalLight } from "../light/DirectionalLight";
 import type { Light } from "../light/Light";
 
 export interface ParallaxMaterialOptions {
@@ -219,23 +220,22 @@ export class ParallaxMaterial implements Material {
    * This method writes camera position, material params, and light data.
    * @param buffer - DataView of the uniform buffer
    * @param offset - Byte offset to start writing (default: 64, after MVP matrix)
-   * @param cameraPosition - Camera world position [x, y, z]
-   * @param light - Optional light for the scene
+   * @param context - Optional rendering context with camera, scene, and mesh information
    */
   writeUniformData(
     buffer: DataView,
     offset: number = 64,
-    cameraPosition?: Float32Array,
-    light?: Light
+    context?: RenderContext
   ): void {
     // Write model matrix at offset 64
     // (Will be written by Renderer before calling this method)
 
     // Write camera position at offset 128 (vec4f: xyz = position, w unused)
-    if (cameraPosition) {
-      buffer.setFloat32(offset + 64, cameraPosition[0], true); // offset 128
-      buffer.setFloat32(offset + 68, cameraPosition[1], true); // offset 132
-      buffer.setFloat32(offset + 72, cameraPosition[2], true); // offset 136
+    if (context?.camera) {
+      const cameraWorldMatrix = context.camera.worldMatrix.data;
+      buffer.setFloat32(offset + 64, cameraWorldMatrix[12], true); // offset 128
+      buffer.setFloat32(offset + 68, cameraWorldMatrix[13], true); // offset 132
+      buffer.setFloat32(offset + 72, cameraWorldMatrix[14], true); // offset 136
       buffer.setFloat32(offset + 76, 0, true); // offset 140 (w unused)
     }
 
@@ -244,6 +244,19 @@ export class ParallaxMaterial implements Material {
     buffer.setFloat32(offset + 84, this.normalScale, true); // offset 148 (materialParams.y)
     buffer.setFloat32(offset + 88, this.normal ? 1 : 0, true); // offset 152 (materialParams.z)
     buffer.setFloat32(offset + 92, this.shininess, true); // offset 156 (materialParams.w)
+
+    // Find light from scene if context provided
+    let light: Light | undefined;
+    if (context?.scene) {
+      context.scene.traverse((obj) => {
+        if (
+          (obj instanceof DirectionalLight || obj instanceof PointLight) &&
+          !light
+        ) {
+          light = obj;
+        }
+      });
+    }
 
     // Write light data at offset 160+
     if (light instanceof PointLight) {
