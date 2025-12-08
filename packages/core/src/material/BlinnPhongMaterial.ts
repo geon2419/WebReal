@@ -10,48 +10,79 @@ export interface BlinnPhongMaterialOptions {
   color?: [number, number, number] | Color;
   shininess?: number;
   wireframe?: boolean;
-  /** Optional displacement map texture */
   displacementMap?: Texture;
-  /** Displacement scale multiplier (default: 1.0) */
   displacementScale?: number;
-  /** Displacement bias offset (default: 0.0) */
   displacementBias?: number;
-  /** Optional normal map texture for surface detail */
   normalMap?: Texture;
-  /** Normal map intensity multiplier (default: 1.0) */
   normalScale?: number;
 }
 
 export class BlinnPhongMaterial implements Material {
   readonly type = "blinnPhong";
-  /** RGBA color (Color instance, 0-1 range) */
-  readonly color: Color;
-  /** Shininess exponent for specular highlight (higher = sharper) */
-  shininess: number;
-  /** Whether to render in wireframe mode */
+  private _color: Color;
+  private _shininess: number;
   wireframe: boolean;
-  /** Optional displacement map texture */
   readonly displacementMap?: Texture;
-  /** Displacement scale multiplier */
   readonly displacementScale: number;
-  /** Displacement bias offset */
   readonly displacementBias: number;
-  /** Optional normal map texture for surface detail */
   readonly normalMap?: Texture;
-  /** Normal map intensity multiplier */
-  readonly normalScale: number;
+  private _normalScale: number;
+
+  get color(): Color {
+    return this._color;
+  }
+
+  get shininess(): number {
+    return this._shininess;
+  }
+
+  get normalScale(): number {
+    return this._normalScale;
+  }
 
   constructor(options: BlinnPhongMaterialOptions = {}) {
-    this.color = options.color
+    this._color = options.color
       ? Color.from(options.color)
       : new Color(1.0, 1.0, 1.0);
-    this.shininess = options.shininess ?? 32.0;
+    this._shininess = options.shininess ?? 32.0;
     this.wireframe = options.wireframe ?? false;
     this.displacementMap = options.displacementMap;
     this.displacementScale = options.displacementScale ?? 1.0;
     this.displacementBias = options.displacementBias ?? 0.0;
     this.normalMap = options.normalMap;
-    this.normalScale = options.normalScale ?? 1.0;
+    this._normalScale = options.normalScale ?? 1.0;
+  }
+
+  /**
+   * Sets the material color.
+   * @param color - Color instance or RGB array [r, g, b]
+   */
+  setColor(color: Color | [number, number, number]): void {
+    this._color = Color.from(color);
+  }
+
+  /**
+   * Sets the shininess exponent for specular highlights.
+   * @param value - Shininess value (1-256)
+   * @throws Error if value is out of range
+   */
+  setShininess(value: number): void {
+    if (value < 1 || value > 256) {
+      throw new Error("Shininess must be between 1 and 256");
+    }
+    this._shininess = value;
+  }
+
+  /**
+   * Sets the normal map intensity multiplier.
+   * @param value - Normal scale value (0-3)
+   * @throws Error if value is out of range
+   */
+  setNormalScale(value: number): void {
+    if (value < 0 || value > 3) {
+      throw new Error("Normal scale must be between 0 and 3");
+    }
+    this._normalScale = value;
   }
 
   getVertexShader(): string {
