@@ -47,4 +47,9 @@ export {
 } from "./camera/PerspectiveCameraHelper";
 export { Ray, type RayTriangleIntersection } from "./Ray";
 export { Raycaster, type Intersection } from "./Raycaster";
-export { Texture, type TextureOptions } from "./Texture";
+export {
+  Texture,
+  type TextureOptions,
+  SamplerPresets,
+  DEFAULT_SAMPLER_OPTIONS,
+} from "./Texture";

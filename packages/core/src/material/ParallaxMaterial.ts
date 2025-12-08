@@ -1,50 +1,25 @@
 import type { Material, VertexBufferLayout, RenderContext } from "./Material";
 import { ShaderLib } from "../shaders";
-import { Texture } from "../Texture";
+import { Texture, DEFAULT_SAMPLER_OPTIONS } from "../Texture";
 import { PointLight } from "../light/PointLight";
 
 export interface ParallaxMaterialOptions {
-  /** Albedo/diffuse texture (color map) */
   albedo: Texture;
-  /** Depth/height map texture (grayscale, white = high, black = low) */
   depth: Texture;
-  /** Optional normal map texture for surface detail */
   normal?: Texture;
-  /** Depth scale factor (0.01-0.1, default: 0.05) */
+  /** @default 0.05 */
   depthScale?: number;
-  /** Normal map intensity (0.5-2.0, default: 1.0) */
+  /** @default 1.0 */
   normalScale?: number;
-  /** Shininess for specular highlights (1-256, default: 32.0) */
+  /** @default 32.0 */
   shininess?: number;
-  /** Generate normal map from depth map if normal texture not provided */
+  /** @default true */
   generateNormalFromDepth?: boolean;
 }
 
 /**
- * A material that renders with parallax occlusion mapping for 2.5D effects.
- *
- * **Requirements:**
- * - Geometry must provide UV coordinates, normals, tangents, and bitangents
- * - Use PlaneGeometry or BoxGeometry (both automatically calculate tangents)
- * - Custom geometries must calculate tangents using the `calculateTangents` utility
- *
- * **Supported Features:**
- * - Parallax occlusion mapping with depth textures
- * - Optional normal mapping for surface detail
- * - Blinn-Phong lighting with specular highlights
- *
- * @example
- * ```ts
- * import { PlaneGeometry, ParallaxMaterial, Texture } from '@web-real/core';
- *
- * const geometry = new PlaneGeometry({ width: 2, height: 2 });
- * const material = new ParallaxMaterial({
- *   albedo: await Texture.load(device, 'albedo.png'),
- *   depth: await Texture.load(device, 'depth.png'),
- *   normal: await Texture.load(device, 'normal.png'),
- *   depthScale: 0.05
- * });
- * ```
+ * Parallax occlusion mapping material for 2.5D depth effects.
+ * Requires geometry with UV, normals, tangents, and bitangents.
  */
 export class ParallaxMaterial implements Material {
   readonly type = "parallax";
@@ -88,14 +63,17 @@ export class ParallaxMaterial implements Material {
     }
   }
 
+  /** @returns Vertex shader code */
   getVertexShader(): string {
     return ShaderLib.get(this.type).vertex;
   }
 
+  /** @returns Fragment shader code */
   getFragmentShader(): string {
     return ShaderLib.get(this.type).fragment;
   }
 
+  /** @returns Vertex buffer layout for position, normal, uv, tangent, bitangent */
   getVertexBufferLayout(): VertexBufferLayout {
     return {
       // position(vec3f) + normal(vec3f) + uv(vec2f) + tangent(vec3f) + bitangent(vec3f) = 14 floats × 4 bytes = 56 bytes
@@ -130,29 +108,20 @@ export class ParallaxMaterial implements Material {
     };
   }
 
-  /**
-   * Uniform buffer layout:
-   * mat4x4f mvp             (64B)  offset 0
-   * mat4x4f model           (64B)  offset 64
-   * vec4f   cameraPos       (16B)  offset 128 (xyz = position, w unused)
-   * vec4f   materialParams  (16B)  offset 144 (x = depthScale, y = normalScale, z = useNormalMap, w = shininess)
-   * vec4f   lightPos        (16B)  offset 160 (xyz = position, w unused)
-   * vec4f   lightColor      (16B)  offset 176 (rgb = color, a = intensity)
-   * = 192 bytes (aligned to 16)
-   */
+  /** @returns 192 bytes */
   getUniformBufferSize(): number {
     return 192;
   }
 
+  /** @returns "triangle-list" */
   getPrimitiveTopology(): GPUPrimitiveTopology {
     return "triangle-list";
   }
 
   /**
-   * Creates a 1x1 dummy normal texture (RGB: 128, 128, 255 -> normal pointing up: 0, 0, 1).
-   * This is used when no normal map is provided to satisfy shader binding requirements.
-   * @param device - The WebGPU device
-   * @returns A dummy normal texture
+   * Creates 1x1 default normal texture (up-facing)
+   * @param device - WebGPU device
+   * @returns Dummy normal texture
    */
   private static createDummyNormalTexture(device: GPUDevice): Texture {
     if (!this._dummyNormalTexture) {
@@ -176,14 +145,8 @@ export class ParallaxMaterial implements Material {
         [1, 1, 1]
       );
 
-      // Create a sampler
-      const sampler = device.createSampler({
-        magFilter: "linear",
-        minFilter: "linear",
-        mipmapFilter: "linear",
-        addressModeU: "repeat",
-        addressModeV: "repeat",
-      });
+      // Create a sampler using default options from Texture
+      const sampler = device.createSampler(DEFAULT_SAMPLER_OPTIONS);
 
       this._dummyNormalTexture = new Texture(texture, sampler, 1, 1);
     }
@@ -191,11 +154,9 @@ export class ParallaxMaterial implements Material {
   }
 
   /**
-   * Gets all textures for binding.
-   * Order: [albedo, depth, normal]
-   * Note: Always returns 3 textures. If no normal texture is provided,
-   * a dummy normal texture is used to satisfy shader binding requirements.
-   * @param device - The WebGPU device (required for creating dummy texture)
+   * Gets all textures for binding
+   * @param device - WebGPU device (required if no normal texture provided)
+   * @returns [albedo, depth, normal] - Uses dummy normal if not provided
    */
   getTextures(device?: GPUDevice): Texture[] {
     const normalTexture =
@@ -212,13 +173,10 @@ export class ParallaxMaterial implements Material {
   }
 
   /**
-   * Writes material-specific uniform data to the buffer.
-   * MVP matrix should be written at offset 0.
-   * Model matrix should be written at offset 64.
-   * This method writes camera position, material params, and light data.
+   * Writes camera, material params, and light data to uniform buffer
    * @param buffer - DataView of the uniform buffer
-   * @param offset - Byte offset to start writing (default: 64, after MVP matrix)
-   * @param context - Optional rendering context with camera, scene, and mesh information
+   * @param offset - Byte offset to start writing (default: 64)
+   * @param context - Rendering context with camera, scene, and mesh info
    */
   writeUniformData(
     buffer: DataView,

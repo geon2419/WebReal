@@ -40,13 +40,78 @@ export interface TextureOptions {
 /**
  * Default sampler configuration.
  */
-const DEFAULT_SAMPLER_OPTIONS: GPUSamplerDescriptor = {
+export const DEFAULT_SAMPLER_OPTIONS: GPUSamplerDescriptor = {
   magFilter: "linear",
   minFilter: "linear",
   mipmapFilter: "linear",
   addressModeU: "repeat",
   addressModeV: "repeat",
 };
+
+/**
+ * Predefined sampler presets for common use cases.
+ *
+ * @example
+ * ```typescript
+ * // Pixel art style (no interpolation)
+ * const texture = await Texture.fromURL(device, url, {
+ *   sampler: SamplerPresets.PIXEL_ART,
+ * });
+ *
+ * // Combine presets with spread operator
+ * const texture = await Texture.fromURL(device, url, {
+ *   sampler: { ...SamplerPresets.SMOOTH, ...SamplerPresets.CLAMP_EDGE },
+ * });
+ * ```
+ */
+export const SamplerPresets = {
+  /**
+   * Nearest-neighbor filtering for pixel art style.
+   * No interpolation between texels.
+   */
+  PIXEL_ART: {
+    magFilter: "nearest",
+    minFilter: "nearest",
+    mipmapFilter: "nearest",
+  } as Partial<GPUSamplerDescriptor>,
+
+  /**
+   * Linear filtering for smooth textures.
+   * Interpolates between texels for smoother appearance.
+   */
+  SMOOTH: {
+    magFilter: "linear",
+    minFilter: "linear",
+    mipmapFilter: "linear",
+  } as Partial<GPUSamplerDescriptor>,
+
+  /**
+   * Clamp to edge address mode.
+   * Prevents texture wrapping, useful for UI elements or single images.
+   */
+  CLAMP_EDGE: {
+    addressModeU: "clamp-to-edge",
+    addressModeV: "clamp-to-edge",
+  } as Partial<GPUSamplerDescriptor>,
+
+  /**
+   * Mirror repeat address mode.
+   * Texture mirrors at boundaries for seamless tiling.
+   */
+  MIRROR_REPEAT: {
+    addressModeU: "mirror-repeat",
+    addressModeV: "mirror-repeat",
+  } as Partial<GPUSamplerDescriptor>,
+
+  /**
+   * Standard repeat address mode.
+   * Texture repeats at boundaries (default behavior).
+   */
+  REPEAT: {
+    addressModeU: "repeat",
+    addressModeV: "repeat",
+  } as Partial<GPUSamplerDescriptor>,
+} as const;
 
 /**
  * Formats that require specific device features for filtering.
@@ -134,6 +199,82 @@ export class Texture {
    */
   get format(): GPUTextureFormat {
     return this._format;
+  }
+
+  /**
+   * Updates the sampler with new options.
+   * Creates a new GPUSampler and replaces the existing one.
+   *
+   * @param device - The WebGPU device
+   * @param options - Sampler options to merge with defaults
+   *
+   * @example
+   * ```typescript
+   * // Change to pixel art style filtering
+   * texture.updateSampler(device, SamplerPresets.PIXEL_ART);
+   *
+   * // Change address mode to clamp
+   * texture.updateSampler(device, { addressModeU: "clamp-to-edge", addressModeV: "clamp-to-edge" });
+   * ```
+   */
+  updateSampler(
+    device: GPUDevice,
+    options: Partial<GPUSamplerDescriptor>
+  ): void {
+    const mergedOptions: GPUSamplerDescriptor = {
+      ...DEFAULT_SAMPLER_OPTIONS,
+      ...options,
+    };
+
+    // Validate and fix options if needed
+    const validatedOptions = Texture.validateSamplerOptions(mergedOptions);
+
+    this._gpuSampler = device.createSampler(validatedOptions);
+  }
+
+  /**
+   * Validates sampler options and fixes invalid configurations.
+   * WebGPU requires all filters to be "linear" when maxAnisotropy > 1.
+   *
+   * @param options - The sampler options to validate
+   * @returns Validated and potentially corrected sampler options
+   */
+  private static validateSamplerOptions(
+    options: GPUSamplerDescriptor
+  ): GPUSamplerDescriptor {
+    const result = { ...options };
+
+    // WebGPU spec: maxAnisotropy > 1 requires all filters to be "linear"
+    if (result.maxAnisotropy !== undefined && result.maxAnisotropy > 1) {
+      const hasNonLinearFilter =
+        result.magFilter === "nearest" ||
+        result.minFilter === "nearest" ||
+        result.mipmapFilter === "nearest";
+
+      if (hasNonLinearFilter) {
+        console.warn(
+          `[Texture] maxAnisotropy > 1 requires all filters to be "linear". ` +
+            `Resetting maxAnisotropy to 1. Current filters: ` +
+            `mag=${result.magFilter}, min=${result.minFilter}, mipmap=${result.mipmapFilter}`
+        );
+        result.maxAnisotropy = 1;
+      }
+    }
+
+    // Validate LOD clamp range
+    if (
+      result.lodMinClamp !== undefined &&
+      result.lodMaxClamp !== undefined &&
+      result.lodMaxClamp < result.lodMinClamp
+    ) {
+      console.warn(
+        `[Texture] lodMaxClamp (${result.lodMaxClamp}) must be >= lodMinClamp (${result.lodMinClamp}). ` +
+          `Setting lodMaxClamp to lodMinClamp.`
+      );
+      result.lodMaxClamp = result.lodMinClamp;
+    }
+
+    return result;
   }
 
   /**
@@ -238,13 +379,15 @@ export class Texture {
         [imageBitmap.width, imageBitmap.height]
       );
 
-      // Merge sampler options with defaults
-      const samplerOptions: GPUSamplerDescriptor = {
+      // Merge sampler options with defaults and validate
+      const mergedSamplerOptions: GPUSamplerDescriptor = {
         ...DEFAULT_SAMPLER_OPTIONS,
         ...options.sampler,
         label: options.label ? `Sampler: ${options.label}` : undefined,
       };
-      const sampler = device.createSampler(samplerOptions);
+      const validatedSamplerOptions =
+        Texture.validateSamplerOptions(mergedSamplerOptions);
+      const sampler = device.createSampler(validatedSamplerOptions);
 
       // Release ImageBitmap resources
       imageBitmap.close();
