@@ -272,6 +272,39 @@ export class Renderer {
   }
 
   /**
+   * Finds the first light in the scene.
+   * @param scene - The scene to search for lights.
+   * @returns The first DirectionalLight or PointLight found, or undefined.
+   */
+  private findFirstLight(scene: Scene): Light | undefined {
+    let light: Light | undefined;
+    scene.traverse((obj) => {
+      if (
+        (obj instanceof DirectionalLight || obj instanceof PointLight) &&
+        !light
+      ) {
+        light = obj;
+      }
+    });
+    return light;
+  }
+
+  /**
+   * Extracts the camera position from the camera's world matrix.
+   * @param camera - The camera to get the position from.
+   * @returns Float32Array containing [x, y, z, 0].
+   */
+  private getCameraPosition(camera: Camera): Float32Array {
+    const cameraWorldMatrix = camera.worldMatrix.data;
+    return new Float32Array([
+      cameraWorldMatrix[12],
+      cameraWorldMatrix[13],
+      cameraWorldMatrix[14],
+      0,
+    ]);
+  }
+
+  /**
    * Sets the clear color for the render pass.
    * @param color - Color instance or RGBA tuple [r, g, b] or [r, g, b, a].
    * @returns This renderer for chaining.
@@ -375,15 +408,7 @@ export class Renderer {
         );
 
         // Write light data: offset 208 (lightPosition), 224 (lightColor), 256 (lightParams), 272 (lightTypes)
-        let light: Light | undefined;
-        scene.traverse((obj) => {
-          if (
-            (obj instanceof DirectionalLight || obj instanceof PointLight) &&
-            !light
-          ) {
-            light = obj;
-          }
-        });
+        const light = this.findFirstLight(scene);
 
         if (light) {
           if (light instanceof DirectionalLight) {
@@ -499,13 +524,7 @@ export class Renderer {
         }
 
         // Write camera position at offset 240
-        const cameraWorldMatrix = camera.worldMatrix.data;
-        const cameraPosData = new Float32Array([
-          cameraWorldMatrix[12],
-          cameraWorldMatrix[13],
-          cameraWorldMatrix[14],
-          0,
-        ]);
+        const cameraPosData = this.getCameraPosition(camera);
         this.device.queue.writeBuffer(
           resources.uniformBuffer,
           240,
@@ -521,24 +540,9 @@ export class Renderer {
           dataView.setFloat32(64 + i * 4, mesh.worldMatrix.data[i], true);
         }
 
-        // Get camera position
-        const cameraWorldMatrix = camera.worldMatrix.data;
-        const cameraPosData = new Float32Array([
-          cameraWorldMatrix[12],
-          cameraWorldMatrix[13],
-          cameraWorldMatrix[14],
-        ]);
-
-        // Find light in scene
-        let light: Light | undefined;
-        scene.traverse((obj) => {
-          if (
-            (obj instanceof DirectionalLight || obj instanceof PointLight) &&
-            !light
-          ) {
-            light = obj;
-          }
-        });
+        // Get camera position and light
+        const cameraPosData = this.getCameraPosition(camera);
+        const light = this.findFirstLight(scene);
 
         // Call material's writeUniformData method
         material.writeUniformData(dataView, 64, cameraPosData, light);
