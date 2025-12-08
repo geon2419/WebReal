@@ -140,7 +140,7 @@ async function main() {
       mesh.scale.set(params.scale, params.scale, params.scale);
 
       // Update material from params
-      material.shininess = params.shininess;
+      material.setShininess(params.shininess);
 
       // Update camera FOV
       camera.fov = params.fov;

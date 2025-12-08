@@ -186,7 +186,7 @@ async function main() {
       mesh.scale.set(params.scale, params.scale, params.scale);
 
       // Update material from params
-      material.shininess = params.shininess;
+      material.setShininess(params.shininess);
       material.wireframe = params.wireframe;
 
       // Render scene
