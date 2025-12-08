@@ -7,8 +7,8 @@ import {
   Scene,
   PerspectiveCamera,
   DirectionalLight,
-  DirectionalLightHelper,
   OrbitCameraController,
+  Texture,
 } from "@web-real/core";
 import { Color, Vector3 } from "@web-real/math";
 import GUI from "lil-gui";
@@ -21,12 +21,14 @@ interface PlaneParams {
   heightSegments: number;
   // Material params
   shininess: number;
+  normalScale: number;
+  displacementScale: number;
+  displacementBias: number;
   // Light params
   lightDirX: number;
   lightDirY: number;
   lightDirZ: number;
   lightIntensity: number;
-  showLightHelper: boolean;
   // Visibility
   showXY: boolean;
   showXZ: boolean;
@@ -38,6 +40,45 @@ let meshXY: Mesh | null = null;
 let meshXZ: Mesh | null = null;
 let meshYZ: Mesh | null = null;
 
+// Store texture map globally
+let textureMap: Texture | null = null;
+
+function createMaterials(params: PlaneParams) {
+  if (!textureMap) {
+    throw new Error("Texture map not loaded");
+  }
+
+  return {
+    materialXY: new BlinnPhongMaterial({
+      color: [0.9, 0.3, 0.3], // Red
+      shininess: params.shininess,
+      normalMap: textureMap,
+      normalScale: params.normalScale,
+      displacementMap: textureMap,
+      displacementScale: params.displacementScale,
+      displacementBias: params.displacementBias,
+    }),
+    materialXZ: new BlinnPhongMaterial({
+      color: [0.3, 0.9, 0.3], // Green
+      shininess: params.shininess,
+      normalMap: textureMap,
+      normalScale: params.normalScale,
+      displacementMap: textureMap,
+      displacementScale: params.displacementScale,
+      displacementBias: params.displacementBias,
+    }),
+    materialYZ: new BlinnPhongMaterial({
+      color: [0.3, 0.3, 0.9], // Blue
+      shininess: params.shininess,
+      normalMap: textureMap,
+      normalScale: params.normalScale,
+      displacementMap: textureMap,
+      displacementScale: params.displacementScale,
+      displacementBias: params.displacementBias,
+    }),
+  };
+}
+
 function createPlaneMeshes(
   scene: Scene,
   params: PlaneParams,
@@ -47,7 +88,6 @@ function createPlaneMeshes(
     materialYZ: BlinnPhongMaterial;
   }
 ) {
-  // Remove existing meshes
   if (meshXY) scene.remove(meshXY);
   if (meshXZ) scene.remove(meshXZ);
   if (meshYZ) scene.remove(meshYZ);
@@ -107,16 +147,18 @@ async function main() {
       // Plane dimensions
       width: 3,
       height: 3,
-      widthSegments: 1,
-      heightSegments: 1,
+      widthSegments: 64,
+      heightSegments: 64,
       // Material params
       shininess: 32,
+      normalScale: 1.0,
+      displacementScale: 0.3,
+      displacementBias: 0.0,
       // Light params
       lightDirX: 1,
       lightDirY: -1,
       lightDirZ: 1,
       lightIntensity: 1.0,
-      showLightHelper: true,
       // Visibility
       showXY: true,
       showXZ: true,
@@ -125,42 +167,23 @@ async function main() {
 
     const scene = new Scene();
 
-    // Create materials for each plane
-    const materialXY = new BlinnPhongMaterial({
-      color: [0.9, 0.3, 0.3], // Red
-      shininess: params.shininess,
-    });
-    const materialXZ = new BlinnPhongMaterial({
-      color: [0.3, 0.9, 0.3], // Green
-      shininess: params.shininess,
-    });
-    const materialYZ = new BlinnPhongMaterial({
-      color: [0.3, 0.3, 0.9], // Blue
-      shininess: params.shininess,
-    });
+    // Load texture for both normal map and displacement map
+    textureMap = await Texture.fromURL(engine.device, "/assets/monalisa.jpg");
 
-    const materials = { materialXY, materialXZ, materialYZ };
+    let materials = createMaterials(params);
 
-    // Create initial plane meshes
     createPlaneMeshes(scene, params, materials);
 
-    // Add directional light
+    // DirectionalLight's direction is negated in shader, so use opposite direction
+    // to illuminate surfaces properly
     const light = new DirectionalLight(
-      new Vector3(params.lightDirX, params.lightDirY, params.lightDirZ),
+      new Vector3(-params.lightDirX, -params.lightDirY, -params.lightDirZ),
       new Color(1, 1, 1),
       params.lightIntensity
     );
     light.position.set(3, 3, 3);
     scene.add(light);
 
-    // Add light helper
-    const lightHelper = new DirectionalLightHelper(light, {
-      size: 2,
-      color: Color.YELLOW,
-    });
-    scene.add(lightHelper);
-
-    // Setup camera
     const camera = new PerspectiveCamera({
       fov: 60,
       near: 0.1,
@@ -174,8 +197,7 @@ async function main() {
       phi: Math.PI / 3,
     });
 
-    // Setup GUI
-    const gui = new GUI({ title: "PlaneGeometry Controls" });
+    const gui = new GUI({ title: "Mapping Controls" });
 
     const planeFolder = gui.addFolder("Plane Dimensions");
     planeFolder
@@ -187,11 +209,11 @@ async function main() {
       .name("Height")
       .onChange(() => createPlaneMeshes(scene, params, materials));
     planeFolder
-      .add(params, "widthSegments", 1, 10, 1)
+      .add(params, "widthSegments", 1, 64, 1)
       .name("Width Segments")
       .onChange(() => createPlaneMeshes(scene, params, materials));
     planeFolder
-      .add(params, "heightSegments", 1, 10, 1)
+      .add(params, "heightSegments", 1, 64, 1)
       .name("Height Segments")
       .onChange(() => createPlaneMeshes(scene, params, materials));
 
@@ -220,9 +242,31 @@ async function main() {
       .add(params, "shininess", 1, 256)
       .name("Shininess")
       .onChange((v: number) => {
-        materialXY.shininess = v;
-        materialXZ.shininess = v;
-        materialYZ.shininess = v;
+        materials.materialXY.setShininess(v);
+        materials.materialXZ.setShininess(v);
+        materials.materialYZ.setShininess(v);
+      });
+    materialFolder
+      .add(params, "normalScale", 0, 3, 0.1)
+      .name("Normal Scale")
+      .onChange((v: number) => {
+        materials.materialXY.setNormalScale(v);
+        materials.materialXZ.setNormalScale(v);
+        materials.materialYZ.setNormalScale(v);
+      });
+    materialFolder
+      .add(params, "displacementScale", 0, 1, 0.01)
+      .name("Displacement Scale")
+      .onChange(() => {
+        materials = createMaterials(params);
+        createPlaneMeshes(scene, params, materials);
+      });
+    materialFolder
+      .add(params, "displacementBias", -0.5, 0.5, 0.01)
+      .name("Displacement Bias")
+      .onChange(() => {
+        materials = createMaterials(params);
+        createPlaneMeshes(scene, params, materials);
       });
 
     const lightFolder = gui.addFolder("Directional Light");
@@ -230,27 +274,19 @@ async function main() {
     lightFolder.add(params, "lightDirY", -2, 2).name("Direction Y");
     lightFolder.add(params, "lightDirZ", -2, 2).name("Direction Z");
     lightFolder.add(params, "lightIntensity", 0, 2).name("Intensity");
-    lightFolder.add(params, "showLightHelper").name("Show Helper");
 
-    // Render loop
     engine.run(() => {
-      // Update light
+      // Update light (negate direction for shader)
       light.direction = new Vector3(
-        params.lightDirX,
-        params.lightDirY,
-        params.lightDirZ
+        -params.lightDirX,
+        -params.lightDirY,
+        -params.lightDirZ
       ).normalize();
       light.intensity = params.lightIntensity;
 
-      // Update light helper
-      lightHelper.update();
-      lightHelper.visible = params.showLightHelper;
-
-      // Render
       renderer.render(scene, camera);
     });
 
-    // Cleanup
     window.addEventListener("beforeunload", () => {
       orbitController.dispose();
       camera.dispose();
