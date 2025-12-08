@@ -40,13 +40,11 @@ export class BoundingSphere {
     const center = box.getCenter();
 
     // Find the maximum distance from center to any vertex
+    // Reuse a single Vector3 to avoid memory allocation in the loop
     let maxRadiusSquared = 0;
+    const point = new Vector3();
     for (let i = 0; i < positions.length; i += 3) {
-      const point = new Vector3(
-        positions[i],
-        positions[i + 1],
-        positions[i + 2]
-      );
+      point.set(positions[i], positions[i + 1], positions[i + 2]);
       const distSquared = center.distanceToSquared(point);
       maxRadiusSquared = Math.max(maxRadiusSquared, distSquared);
     }
@@ -99,6 +97,8 @@ export class BoundingSphere {
 
   /**
    * Checks if the sphere is empty (negative radius).
+   * Note: A radius of 0 represents a valid degenerate sphere (a single point)
+   * and is not considered empty.
    */
   isEmpty(): boolean {
     return this.radius < 0;
