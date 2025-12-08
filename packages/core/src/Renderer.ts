@@ -5,6 +5,7 @@ import type { Camera } from "./camera/Camera";
 import type { Material, RenderContext } from "./material/Material";
 import { Mesh } from "./Mesh";
 import { Light } from "./light/Light";
+import { getIndexFormat } from "./geometry/Geometry";
 
 interface MeshGPUResources {
   vertexBuffer: GPUBuffer;
@@ -14,6 +15,7 @@ interface MeshGPUResources {
   materialType: string;
   topology: GPUPrimitiveTopology;
   indexCount: number;
+  indexFormat: GPUIndexFormat;
 }
 
 /**
@@ -198,6 +200,7 @@ export class Renderer {
         currentTopology === "line-list"
           ? mesh.getWireframeIndices()
           : mesh.indices;
+      const indexFormat = getIndexFormat(indexData);
       const indexBuffer = this.device.createBuffer({
         label: "Mesh Index Buffer",
         size: indexData.byteLength,
@@ -206,7 +209,9 @@ export class Renderer {
       this.device.queue.writeBuffer(
         indexBuffer,
         0,
-        indexData as Uint16Array<ArrayBuffer>
+        indexData instanceof Uint32Array
+          ? (indexData as Uint32Array<ArrayBuffer>)
+          : (indexData as Uint16Array<ArrayBuffer>)
       );
 
       const uniformBufferSize = mesh.material.getUniformBufferSize();
@@ -259,6 +264,7 @@ export class Renderer {
         materialType: currentMaterialType,
         topology: currentTopology,
         indexCount: indexData.length,
+        indexFormat,
       };
       this.meshBuffers.set(mesh, resources);
       this.trackedMeshes.add(mesh);
@@ -384,7 +390,10 @@ export class Renderer {
 
       // Use draw() for non-indexed geometry (e.g., lines), drawIndexed() otherwise
       if (resources.indexCount > 0) {
-        passEncoder.setIndexBuffer(resources.indexBuffer, "uint16");
+        passEncoder.setIndexBuffer(
+          resources.indexBuffer,
+          resources.indexFormat
+        );
         passEncoder.drawIndexed(resources.indexCount);
       } else {
         passEncoder.draw(mesh.vertexCount);

@@ -1,4 +1,4 @@
-import type { Geometry } from "./Geometry";
+import type { Geometry, IndexArray } from "./Geometry";
 import { TangentCalculator } from "./TangentCalculator";
 
 export class BoxGeometry implements Geometry {
@@ -7,7 +7,7 @@ export class BoxGeometry implements Geometry {
   private readonly _uvs: Float32Array;
   private readonly _tangents: Float32Array;
   private readonly _bitangents: Float32Array;
-  private readonly _indices: Uint16Array;
+  private readonly _indices: IndexArray;
   private readonly _vertexCount: number;
   private readonly _indexCount: number;
 
@@ -66,7 +66,7 @@ export class BoxGeometry implements Geometry {
     return this._bitangents;
   }
 
-  get indices(): Uint16Array {
+  get indices(): IndexArray {
     return this._indices;
   }
 

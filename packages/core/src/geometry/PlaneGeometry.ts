@@ -1,4 +1,4 @@
-import type { Geometry } from "./Geometry";
+import type { Geometry, IndexArray } from "./Geometry";
 import { TangentCalculator } from "./TangentCalculator";
 
 /** Plane orientation options */
@@ -58,7 +58,7 @@ export interface PlaneGeometryOptions {
 export class PlaneGeometry implements Geometry {
   private readonly _positions: Float32Array;
   private readonly _normals: Float32Array;
-  private readonly _indices: Uint16Array;
+  private readonly _indices: IndexArray;
   private readonly _uvs: Float32Array;
   private readonly _tangents: Float32Array;
   private readonly _bitangents: Float32Array;
@@ -115,7 +115,7 @@ export class PlaneGeometry implements Geometry {
     return this._normals;
   }
 
-  get indices(): Uint16Array {
+  get indices(): IndexArray {
     return this._indices;
   }
 

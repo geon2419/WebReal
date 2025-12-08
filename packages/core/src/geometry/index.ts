@@ -1,4 +1,5 @@
-export type { Geometry } from "./Geometry";
+export type { Geometry, IndexArray } from "./Geometry";
+export { createIndexArray, getIndexFormat } from "./Geometry";
 export { BoxGeometry } from "./BoxGeometry";
 export {
   CylinderGeometry,

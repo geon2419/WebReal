@@ -1,4 +1,4 @@
-import type { Geometry } from "./geometry/Geometry";
+import type { Geometry, IndexArray } from "./geometry/Geometry";
 import type { Material } from "./material/Material";
 import { VertexColorMaterial } from "./material/VertexColorMaterial";
 import { Object3D } from "./Object3D";
@@ -40,7 +40,7 @@ export class Mesh extends Object3D {
     return this._boundingBox;
   }
 
-  get indices(): Uint16Array {
+  get indices(): IndexArray {
     return this.geometry.indices;
   }
 
@@ -55,12 +55,15 @@ export class Mesh extends Object3D {
   /**
    * Generates wireframe indices from triangle indices.
    * Converts each triangle (a, b, c) to three line segments (a-b, b-c, c-a).
-   * @returns Uint16Array of wireframe indices
+   * @returns IndexArray of wireframe indices (same type as original indices)
    */
-  getWireframeIndices(): Uint16Array {
+  getWireframeIndices(): IndexArray {
     const triangleIndices = this.geometry.indices;
     const triangleCount = triangleIndices.length / 3;
-    const wireframeIndices = new Uint16Array(triangleCount * 6);
+    const wireframeIndices =
+      triangleIndices instanceof Uint32Array
+        ? new Uint32Array(triangleCount * 6)
+        : new Uint16Array(triangleCount * 6);
 
     for (let i = 0; i < triangleCount; i++) {
       const offset = i * 3;

@@ -1,4 +1,4 @@
-import type { Geometry } from "./Geometry";
+import type { Geometry, IndexArray } from "./Geometry";
 import type { Camera } from "../camera/Camera";
 import { Color, Matrix4 } from "@web-real/math";
 
@@ -25,7 +25,7 @@ export class FrustumGeometry implements Geometry {
   private _positions: Float32Array;
   private _colors: Float32Array;
   private readonly _normals: Float32Array;
-  private readonly _indices: Uint16Array;
+  private readonly _indices: IndexArray;
   private _vertexCount: number;
   private _frustumColors: {
     near: Color;
@@ -64,7 +64,7 @@ export class FrustumGeometry implements Geometry {
     return this._normals;
   }
 
-  get indices(): Uint16Array {
+  get indices(): IndexArray {
     return this._indices;
   }
 
