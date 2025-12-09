@@ -9,3 +9,4 @@ export {
   calculateMipLevelCount,
   isRenderableFormat,
 } from "./MipmapGenerator";
+export { DummyTextures } from "./DummyTextures";

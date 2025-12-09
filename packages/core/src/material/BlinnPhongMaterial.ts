@@ -3,28 +3,118 @@ import type { Material, VertexBufferLayout, RenderContext } from "./Material";
 import { ShaderLib } from "../shaders";
 import { DirectionalLight } from "../light/DirectionalLight";
 import { PointLight } from "../light/PointLight";
+import type { Texture } from "../texture";
+import { DummyTextures } from "../texture";
 
 export interface BlinnPhongMaterialOptions {
   color?: [number, number, number] | Color;
   shininess?: number;
   wireframe?: boolean;
+  displacementMap?: Texture;
+  displacementScale?: number;
+  displacementBias?: number;
+  normalMap?: Texture;
+  normalScale?: number;
 }
 
 export class BlinnPhongMaterial implements Material {
   readonly type = "blinnPhong";
-  /** RGBA color (Color instance, 0-1 range) */
-  readonly color: Color;
-  /** Shininess exponent for specular highlight (higher = sharper) */
-  shininess: number;
-  /** Whether to render in wireframe mode */
+  private _color: Color;
+  private _shininess: number;
   wireframe: boolean;
+  readonly displacementMap?: Texture;
+  private _displacementScale: number;
+  private _displacementBias: number;
+  readonly normalMap?: Texture;
+  private _normalScale: number;
+
+  get color(): Color {
+    return this._color;
+  }
+
+  get shininess(): number {
+    return this._shininess;
+  }
+
+  get normalScale(): number {
+    return this._normalScale;
+  }
+
+  get displacementScale(): number {
+    return this._displacementScale;
+  }
+
+  get displacementBias(): number {
+    return this._displacementBias;
+  }
 
   constructor(options: BlinnPhongMaterialOptions = {}) {
-    this.color = options.color
+    this._color = options.color
       ? Color.from(options.color)
       : new Color(1.0, 1.0, 1.0);
-    this.shininess = options.shininess ?? 32.0;
+    this._shininess = options.shininess ?? 32.0;
     this.wireframe = options.wireframe ?? false;
+    this.displacementMap = options.displacementMap;
+    this._displacementScale = options.displacementScale ?? 1.0;
+    this._displacementBias = options.displacementBias ?? 0.0;
+    this.normalMap = options.normalMap;
+    this._normalScale = options.normalScale ?? 1.0;
+  }
+
+  /**
+   * Sets the material color.
+   * @param color - Color instance or RGB array [r, g, b]
+   */
+  setColor(color: Color | [number, number, number]): void {
+    this._color = Color.from(color);
+  }
+
+  /**
+   * Sets the shininess exponent for specular highlights.
+   * @param value - Shininess value (1-256)
+   * @throws Error if value is out of range
+   */
+  setShininess(value: number): void {
+    if (value < 1 || value > 256) {
+      throw new Error("Shininess must be between 1 and 256");
+    }
+    this._shininess = value;
+  }
+
+  /**
+   * Sets the normal map intensity multiplier.
+   * @param value - Normal scale value (0-3)
+   * @throws Error if value is out of range
+   */
+  setNormalScale(value: number): void {
+    if (value < 0 || value > 3) {
+      throw new Error("Normal scale must be between 0 and 3");
+    }
+    this._normalScale = value;
+  }
+
+  /**
+   * Sets the displacement map scale multiplier.
+   * @param value - Displacement scale value (0-10)
+   * @throws Error if value is out of range
+   */
+  setDisplacementScale(value: number): void {
+    if (value < 0 || value > 10) {
+      throw new Error("Displacement scale must be between 0 and 10");
+    }
+    this._displacementScale = value;
+  }
+
+  /**
+   * Sets the displacement map bias offset.
+   * @param value - Displacement bias value (-1 to 1)
+   * @throws Error if value is out of range
+   */
+  setDisplacementBias(value: number): void {
+    if (value < -1 || value > 1) {
+      throw new Error("Displacement bias must be between -1 and 1");
+    }
+    this._displacementBias = value;
   }
 
   getVertexShader(): string {
@@ -37,8 +127,8 @@ export class BlinnPhongMaterial implements Material {
 
   getVertexBufferLayout(): VertexBufferLayout {
     return {
-      // position(vec3f) + normal(vec3f) = 6 floats × 4 bytes = 24 bytes
-      arrayStride: 24,
+      // position(vec3f) + normal(vec3f) + uv(vec2f) + tangent(vec3f) + bitangent(vec3f) = 14 floats × 4 bytes = 56 bytes
+      arrayStride: 56,
       attributes: [
         {
           shaderLocation: 0,
@@ -50,13 +140,45 @@ export class BlinnPhongMaterial implements Material {
           offset: 12,
           format: "float32x3", // normal
         },
+        {
+          shaderLocation: 2,
+          offset: 24,
+          format: "float32x2", // uv
+        },
+        {
+          shaderLocation: 3,
+          offset: 32,
+          format: "float32x3", // tangent
+        },
+        {
+          shaderLocation: 4,
+          offset: 44,
+          format: "float32x3", // bitangent
+        },
       ],
     };
   }
 
-  // Layout: mat4x4f mvp (64B) + mat4x4f model (64B) + mat4x4f normalMatrix (64B) + vec4f colorAndShininess (16B) + vec4f lightPosition (16B) + vec4f lightColor (16B) + vec4f cameraPosition (16B) + vec4f lightParams (16B) + vec4f lightTypes (16B) = 288 bytes
+  // Layout: mat4x4f mvp (64B) + mat4x4f model (64B) + mat4x4f normalMatrix (64B) + vec4f colorAndShininess (16B) + vec4f lightPosition (16B) + vec4f lightColor (16B) + vec4f cameraPosition (16B) + vec4f lightParams (16B) + vec4f lightTypes (16B) + vec4f displacementParams (16B) = 304 bytes
   getUniformBufferSize(): number {
-    return 288;
+    return 304;
+  }
+
+  /**
+   * Gets textures for binding. Returns [displacementMap, normalMap] with dummy fallbacks.
+   * @param device - WebGPU device for creating dummy textures if needed
+   * @returns Array with [displacement texture, normal texture]
+   */
+  getTextures(device?: GPUDevice): Texture[] {
+    if (!device) {
+      throw new Error(
+        "BlinnPhongMaterial.getTextures() requires a GPUDevice parameter"
+      );
+    }
+    const displacementTex =
+      this.displacementMap ?? DummyTextures.getBlack(device);
+    const normalTex = this.normalMap ?? DummyTextures.getNormal(device);
+    return [displacementTex, normalTex];
   }
 
   getPrimitiveTopology(): GPUPrimitiveTopology {
@@ -181,5 +303,11 @@ export class BlinnPhongMaterial implements Material {
       buffer.setFloat32(offset + 184, cameraWorldMatrix[14], true); // offset 248
       buffer.setFloat32(offset + 188, 0, true); // offset 252 (w unused)
     }
+
+    // Write displacement params at offset 288 (vec4f: x=scale, y=bias, z=normalScale, w=unused)
+    buffer.setFloat32(offset + 224, this.displacementScale, true); // offset 288
+    buffer.setFloat32(offset + 228, this.displacementBias, true); // offset 292
+    buffer.setFloat32(offset + 232, this.normalScale, true); // offset 296 (normalScale)
+    buffer.setFloat32(offset + 236, 0, true); // offset 300 (unused)
   }
 }

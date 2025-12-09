@@ -1,6 +1,7 @@
 import type { Geometry, IndexArray } from "../geometry/Geometry";
 import type { Material } from "../material/Material";
 import { VertexColorMaterial } from "../material/VertexColorMaterial";
+import { TangentCalculator } from "../geometry/TangentCalculator";
 import { Object3D } from "./Object3D";
 import { BoundingBox } from "@web-real/math";
 import { computeBoundingBox } from "../geometry/BoundingUtils";
@@ -224,7 +225,6 @@ export class Mesh extends Object3D {
       }
 
       case "basic":
-      case "blinnPhong":
       default: {
         // Default: interleave position + normal
         const data = new Float32Array(vertexCount * 6);
@@ -240,6 +240,66 @@ export class Mesh extends Object3D {
           data[dataOffset + 3] = normals[offset];
           data[dataOffset + 4] = normals[offset + 1];
           data[dataOffset + 5] = normals[offset + 2];
+        }
+
+        return data;
+      }
+
+      case "blinnPhong": {
+        // BlinnPhong material needs position + normal + uv + tangent + bitangent for normal mapping
+        const uvs = this.geometry.uvs;
+        if (!uvs) {
+          throw new Error(
+            "BlinnPhongMaterial requires geometry with UV coordinates"
+          );
+        }
+
+        // Get tangents/bitangents from geometry or calculate at runtime
+        let tangents = this.geometry.tangents;
+        let bitangents = this.geometry.bitangents;
+        if (!tangents || !bitangents) {
+          // Calculate tangents at runtime if geometry doesn't provide them
+          const calculated = TangentCalculator.calculate(
+            positions,
+            normals,
+            uvs,
+            this.geometry.indices
+          );
+          tangents = calculated.tangents;
+          bitangents = calculated.bitangents;
+        }
+
+        // position(3) + normal(3) + uv(2) + tangent(3) + bitangent(3) = 14 floats
+        const data = new Float32Array(vertexCount * 14);
+
+        for (let i = 0; i < vertexCount; i++) {
+          const posOffset = i * 3;
+          const uvOffset = i * 2;
+          const dataOffset = i * 14;
+
+          // position
+          data[dataOffset] = positions[posOffset];
+          data[dataOffset + 1] = positions[posOffset + 1];
+          data[dataOffset + 2] = positions[posOffset + 2];
+
+          // normal
+          data[dataOffset + 3] = normals[posOffset];
+          data[dataOffset + 4] = normals[posOffset + 1];
+          data[dataOffset + 5] = normals[posOffset + 2];
+
+          // uv
+          data[dataOffset + 6] = uvs[uvOffset];
+          data[dataOffset + 7] = uvs[uvOffset + 1];
+
+          // tangent
+          data[dataOffset + 8] = tangents[posOffset];
+          data[dataOffset + 9] = tangents[posOffset + 1];
+          data[dataOffset + 10] = tangents[posOffset + 2];
+
+          // bitangent
+          data[dataOffset + 11] = bitangents[posOffset];
+          data[dataOffset + 12] = bitangents[posOffset + 1];
+          data[dataOffset + 13] = bitangents[posOffset + 2];
         }
 
         return data;

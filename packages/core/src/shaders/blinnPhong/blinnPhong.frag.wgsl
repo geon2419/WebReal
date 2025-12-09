@@ -8,13 +8,20 @@ struct Uniforms {
   cameraPosition: vec4f,
   lightParams: vec4f,         // x = range, y = attenuation param
   lightTypes: vec4f,          // x = light type (0=directional, 1=point), y = attenuation type (0=linear, 1=quadratic, 2=physical)
+  displacementParams: vec4f,  // x = scale, y = bias, z = normalScale, w = unused
 }
 
 @group(0) @binding(0) var<uniform> uniforms: Uniforms;
+@group(0) @binding(1) var textureSampler: sampler;
+@group(0) @binding(2) var displacementMap: texture_2d<f32>;
+@group(0) @binding(3) var normalMap: texture_2d<f32>;
 
 struct FragmentInput {
-  @location(0) normal: vec3f,
+  @location(0) worldNormal: vec3f,
   @location(1) worldPosition: vec3f,
+  @location(2) uv: vec2f,
+  @location(3) worldTangent: vec3f,
+  @location(4) worldBitangent: vec3f,
 }
 
 fn calculateAttenuation(distance: f32, range: f32, attenuationType: f32, param: f32) -> f32 {
@@ -24,18 +31,35 @@ fn calculateAttenuation(distance: f32, range: f32, attenuationType: f32, param: 
     // Linear: 1 - d/range
     return max(1.0 - normalizedDist, 0.0);
   } else if (attenuationType < 1.5) {
-    // Quadratic: (1 - d/range)²
+    // Quadratic: (1 - d/range)^2
     let linear = max(1.0 - normalizedDist, 0.0);
     return linear * linear;
   } else {
-    // Physical: 1 / (1 + (d/range)² * k)
+    // Physical: 1 / (1 + (d/range)^2 * k)
     return 1.0 / (1.0 + normalizedDist * normalizedDist * param);
   }
 }
 
 @fragment
 fn main(input: FragmentInput) -> @location(0) vec4f {
-  let normal = normalize(input.normal);
+  // Construct TBN matrix (tangent space to world space)
+  let T = normalize(input.worldTangent);
+  let B = normalize(input.worldBitangent);
+  let N = normalize(input.worldNormal);
+  let TBN = mat3x3f(T, B, N);
+  
+  // Sample normal map and convert from [0,1] to [-1,1]
+  let normalMapSample = textureSample(normalMap, textureSampler, input.uv).rgb;
+  var normalTangent = normalMapSample * 2.0 - 1.0;
+  
+  // Apply normal scale to X and Y components (Z stays as is for proper normalization)
+  let normalScale = uniforms.displacementParams.z;
+  normalTangent = vec3f(normalTangent.x * normalScale, normalTangent.y * normalScale, normalTangent.z);
+  normalTangent = normalize(normalTangent);
+  
+  // Transform normal from tangent space to world space
+  let normal = normalize(TBN * normalTangent);
+  
   let viewDir = normalize(uniforms.cameraPosition.xyz - input.worldPosition);
   
   var lightDir: vec3f;
@@ -59,7 +83,6 @@ fn main(input: FragmentInput) -> @location(0) vec4f {
     attenuation = calculateAttenuation(distance, range, attenuationType, param);
   }
   
-  // Ambient
   let ambient = 0.1;
   
   // Diffuse (Lambertian)
@@ -72,7 +95,6 @@ fn main(input: FragmentInput) -> @location(0) vec4f {
   let shininess = uniforms.colorAndShininess.a;
   let specular = pow(NdotH, shininess) * uniforms.lightColor.rgb * uniforms.lightColor.a * attenuation;
   
-  // Final color
   let materialColor = uniforms.colorAndShininess.rgb;
   let finalColor = materialColor * (ambient + diffuse) + specular;
   
