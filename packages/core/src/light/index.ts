@@ -1,4 +1,5 @@
 export { Light } from "./Light";
+export { AmbientLight } from "./AmbientLight";
 export { DirectionalLight } from "./DirectionalLight";
 export { PointLight, type AttenuationType } from "./PointLight";
 export {

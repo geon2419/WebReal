@@ -7,6 +7,8 @@ export {
   PlaneGeometry,
   type PlaneGeometryOptions,
   type PlaneOrientation,
+  SphereGeometry,
+  type SphereGeometryOptions,
   type Geometry,
 } from "./geometry";
 export {
@@ -19,6 +21,7 @@ export {
   type LineColorMaterialOptions,
   type TextureMaterialOptions,
   type ParallaxMaterialOptions,
+  type PBRMaterialOptions,
   BasicMaterial,
   BlinnPhongMaterial,
   VertexColorMaterial,
@@ -26,11 +29,13 @@ export {
   LineColorMaterial,
   TextureMaterial,
   ParallaxMaterial,
+  PBRMaterial,
 } from "./material";
 export { ShaderLib, type ShaderSource } from "./shaders";
 export * from "./camera";
 export {
   Light,
+  AmbientLight,
   DirectionalLight,
   DirectionalLightHelper,
   type DirectionalLightHelperOptions,

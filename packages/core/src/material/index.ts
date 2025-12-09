@@ -22,3 +22,4 @@ export {
   ParallaxMaterial,
   type ParallaxMaterialOptions,
 } from "./ParallaxMaterial";
+export { PBRMaterial, type PBRMaterialOptions } from "./PBRMaterial";

@@ -42,6 +42,14 @@
         "lil-gui": "^0.21.0",
       },
     },
+    "examples/pbr-material": {
+      "name": "@examples/pbr-material",
+      "dependencies": {
+        "@web-real/core": "workspace:*",
+        "@web-real/math": "workspace:*",
+        "lil-gui": "^0.21.0",
+      },
+    },
     "examples/perspective-camera": {
       "name": "@examples/perspective-camera",
       "dependencies": {
@@ -143,6 +151,8 @@
     "@examples/cube-raw": ["@examples/cube-raw@workspace:examples/cube-raw"],
 
     "@examples/orthographic-camera": ["@examples/orthographic-camera@workspace:examples/orthographic-camera"],
+
+    "@examples/pbr-material": ["@examples/pbr-material@workspace:examples/pbr-material"],
 
     "@examples/perspective-camera": ["@examples/perspective-camera@workspace:examples/perspective-camera"],
 
