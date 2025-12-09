@@ -277,7 +277,7 @@ export class PBRMaterial implements Material {
 
   /**
    * Gets the uniform buffer size required for this material.
-   * Layout:
+   * Layout (absolute buffer positions from start):
    * - 0-64: mvpMatrix
    * - 64-128: modelMatrix
    * - 128-192: normalMatrix
@@ -289,6 +289,9 @@ export class PBRMaterial implements Material {
    * - 272-288: ambientLight (rgb + intensity)
    * - 288-480: lights[4] (48 bytes each: position 16 + color 16 + params 16)
    * - 480-512: padding
+   *
+   * Note: writeUniformData() receives offset parameter (default 64) and uses relative offsets.
+   * For example, to write at absolute position 240, it uses offset+176 (64+176=240).
    * @returns Size in bytes (512 bytes total)
    */
   getUniformBufferSize(): number {
@@ -333,7 +336,8 @@ export class PBRMaterial implements Material {
   /**
    * Writes material properties and lighting data to the uniform buffer.
    * @param buffer - DataView of the uniform buffer to write to
-   * @param offset - Byte offset to start writing (default: 64)
+   * @param offset - Byte offset to start writing (default: 64). This represents the absolute position
+   *                 where modelMatrix begins. All subsequent writes use relative offsets from this parameter.
    * @param context - Rendering context containing camera, lights, and mesh transform
    */
   writeUniformData(
@@ -341,141 +345,196 @@ export class PBRMaterial implements Material {
     offset: number = 64,
     context?: RenderContext
   ): void {
-    // Write model matrix at offset 64
-    if (context?.mesh) {
-      for (let i = 0; i < 16; i++) {
-        buffer.setFloat32(
-          offset + i * 4,
-          context.mesh.worldMatrix.data[i],
-          true
-        );
-      }
-    }
+    this._writeModelMatrix(buffer, offset, context);
+    this._writeNormalMatrix(buffer, offset, context);
+    this._writeBaseColor(buffer, offset);
+    this._writePBRParams(buffer, offset);
+    this._writeEmissive(buffer, offset);
+    this._writeCameraPosition(buffer, offset, context);
+    this._writeAmbientLight(buffer, offset, context);
+    const lightCount = this._writeLights(buffer, offset, context);
+    this._writeEnvParams(buffer, offset, lightCount);
+  }
 
-    // Write normal matrix at offset 128 (inverse transpose of model matrix)
-    if (context?.mesh) {
-      const normalMatrix = context.mesh.worldMatrix.inverse().transpose();
-      for (let i = 0; i < 16; i++) {
-        buffer.setFloat32(offset + 64 + i * 4, normalMatrix.data[i], true);
-      }
-    }
+  /**
+   * Writes model matrix to the uniform buffer.
+   * @param buffer - DataView of the uniform buffer
+   * @param offset - Base offset (modelMatrix at offset+0)
+   * @param context - Rendering context
+   */
+  private _writeModelMatrix(
+    buffer: DataView,
+    offset: number,
+    context?: RenderContext
+  ): void {
+    if (!context?.mesh) return;
 
-    // baseColor at offset 192 (vec4f: rgb + alpha)
+    for (let i = 0; i < 16; i++) {
+      buffer.setFloat32(offset + i * 4, context.mesh.worldMatrix.data[i], true);
+    }
+  }
+
+  /**
+   * Writes normal matrix (inverse transpose of model matrix) to the uniform buffer.
+   * @param buffer - DataView of the uniform buffer
+   * @param offset - Base offset (normalMatrix at offset+64)
+   * @param context - Rendering context
+   */
+  private _writeNormalMatrix(
+    buffer: DataView,
+    offset: number,
+    context?: RenderContext
+  ): void {
+    if (!context?.mesh) return;
+
+    const normalMatrix = context.mesh.worldMatrix.inverse().transpose();
+    for (let i = 0; i < 16; i++) {
+      buffer.setFloat32(offset + 64 + i * 4, normalMatrix.data[i], true);
+    }
+  }
+
+  /**
+   * Writes base color to the uniform buffer.
+   * @param buffer - DataView of the uniform buffer
+   * @param offset - Base offset (baseColor at offset+128)
+   */
+  private _writeBaseColor(buffer: DataView, offset: number): void {
     buffer.setFloat32(offset + 128, this._color.r, true);
     buffer.setFloat32(offset + 132, this._color.g, true);
     buffer.setFloat32(offset + 136, this._color.b, true);
     buffer.setFloat32(offset + 140, 1.0, true); // alpha
+  }
 
-    // pbrParams at offset 208 (vec4f: metalness, roughness, aoIntensity, normalScale)
+  /**
+   * Writes PBR parameters to the uniform buffer.
+   * @param buffer - DataView of the uniform buffer
+   * @param offset - Base offset (pbrParams at offset+144)
+   */
+  private _writePBRParams(buffer: DataView, offset: number): void {
     buffer.setFloat32(offset + 144, this._metalness, true);
     buffer.setFloat32(offset + 148, this._roughness, true);
     buffer.setFloat32(offset + 152, this._aoMapIntensity, true);
     buffer.setFloat32(offset + 156, this._normalScale, true);
+  }
 
-    // emissive at offset 224 (vec4f: rgb + intensity)
+  /**
+   * Writes emissive color and intensity to the uniform buffer.
+   * @param buffer - DataView of the uniform buffer
+   * @param offset - Base offset (emissive at offset+160)
+   */
+  private _writeEmissive(buffer: DataView, offset: number): void {
     buffer.setFloat32(offset + 160, this._emissive.r, true);
     buffer.setFloat32(offset + 164, this._emissive.g, true);
     buffer.setFloat32(offset + 168, this._emissive.b, true);
     buffer.setFloat32(offset + 172, this._emissiveIntensity, true);
+  }
 
-    // envParams at offset 240 (vec4f: envMapIntensity, lightCount, hasEnvMap, unused)
+  /**
+   * Writes environment map parameters to the uniform buffer.
+   * @param buffer - DataView of the uniform buffer
+   * @param offset - Base offset (envParams at offset+176)
+   * @param lightCount - Number of active lights
+   */
+  private _writeEnvParams(
+    buffer: DataView,
+    offset: number,
+    lightCount: number
+  ): void {
     const hasEnvMap = this.envMap ? 1.0 : 0.0;
     buffer.setFloat32(offset + 176, this._envMapIntensity, true);
+    buffer.setFloat32(offset + 180, lightCount, true);
     buffer.setFloat32(offset + 184, hasEnvMap, true);
     buffer.setFloat32(offset + 188, 0.0, true); // unused
+  }
 
-    // cameraPosition at offset 256
-    if (context?.camera) {
-      const cameraWorldMatrix = context.camera.worldMatrix.data;
-      buffer.setFloat32(offset + 192, cameraWorldMatrix[12], true);
-      buffer.setFloat32(offset + 196, cameraWorldMatrix[13], true);
-      buffer.setFloat32(offset + 200, cameraWorldMatrix[14], true);
-      buffer.setFloat32(offset + 204, 0.0, true); // unused
-    }
+  /**
+   * Writes camera position to the uniform buffer.
+   * @param buffer - DataView of the uniform buffer
+   * @param offset - Base offset (cameraPosition at offset+192)
+   * @param context - Rendering context
+   */
+  private _writeCameraPosition(
+    buffer: DataView,
+    offset: number,
+    context?: RenderContext
+  ): void {
+    if (!context?.camera) return;
 
-    // ambientLight at offset 272 (vec4f: rgb + intensity)
-    let ambientWritten = false;
+    const cameraWorldMatrix = context.camera.worldMatrix.data;
+    buffer.setFloat32(offset + 192, cameraWorldMatrix[12], true);
+    buffer.setFloat32(offset + 196, cameraWorldMatrix[13], true);
+    buffer.setFloat32(offset + 200, cameraWorldMatrix[14], true);
+    buffer.setFloat32(offset + 204, 0.0, true); // unused
+  }
+
+  /**
+   * Writes ambient light data to the uniform buffer.
+   * @param buffer - DataView of the uniform buffer
+   * @param offset - Base offset (ambientLight at offset+208)
+   * @param context - Rendering context
+   */
+  private _writeAmbientLight(
+    buffer: DataView,
+    offset: number,
+    context?: RenderContext
+  ): void {
+    let ambientLight: AmbientLight | undefined;
+
     if (context?.lights) {
       for (const light of context.lights) {
         if (light instanceof AmbientLight) {
-          buffer.setFloat32(offset + 208, light.color.r, true);
-          buffer.setFloat32(offset + 212, light.color.g, true);
-          buffer.setFloat32(offset + 216, light.color.b, true);
-          buffer.setFloat32(offset + 220, light.intensity, true);
-          ambientWritten = true;
+          ambientLight = light;
           break;
         }
       }
     }
-    if (!ambientWritten) {
+
+    if (ambientLight) {
+      buffer.setFloat32(offset + 208, ambientLight.color.r, true);
+      buffer.setFloat32(offset + 212, ambientLight.color.g, true);
+      buffer.setFloat32(offset + 216, ambientLight.color.b, true);
+      buffer.setFloat32(offset + 220, ambientLight.intensity, true);
+    } else {
       // Default ambient: very dim white light
       buffer.setFloat32(offset + 208, 1.0, true);
       buffer.setFloat32(offset + 212, 1.0, true);
       buffer.setFloat32(offset + 216, 1.0, true);
       buffer.setFloat32(offset + 220, 0.03, true);
     }
+  }
 
-    // lights[4] at offset 288 (48 bytes each: position 16 + color 16 + params 16)
-    // params: x = type (0=directional, 1=point), y = range, z = attenuation type, w = attenuation param
-    let lightIndex = 0;
+  /**
+   * Writes light data to the uniform buffer.
+   * @param buffer - DataView of the uniform buffer
+   * @param offset - Base offset (lights at offset+224)
+   * @param context - Rendering context
+   * @returns Number of lights written
+   */
+  private _writeLights(
+    buffer: DataView,
+    offset: number,
+    context?: RenderContext
+  ): number {
     const maxLights = 4;
-    const lightBaseOffset = offset + 224; // 288 from buffer start (64 + 224)
+    const lightBaseOffset = offset + 224;
+    let lightIndex = 0;
 
     if (context?.lights) {
       for (const light of context.lights) {
         if (lightIndex >= maxLights) break;
-        if (light instanceof AmbientLight) continue; // Skip ambient lights
+        if (light instanceof AmbientLight) continue;
 
         const lightOffset = lightBaseOffset + lightIndex * 48;
 
         if (light instanceof DirectionalLight) {
-          // Position (actually direction for directional light)
-          buffer.setFloat32(lightOffset, light.direction.x, true);
-          buffer.setFloat32(lightOffset + 4, light.direction.y, true);
-          buffer.setFloat32(lightOffset + 8, light.direction.z, true);
-          buffer.setFloat32(lightOffset + 12, 0.0, true);
-
-          // Color
-          buffer.setFloat32(lightOffset + 16, light.color.r, true);
-          buffer.setFloat32(lightOffset + 20, light.color.g, true);
-          buffer.setFloat32(lightOffset + 24, light.color.b, true);
-          buffer.setFloat32(lightOffset + 28, light.intensity, true);
-
-          // Params: type=0 (directional), range, attenType, attenParam
-          buffer.setFloat32(lightOffset + 32, 0.0, true); // type: directional
-          buffer.setFloat32(lightOffset + 36, 0.0, true); // range (unused)
-          buffer.setFloat32(lightOffset + 40, 0.0, true); // attenType (unused)
-          buffer.setFloat32(lightOffset + 44, 0.0, true); // attenParam (unused)
-
+          this._writeDirectionalLight(buffer, lightOffset, light);
           lightIndex++;
         } else if (light instanceof PointLight) {
-          // Position (world position)
-          light.updateWorldMatrix(true, false);
-          buffer.setFloat32(lightOffset, light.worldMatrix.data[12], true);
-          buffer.setFloat32(lightOffset + 4, light.worldMatrix.data[13], true);
-          buffer.setFloat32(lightOffset + 8, light.worldMatrix.data[14], true);
-          buffer.setFloat32(lightOffset + 12, 0.0, true);
-
-          // Color
-          buffer.setFloat32(lightOffset + 16, light.color.r, true);
-          buffer.setFloat32(lightOffset + 20, light.color.g, true);
-          buffer.setFloat32(lightOffset + 24, light.color.b, true);
-          buffer.setFloat32(lightOffset + 28, light.intensity, true);
-
-          // Params: type=1 (point), range, attenType, attenParam
-          const attenuationFactors = light.getAttenuationFactors();
-          buffer.setFloat32(lightOffset + 32, 1.0, true); // type: point
-          buffer.setFloat32(lightOffset + 36, attenuationFactors[0], true); // range
-          buffer.setFloat32(lightOffset + 40, attenuationFactors[3], true); // attenType
-          buffer.setFloat32(lightOffset + 44, attenuationFactors[1], true); // attenParam
-
+          this._writePointLight(buffer, lightOffset, light);
           lightIndex++;
         }
       }
     }
-
-    // Write light count at offset 240 + 4 = 244 (envParams.y)
-    buffer.setFloat32(offset + 180, lightIndex, true);
 
     // Zero out remaining light slots
     for (let i = lightIndex; i < maxLights; i++) {
@@ -484,5 +543,69 @@ export class PBRMaterial implements Material {
         buffer.setFloat32(lightOffset + j * 4, 0.0, true);
       }
     }
+
+    return lightIndex;
+  }
+
+  /**
+   * Writes directional light data to the uniform buffer.
+   * @param buffer - DataView of the uniform buffer
+   * @param offset - Absolute offset for this light slot
+   * @param light - Directional light instance
+   */
+  private _writeDirectionalLight(
+    buffer: DataView,
+    offset: number,
+    light: DirectionalLight
+  ): void {
+    // Direction
+    buffer.setFloat32(offset, light.direction.x, true);
+    buffer.setFloat32(offset + 4, light.direction.y, true);
+    buffer.setFloat32(offset + 8, light.direction.z, true);
+    buffer.setFloat32(offset + 12, 0.0, true);
+
+    // Color and intensity
+    buffer.setFloat32(offset + 16, light.color.r, true);
+    buffer.setFloat32(offset + 20, light.color.g, true);
+    buffer.setFloat32(offset + 24, light.color.b, true);
+    buffer.setFloat32(offset + 28, light.intensity, true);
+
+    // Params: type=0 (directional)
+    buffer.setFloat32(offset + 32, 0.0, true);
+    buffer.setFloat32(offset + 36, 0.0, true);
+    buffer.setFloat32(offset + 40, 0.0, true);
+    buffer.setFloat32(offset + 44, 0.0, true);
+  }
+
+  /**
+   * Writes point light data to the uniform buffer.
+   * @param buffer - DataView of the uniform buffer
+   * @param offset - Absolute offset for this light slot
+   * @param light - Point light instance
+   */
+  private _writePointLight(
+    buffer: DataView,
+    offset: number,
+    light: PointLight
+  ): void {
+    // Position
+    light.updateWorldMatrix(true, false);
+    buffer.setFloat32(offset, light.worldMatrix.data[12], true);
+    buffer.setFloat32(offset + 4, light.worldMatrix.data[13], true);
+    buffer.setFloat32(offset + 8, light.worldMatrix.data[14], true);
+    buffer.setFloat32(offset + 12, 0.0, true);
+
+    // Color and intensity
+    buffer.setFloat32(offset + 16, light.color.r, true);
+    buffer.setFloat32(offset + 20, light.color.g, true);
+    buffer.setFloat32(offset + 24, light.color.b, true);
+    buffer.setFloat32(offset + 28, light.intensity, true);
+
+    // Params: type=1 (point), range, attenType, attenParam
+    const attenuationFactors = light.getAttenuationFactors();
+    buffer.setFloat32(offset + 32, 1.0, true); // type: point
+    buffer.setFloat32(offset + 36, attenuationFactors[0], true); // range
+    buffer.setFloat32(offset + 40, attenuationFactors[3], true); // attenType
+    buffer.setFloat32(offset + 44, attenuationFactors[1], true); // attenParam
   }
 }
