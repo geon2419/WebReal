@@ -42,7 +42,7 @@ fn parallaxMapping(uv: vec2f, viewDir: vec3f, TBN: mat3x3f) -> vec2f {
   
   // Initial values
   var currentTexCoords = uv;
-  var currentDepthMapValue = textureSample(depthTexture, textureSampler, currentTexCoords).r;
+  var currentDepthMapValue = textureSampleLevel(depthTexture, textureSampler, currentTexCoords, 0.0).r;
   
   // Steep parallax mapping loop
   for (var i = 0; i < 32; i = i + 1) {
@@ -52,8 +52,8 @@ fn parallaxMapping(uv: vec2f, viewDir: vec3f, TBN: mat3x3f) -> vec2f {
     
     // Shift texture coordinates along direction of P
     currentTexCoords -= deltaTexCoords;
-    // Get depth map value at current texture coordinates
-    currentDepthMapValue = textureSample(depthTexture, textureSampler, currentTexCoords).r;
+    // Get depth map value at current texture coordinates (use textureSampleLevel for non-uniform control flow)
+    currentDepthMapValue = textureSampleLevel(depthTexture, textureSampler, currentTexCoords, 0.0).r;
     // Get depth of next layer
     currentLayerDepth += layerDepth;
   }
@@ -62,7 +62,7 @@ fn parallaxMapping(uv: vec2f, viewDir: vec3f, TBN: mat3x3f) -> vec2f {
   let prevTexCoords = currentTexCoords + deltaTexCoords;
   
   let afterDepth = currentDepthMapValue - currentLayerDepth;
-  let beforeDepth = textureSample(depthTexture, textureSampler, prevTexCoords).r - currentLayerDepth + layerDepth;
+  let beforeDepth = textureSampleLevel(depthTexture, textureSampler, prevTexCoords, 0.0).r - currentLayerDepth + layerDepth;
   
   let weight = afterDepth / (afterDepth - beforeDepth);
   let finalTexCoords = prevTexCoords * weight + currentTexCoords * (1.0 - weight);
