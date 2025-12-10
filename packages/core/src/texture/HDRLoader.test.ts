@@ -66,7 +66,7 @@ const createMockRGBEBuffer = (
     pixelData[offset] = 128; // R
     pixelData[offset + 1] = 128; // G
     pixelData[offset + 2] = 128; // B
-    pixelData[offset + 3] = 128; // E (exponent = 0, so RGB values = 0.5)
+    pixelData[offset + 3] = 128; // E (exponent = 128, giving scale 2^-8, so RGB 128 -> 0.5)
   }
 
   // Combine header and pixel data
