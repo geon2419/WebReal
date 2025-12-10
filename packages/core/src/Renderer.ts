@@ -3,6 +3,8 @@ import type { Engine } from "./Engine";
 import type { Scene } from "./scene/Scene";
 import type { Camera } from "./camera/Camera";
 import type { Material, RenderContext } from "./material/Material";
+import { PBRMaterial } from "./material/PBRMaterial";
+import { SkyboxMaterial } from "./material/SkyboxMaterial";
 import { Mesh } from "./scene/Mesh";
 import { Light } from "./light/Light";
 import { getIndexFormat } from "./geometry/Geometry";
@@ -12,10 +14,18 @@ interface MeshGPUResources {
   indexBuffer: GPUBuffer;
   uniformBuffer: GPUBuffer;
   bindGroup: GPUBindGroup;
+  iblBindGroup?: GPUBindGroup;
   materialType: string;
   topology: GPUPrimitiveTopology;
   indexCount: number;
   indexFormat: GPUIndexFormat;
+}
+
+interface SkyboxGPUResources {
+  pipeline: GPURenderPipeline;
+  uniformBuffer: GPUBuffer;
+  bindGroup: GPUBindGroup;
+  material: SkyboxMaterial;
 }
 
 /**
@@ -41,6 +51,9 @@ export class Renderer {
   private pipelineCache: Map<string, GPURenderPipeline> = new Map();
   private meshBuffers: WeakMap<Mesh, MeshGPUResources> = new WeakMap();
   private trackedMeshes: Set<Mesh> = new Set();
+
+  // Skybox rendering resources
+  private skyboxResources?: SkyboxGPUResources;
 
   /**
    * Creates a new Renderer instance with 4x MSAA and depth buffering.
@@ -264,11 +277,42 @@ export class Renderer {
         entries: bindGroupEntries,
       });
 
+      // Create IBL bind group for PBR materials with IBL enabled
+      let iblBindGroup: GPUBindGroup | undefined;
+      if (mesh.material instanceof PBRMaterial && mesh.material.useIBL) {
+        const iblTextures = mesh.material.getIBLTextures(this.device);
+        if (iblTextures) {
+          iblBindGroup = this.device.createBindGroup({
+            label: "IBL Bind Group",
+            layout: pipeline.getBindGroupLayout(1),
+            entries: [
+              {
+                binding: 0,
+                resource: iblTextures.prefilteredMap.gpuSampler,
+              },
+              {
+                binding: 1,
+                resource: iblTextures.prefilteredMap.cubeView,
+              },
+              {
+                binding: 2,
+                resource: iblTextures.irradianceMap.cubeView,
+              },
+              {
+                binding: 3,
+                resource: iblTextures.brdfLUT.gpuTexture.createView(),
+              },
+            ],
+          });
+        }
+      }
+
       resources = {
         vertexBuffer,
         indexBuffer,
         uniformBuffer,
         bindGroup,
+        iblBindGroup,
         materialType: currentMaterialType,
         topology: currentTopology,
         indexCount: indexData.length,
@@ -279,6 +323,154 @@ export class Renderer {
     }
 
     return resources;
+  }
+
+  /**
+   * Creates or updates GPU resources for skybox rendering.
+   * @param material - The skybox material to render
+   * @returns GPU resources for skybox rendering
+   */
+  private getOrCreateSkyboxResources(
+    material: SkyboxMaterial
+  ): SkyboxGPUResources {
+    // Invalidate if material changed
+    if (this.skyboxResources && this.skyboxResources.material !== material) {
+      this.skyboxResources.uniformBuffer.destroy();
+      this.skyboxResources = undefined;
+    }
+
+    if (!this.skyboxResources) {
+      // Create skybox pipeline with special depth settings
+      const vertexShaderModule = this.device.createShaderModule({
+        label: "Skybox Vertex Shader",
+        code: material.getVertexShader(),
+      });
+
+      const fragmentShaderModule = this.device.createShaderModule({
+        label: "Skybox Fragment Shader",
+        code: material.getFragmentShader(),
+      });
+
+      const pipeline = this.device.createRenderPipeline({
+        label: "Skybox Pipeline",
+        layout: "auto",
+        vertex: {
+          module: vertexShaderModule,
+          entryPoint: "main",
+          // No vertex buffers - fullscreen triangle generated in shader
+        },
+        fragment: {
+          module: fragmentShaderModule,
+          entryPoint: "main",
+          targets: [{ format: this.format }],
+        },
+        primitive: {
+          topology: "triangle-list",
+          // No culling for skybox
+          cullMode: "none",
+        },
+        depthStencil: {
+          // No depth write - skybox rendered first at z=1
+          depthWriteEnabled: false,
+          // Skybox passes when depth is less-equal (z=1 passes initially)
+          depthCompare: "less-equal",
+          format: "depth24plus",
+        },
+        multisample: {
+          count: this.sampleCount,
+        },
+      });
+
+      const uniformBuffer = this.device.createBuffer({
+        label: "Skybox Uniform Buffer",
+        size: material.getUniformBufferSize(),
+        usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+      });
+
+      // Create bind group with textures
+      const textures = material.getTextures(this.device);
+      const cubeTexture = material.getCubeTexture();
+
+      const bindGroupEntries: GPUBindGroupEntry[] = [
+        { binding: 0, resource: { buffer: uniformBuffer } },
+        { binding: 1, resource: textures[0].gpuSampler },
+        { binding: 2, resource: textures[0].gpuTexture.createView() }, // equirect
+      ];
+
+      // Add cubemap view
+      if (cubeTexture) {
+        bindGroupEntries.push({
+          binding: 3,
+          resource: cubeTexture.cubeView,
+        });
+      } else {
+        // Create a dummy cube view from a 1x1 texture
+        // WebGPU requires the view to exist even if not used
+        const dummyCubeTexture = this.device.createTexture({
+          label: "Dummy Cube Texture",
+          size: [1, 1, 6],
+          format: "rgba8unorm",
+          usage: GPUTextureUsage.TEXTURE_BINDING,
+          dimension: "2d",
+        });
+        bindGroupEntries.push({
+          binding: 3,
+          resource: dummyCubeTexture.createView({
+            dimension: "cube",
+          }),
+        });
+      }
+
+      const bindGroup = this.device.createBindGroup({
+        label: "Skybox Bind Group",
+        layout: pipeline.getBindGroupLayout(0),
+        entries: bindGroupEntries,
+      });
+
+      this.skyboxResources = {
+        pipeline,
+        uniformBuffer,
+        bindGroup,
+        material,
+      };
+    }
+
+    return this.skyboxResources;
+  }
+
+  /**
+   * Renders the skybox as background.
+   * @param passEncoder - The render pass encoder
+   * @param material - The skybox material
+   * @param camera - The camera for view-projection calculation
+   */
+  private renderSkybox(
+    passEncoder: GPURenderPassEncoder,
+    material: SkyboxMaterial,
+    camera: Camera
+  ): void {
+    const resources = this.getOrCreateSkyboxResources(material);
+
+    // Write uniform data
+    const uniformData = new ArrayBuffer(material.getUniformBufferSize());
+    const dataView = new DataView(uniformData);
+
+    // Create minimal render context for skybox
+    const renderContext: RenderContext = {
+      camera,
+      scene: null as any, // Skybox doesn't need scene
+      mesh: null as any, // Skybox doesn't need mesh
+      lights: [],
+    };
+
+    material.writeUniformData(dataView, 0, renderContext);
+
+    this.device.queue.writeBuffer(resources.uniformBuffer, 0, uniformData);
+
+    passEncoder.setPipeline(resources.pipeline);
+    passEncoder.setBindGroup(0, resources.bindGroup);
+    // Draw fullscreen triangle (3 vertices, no vertex buffer)
+    passEncoder.draw(3);
   }
 
   /**
@@ -341,6 +533,11 @@ export class Renderer {
 
     const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor);
 
+    // Render skybox first (if scene has environment)
+    if (scene.skyboxMaterial) {
+      this.renderSkybox(passEncoder, scene.skyboxMaterial, camera);
+    }
+
     for (const mesh of meshes) {
       const material = mesh.material;
       const pipeline = this.getOrCreatePipeline(material);
@@ -394,6 +591,12 @@ export class Renderer {
 
       passEncoder.setPipeline(pipeline);
       passEncoder.setBindGroup(0, resources.bindGroup);
+
+      // Set IBL bind group for PBR materials with IBL enabled
+      if (resources.iblBindGroup) {
+        passEncoder.setBindGroup(1, resources.iblBindGroup);
+      }
+
       passEncoder.setVertexBuffer(0, resources.vertexBuffer);
 
       // Use draw() for non-indexed geometry (e.g., lines), drawIndexed() otherwise
