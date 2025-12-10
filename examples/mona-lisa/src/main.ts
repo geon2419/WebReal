@@ -14,108 +14,72 @@ import { Color, Vector3 } from "@web-real/math";
 import GUI from "lil-gui";
 
 interface ParallaxParams {
-  // Parallax material params
   depthScale: number;
   normalScale: number;
   shininess: number;
-  // Ambient light params
   ambientIntensity: number;
-  // Light 1 params (main light)
-  light1Enabled: boolean;
-  light1PosZ: number;
-  light1Intensity: number;
-  light1ColorR: number;
-  light1ColorG: number;
-  light1ColorB: number;
-  // Light 2 params (secondary light)
-  light2Enabled: boolean;
-  light2PosX: number;
-  light2PosY: number;
-  light2PosZ: number;
-  light2Intensity: number;
-  light2ColorR: number;
-  light2ColorG: number;
-  light2ColorB: number;
-  // Mouse control
+  mouseLightEnabled: boolean;
+  mouseLightPosZ: number;
+  mouseLightIntensity: number;
+  mouseLightColorR: number;
+  mouseLightColorG: number;
+  mouseLightColorB: number;
+  fillLightEnabled: boolean;
+  fillLightPosX: number;
+  fillLightPosY: number;
+  fillLightPosZ: number;
+  fillLightIntensity: number;
+  fillLightColorR: number;
+  fillLightColorG: number;
+  fillLightColorB: number;
   mouseEnabled: boolean;
   mouseRange: number;
+  tiltEnabled: boolean;
+  tiltAmount: number;
 }
 
 async function main() {
   const canvas = document.getElementById("canvas") as HTMLCanvasElement;
 
-  // Image dimensions
+  const canvasSize = 500;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = canvasSize * dpr;
+  canvas.height = canvasSize * dpr;
+  canvas.style.width = `${canvasSize}px`;
+  canvas.style.height = `${canvasSize}px`;
+
   const imageWidth = 560;
   const imageHeight = 1000;
   const imageAspectRatio = imageWidth / imageHeight;
-
-  function updateCanvasSize() {
-    const container = canvas.parentElement!;
-    const containerWidth = container.clientWidth;
-    const containerHeight = container.clientHeight;
-    const containerAspectRatio = containerWidth / containerHeight;
-
-    let displayWidth: number;
-    let displayHeight: number;
-
-    // Fit image to container while maintaining aspect ratio
-    if (containerAspectRatio > imageAspectRatio) {
-      // Container is wider, fit to height
-      displayHeight = containerHeight;
-      displayWidth = displayHeight * imageAspectRatio;
-    } else {
-      // Container is taller, fit to width
-      displayWidth = containerWidth;
-      displayHeight = displayWidth / imageAspectRatio;
-    }
-
-    const dpr = window.devicePixelRatio || 1;
-    const width = Math.floor(displayWidth * dpr);
-    const height = Math.floor(displayHeight * dpr);
-
-    if (canvas.width !== width || canvas.height !== height) {
-      canvas.width = width;
-      canvas.height = height;
-      canvas.style.width = `${displayWidth}px`;
-      canvas.style.height = `${displayHeight}px`;
-    }
-  }
-
-  updateCanvasSize();
-  window.addEventListener("resize", updateCanvasSize);
 
   try {
     const engine = await Engine.create({ canvas });
     const renderer = new Renderer(engine);
     renderer.setClearColor([0.02, 0.02, 0.03]);
 
-    // GUI parameters
     const params: ParallaxParams = {
-      // Parallax material params
       depthScale: 0.05,
       normalScale: 1.0,
       shininess: 64,
-      // Ambient light params
       ambientIntensity: 0.5,
-      // Light 1 params (main light - mouse controlled)
-      light1Enabled: true,
-      light1PosZ: 1.0,
-      light1Intensity: 0.5,
-      light1ColorR: 1.0,
-      light1ColorG: 1.0,
-      light1ColorB: 1.0,
-      // Light 2 params (secondary fixed light)
-      light2Enabled: true,
-      light2PosX: -0.8,
-      light2PosY: 0.5,
-      light2PosZ: 0.8,
-      light2Intensity: 0.3,
-      light2ColorR: 1.0,
-      light2ColorG: 0.9,
-      light2ColorB: 0.7,
-      // Mouse control
+      mouseLightEnabled: true,
+      mouseLightPosZ: 1.0,
+      mouseLightIntensity: 0.5,
+      mouseLightColorR: 1.0,
+      mouseLightColorG: 1.0,
+      mouseLightColorB: 1.0,
+      fillLightEnabled: true,
+      fillLightPosX: -0.8,
+      fillLightPosY: 0.5,
+      fillLightPosZ: 0.8,
+      fillLightIntensity: 0.3,
+      fillLightColorR: 1.0,
+      fillLightColorG: 0.9,
+      fillLightColorB: 0.7,
       mouseEnabled: true,
       mouseRange: 2.0,
+      tiltEnabled: true,
+      tiltAmount: 0.3,
     };
 
     const gui = new GUI({ title: "2.5D Parallax Controls" });
@@ -134,33 +98,55 @@ async function main() {
       .add(params, "ambientIntensity", 0, 1.0, 0.01)
       .name("Intensity");
 
-    const light1Folder = gui.addFolder("Light 1 (Main)");
-    light1Folder.add(params, "light1Enabled").name("Enabled");
-    light1Folder.add(params, "light1PosZ", 0.1, 2.0, 0.1).name("Distance");
-    light1Folder
-      .add(params, "light1Intensity", 0.1, 2.0, 0.1)
+    const mouseLightFolder = gui.addFolder("Mouse Light (Main)");
+    mouseLightFolder.add(params, "mouseLightEnabled").name("Enabled");
+    mouseLightFolder
+      .add(params, "mouseLightPosZ", 0.1, 2.0, 0.1)
+      .name("Distance");
+    mouseLightFolder
+      .add(params, "mouseLightIntensity", 0.1, 2.0, 0.1)
       .name("Intensity");
-    const light1ColorFolder = light1Folder.addFolder("Color");
-    light1ColorFolder.add(params, "light1ColorR", 0, 1, 0.01).name("Red");
-    light1ColorFolder.add(params, "light1ColorG", 0, 1, 0.01).name("Green");
-    light1ColorFolder.add(params, "light1ColorB", 0, 1, 0.01).name("Blue");
+    const mouseLightColorFolder = mouseLightFolder.addFolder("Color");
+    mouseLightColorFolder
+      .add(params, "mouseLightColorR", 0, 1, 0.01)
+      .name("Red");
+    mouseLightColorFolder
+      .add(params, "mouseLightColorG", 0, 1, 0.01)
+      .name("Green");
+    mouseLightColorFolder
+      .add(params, "mouseLightColorB", 0, 1, 0.01)
+      .name("Blue");
 
-    const light2Folder = gui.addFolder("Light 2 (Secondary)");
-    light2Folder.add(params, "light2Enabled").name("Enabled");
-    light2Folder.add(params, "light2PosX", -2.0, 2.0, 0.1).name("Position X");
-    light2Folder.add(params, "light2PosY", -2.0, 2.0, 0.1).name("Position Y");
-    light2Folder.add(params, "light2PosZ", 0.1, 2.0, 0.1).name("Position Z");
-    light2Folder
-      .add(params, "light2Intensity", 0.1, 2.0, 0.1)
+    const fillLightFolder = gui.addFolder("Fill Light (Secondary)");
+    fillLightFolder.add(params, "fillLightEnabled").name("Enabled");
+    fillLightFolder
+      .add(params, "fillLightPosX", -2.0, 2.0, 0.1)
+      .name("Position X");
+    fillLightFolder
+      .add(params, "fillLightPosY", -2.0, 2.0, 0.1)
+      .name("Position Y");
+    fillLightFolder
+      .add(params, "fillLightPosZ", 0.1, 2.0, 0.1)
+      .name("Position Z");
+    fillLightFolder
+      .add(params, "fillLightIntensity", 0.1, 2.0, 0.1)
       .name("Intensity");
-    const light2ColorFolder = light2Folder.addFolder("Color");
-    light2ColorFolder.add(params, "light2ColorR", 0, 1, 0.01).name("Red");
-    light2ColorFolder.add(params, "light2ColorG", 0, 1, 0.01).name("Green");
-    light2ColorFolder.add(params, "light2ColorB", 0, 1, 0.01).name("Blue");
+    const fillLightColorFolder = fillLightFolder.addFolder("Color");
+    fillLightColorFolder.add(params, "fillLightColorR", 0, 1, 0.01).name("Red");
+    fillLightColorFolder
+      .add(params, "fillLightColorG", 0, 1, 0.01)
+      .name("Green");
+    fillLightColorFolder
+      .add(params, "fillLightColorB", 0, 1, 0.01)
+      .name("Blue");
 
     const mouseFolder = gui.addFolder("Mouse Control");
     mouseFolder.add(params, "mouseEnabled").name("Enabled");
     mouseFolder.add(params, "mouseRange", 0.0, 2.0, 0.1).name("Range");
+
+    const tiltFolder = gui.addFolder("Tilt Effect");
+    tiltFolder.add(params, "tiltEnabled").name("Enabled");
+    tiltFolder.add(params, "tiltAmount", 0.0, 1.0, 0.05).name("Amount");
 
     const [albedoTexture, depthTexture, normalTexture] = await Promise.all([
       Texture.fromURL(engine.device, "/assets/monalisa.jpg"),
@@ -170,7 +156,8 @@ async function main() {
 
     const scene = new Scene();
 
-    const planeHeight = 2.0;
+    const maxViewSize = 1.6;
+    const planeHeight = maxViewSize;
     const planeWidth = planeHeight * imageAspectRatio;
 
     const planeGeometry = new PlaneGeometry({
@@ -188,42 +175,47 @@ async function main() {
       depthScale: params.depthScale,
       normalScale: params.normalScale,
       shininess: params.shininess,
-      generateNormalFromDepth: false, // Use provided normal map
+      generateNormalFromDepth: false,
     });
 
     const mesh = new Mesh(planeGeometry, parallaxMaterial);
     scene.add(mesh);
 
-    // Ambient light
     const ambientLight = new AmbientLight(
       new Color(1.0, 1.0, 1.0),
       params.ambientIntensity
     );
     scene.add(ambientLight);
 
-    // Light 1: Main light (mouse controlled)
-    const light1 = new PointLight(
-      new Color(params.light1ColorR, params.light1ColorG, params.light1ColorB),
-      params.light1Intensity,
+    const mouseLight = new PointLight(
+      new Color(
+        params.mouseLightColorR,
+        params.mouseLightColorG,
+        params.mouseLightColorB
+      ),
+      params.mouseLightIntensity,
       20,
       "quadratic"
     );
-    light1.position.set(0, 0, params.light1PosZ);
-    scene.add(light1);
+    mouseLight.position.set(0, 0, params.mouseLightPosZ);
+    scene.add(mouseLight);
 
-    // Light 2: Secondary fixed light (warm tone from left-top)
-    const light2 = new PointLight(
-      new Color(params.light2ColorR, params.light2ColorG, params.light2ColorB),
-      params.light2Intensity,
+    const fillLight = new PointLight(
+      new Color(
+        params.fillLightColorR,
+        params.fillLightColorG,
+        params.fillLightColorB
+      ),
+      params.fillLightIntensity,
       20,
       "quadratic"
     );
-    light2.position.set(
-      params.light2PosX,
-      params.light2PosY,
-      params.light2PosZ
+    fillLight.position.set(
+      params.fillLightPosX,
+      params.fillLightPosY,
+      params.fillLightPosZ
     );
-    scene.add(light2);
+    scene.add(fillLight);
 
     const camera = new PerspectiveCamera({
       fov: 45,
@@ -232,84 +224,90 @@ async function main() {
     });
     camera.updateAspect(canvas);
 
-    // Calculate camera distance to fill viewport with the plane
-    // For a plane of height H, to fill the viewport vertically:
-    // distance = (H / 2) / tan(fov / 2)
     const fovRadians = (45 * Math.PI) / 180;
-    const distance = planeHeight / 2 / Math.tan(fovRadians / 2);
+    const viewHeight = 2.0;
+    const distance = viewHeight / 2 / Math.tan(fovRadians / 2);
 
     camera.position.set(0, 0, distance);
     camera.lookAt(new Vector3(0, 0, 0));
 
     let mouseX = 0;
     let mouseY = 0;
+    let targetTiltX = 0;
+    let targetTiltY = 0;
+    let currentTiltX = 0;
+    let currentTiltY = 0;
 
     canvas.addEventListener("mousemove", (event) => {
-      if (!params.mouseEnabled) {
-        return;
-      }
-
       const rect = canvas.getBoundingClientRect();
-      // Normalize mouse position to [-1, 1] range
       mouseX = ((event.clientX - rect.left) / rect.width) * 2 - 1;
       mouseY = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+      if (params.tiltEnabled) {
+        targetTiltX = mouseY * params.tiltAmount;
+        targetTiltY = -mouseX * params.tiltAmount;
+      }
     });
 
     canvas.addEventListener("mouseleave", () => {
       mouseX = 0;
       mouseY = 0;
+      targetTiltX = 0;
+      targetTiltY = 0;
     });
 
     engine.run(() => {
-      // Update camera aspect ratio if canvas size changed
-      camera.updateAspect(canvas);
+      const lerpFactor = 0.1;
+      currentTiltX += (targetTiltX - currentTiltX) * lerpFactor;
+      currentTiltY += (targetTiltY - currentTiltY) * lerpFactor;
 
-      // Update parallax material properties
+      if (params.tiltEnabled) {
+        mesh.rotation.set(currentTiltX, currentTiltY, 0);
+      } else {
+        mesh.rotation.set(0, 0, 0);
+      }
+
       parallaxMaterial.depthScale = params.depthScale;
       parallaxMaterial.normalScale = params.normalScale;
       parallaxMaterial.shininess = params.shininess;
 
-      // Update ambient light
       ambientLight.intensity = params.ambientIntensity;
 
-      // Update light 1 position based on mouse
       if (params.mouseEnabled) {
-        light1.position.set(
+        mouseLight.position.set(
           mouseX * params.mouseRange,
           mouseY * params.mouseRange,
-          params.light1PosZ
+          params.mouseLightPosZ
         );
       } else {
-        light1.position.set(0, 0, params.light1PosZ);
+        mouseLight.position.set(0, 0, params.mouseLightPosZ);
       }
 
-      // Update light 1 properties
-      if (params.light1Enabled) {
-        light1.intensity = params.light1Intensity;
-        light1.color = new Color(
-          params.light1ColorR,
-          params.light1ColorG,
-          params.light1ColorB
+      if (params.mouseLightEnabled) {
+        mouseLight.intensity = params.mouseLightIntensity;
+        mouseLight.color = new Color(
+          params.mouseLightColorR,
+          params.mouseLightColorG,
+          params.mouseLightColorB
         );
       } else {
-        light1.intensity = 0;
+        mouseLight.intensity = 0;
       }
 
-      // Update light 2 properties
-      light2.position.set(
-        params.light2PosX,
-        params.light2PosY,
-        params.light2PosZ
+      fillLight.position.set(
+        params.fillLightPosX,
+        params.fillLightPosY,
+        params.fillLightPosZ
       );
-      if (params.light2Enabled) {
-        light2.intensity = params.light2Intensity;
-        light2.color = new Color(
-          params.light2ColorR,
-          params.light2ColorG,
-          params.light2ColorB
+      if (params.fillLightEnabled) {
+        fillLight.intensity = params.fillLightIntensity;
+        fillLight.color = new Color(
+          params.fillLightColorR,
+          params.fillLightColorG,
+          params.fillLightColorB
         );
       } else {
-        light2.intensity = 0;
+        fillLight.intensity = 0;
       }
 
       renderer.render(scene, camera);
