@@ -92,9 +92,9 @@ export class ParallaxMaterial implements Material {
    * @param value - Depth scale value (recommended range: 0.01-0.1)
    */
   set depthScale(value: number) {
-    if (value < 0.01 || value > 0.15) {
+    if (value < 0.01 || value > 0.1) {
       console.warn(
-        `ParallaxMaterial: depthScale ${value} is outside recommended range (0.01-0.15)`
+        `ParallaxMaterial: depthScale ${value} is outside recommended range (0.01-0.1)`
       );
     }
     this._depthScale = value;
