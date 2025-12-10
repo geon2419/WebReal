@@ -7,6 +7,7 @@ import {
   Scene,
   PerspectiveCamera,
   PointLight,
+  AmbientLight,
   Texture,
 } from "@web-real/core";
 import { Color, Vector3 } from "@web-real/math";
@@ -17,13 +18,24 @@ interface ParallaxParams {
   depthScale: number;
   normalScale: number;
   shininess: number;
-  // Light params
-  lightEnabled: boolean;
-  lightPosZ: number;
-  lightIntensity: number;
-  lightColorR: number;
-  lightColorG: number;
-  lightColorB: number;
+  // Ambient light params
+  ambientIntensity: number;
+  // Light 1 params (main light)
+  light1Enabled: boolean;
+  light1PosZ: number;
+  light1Intensity: number;
+  light1ColorR: number;
+  light1ColorG: number;
+  light1ColorB: number;
+  // Light 2 params (secondary light)
+  light2Enabled: boolean;
+  light2PosX: number;
+  light2PosY: number;
+  light2PosZ: number;
+  light2Intensity: number;
+  light2ColorR: number;
+  light2ColorG: number;
+  light2ColorB: number;
   // Mouse control
   mouseEnabled: boolean;
   mouseRange: number;
@@ -83,13 +95,24 @@ async function main() {
       depthScale: 0.05,
       normalScale: 1.0,
       shininess: 64,
-      // Light params
-      lightEnabled: true,
-      lightPosZ: 1.0,
-      lightIntensity: 0.5,
-      lightColorR: 1.0,
-      lightColorG: 1.0,
-      lightColorB: 1.0,
+      // Ambient light params
+      ambientIntensity: 0.5,
+      // Light 1 params (main light - mouse controlled)
+      light1Enabled: true,
+      light1PosZ: 1.0,
+      light1Intensity: 0.5,
+      light1ColorR: 1.0,
+      light1ColorG: 1.0,
+      light1ColorB: 1.0,
+      // Light 2 params (secondary fixed light)
+      light2Enabled: true,
+      light2PosX: -0.8,
+      light2PosY: 0.5,
+      light2PosZ: 0.8,
+      light2Intensity: 0.3,
+      light2ColorR: 1.0,
+      light2ColorG: 0.9,
+      light2ColorB: 0.7,
       // Mouse control
       mouseEnabled: true,
       mouseRange: 2.0,
@@ -106,14 +129,34 @@ async function main() {
       .name("Normal Scale");
     parallaxFolder.add(params, "shininess", 1, 128, 1).name("Shininess");
 
-    const lightFolder = gui.addFolder("Light");
-    lightFolder.add(params, "lightEnabled").name("Enabled");
-    lightFolder.add(params, "lightPosZ", 0.1, 2.0, 0.1).name("Distance");
-    lightFolder.add(params, "lightIntensity", 0.1, 2.0, 0.1).name("Intensity");
-    const lightColorFolder = lightFolder.addFolder("Color");
-    lightColorFolder.add(params, "lightColorR", 0, 1, 0.01).name("Red");
-    lightColorFolder.add(params, "lightColorG", 0, 1, 0.01).name("Green");
-    lightColorFolder.add(params, "lightColorB", 0, 1, 0.01).name("Blue");
+    const ambientFolder = gui.addFolder("Ambient Light");
+    ambientFolder
+      .add(params, "ambientIntensity", 0, 1.0, 0.01)
+      .name("Intensity");
+
+    const light1Folder = gui.addFolder("Light 1 (Main)");
+    light1Folder.add(params, "light1Enabled").name("Enabled");
+    light1Folder.add(params, "light1PosZ", 0.1, 2.0, 0.1).name("Distance");
+    light1Folder
+      .add(params, "light1Intensity", 0.1, 2.0, 0.1)
+      .name("Intensity");
+    const light1ColorFolder = light1Folder.addFolder("Color");
+    light1ColorFolder.add(params, "light1ColorR", 0, 1, 0.01).name("Red");
+    light1ColorFolder.add(params, "light1ColorG", 0, 1, 0.01).name("Green");
+    light1ColorFolder.add(params, "light1ColorB", 0, 1, 0.01).name("Blue");
+
+    const light2Folder = gui.addFolder("Light 2 (Secondary)");
+    light2Folder.add(params, "light2Enabled").name("Enabled");
+    light2Folder.add(params, "light2PosX", -2.0, 2.0, 0.1).name("Position X");
+    light2Folder.add(params, "light2PosY", -2.0, 2.0, 0.1).name("Position Y");
+    light2Folder.add(params, "light2PosZ", 0.1, 2.0, 0.1).name("Position Z");
+    light2Folder
+      .add(params, "light2Intensity", 0.1, 2.0, 0.1)
+      .name("Intensity");
+    const light2ColorFolder = light2Folder.addFolder("Color");
+    light2ColorFolder.add(params, "light2ColorR", 0, 1, 0.01).name("Red");
+    light2ColorFolder.add(params, "light2ColorG", 0, 1, 0.01).name("Green");
+    light2ColorFolder.add(params, "light2ColorB", 0, 1, 0.01).name("Blue");
 
     const mouseFolder = gui.addFolder("Mouse Control");
     mouseFolder.add(params, "mouseEnabled").name("Enabled");
@@ -151,14 +194,36 @@ async function main() {
     const mesh = new Mesh(planeGeometry, parallaxMaterial);
     scene.add(mesh);
 
-    const light = new PointLight(
-      new Color(params.lightColorR, params.lightColorG, params.lightColorB),
-      params.lightIntensity,
+    // Ambient light
+    const ambientLight = new AmbientLight(
+      new Color(1.0, 1.0, 1.0),
+      params.ambientIntensity
+    );
+    scene.add(ambientLight);
+
+    // Light 1: Main light (mouse controlled)
+    const light1 = new PointLight(
+      new Color(params.light1ColorR, params.light1ColorG, params.light1ColorB),
+      params.light1Intensity,
       20,
       "quadratic"
     );
-    light.position.set(0, 0, params.lightPosZ);
-    scene.add(light);
+    light1.position.set(0, 0, params.light1PosZ);
+    scene.add(light1);
+
+    // Light 2: Secondary fixed light (warm tone from left-top)
+    const light2 = new PointLight(
+      new Color(params.light2ColorR, params.light2ColorG, params.light2ColorB),
+      params.light2Intensity,
+      20,
+      "quadratic"
+    );
+    light2.position.set(
+      params.light2PosX,
+      params.light2PosY,
+      params.light2PosZ
+    );
+    scene.add(light2);
 
     const camera = new PerspectiveCamera({
       fov: 45,
@@ -204,27 +269,47 @@ async function main() {
       parallaxMaterial.normalScale = params.normalScale;
       parallaxMaterial.shininess = params.shininess;
 
-      // Update light position based on mouse
+      // Update ambient light
+      ambientLight.intensity = params.ambientIntensity;
+
+      // Update light 1 position based on mouse
       if (params.mouseEnabled) {
-        light.position.set(
+        light1.position.set(
           mouseX * params.mouseRange,
           mouseY * params.mouseRange,
-          params.lightPosZ
+          params.light1PosZ
         );
       } else {
-        light.position.set(0, 0, params.lightPosZ);
+        light1.position.set(0, 0, params.light1PosZ);
       }
 
-      // Update light properties
-      if (params.lightEnabled) {
-        light.intensity = params.lightIntensity;
-        light.color = new Color(
-          params.lightColorR,
-          params.lightColorG,
-          params.lightColorB
+      // Update light 1 properties
+      if (params.light1Enabled) {
+        light1.intensity = params.light1Intensity;
+        light1.color = new Color(
+          params.light1ColorR,
+          params.light1ColorG,
+          params.light1ColorB
         );
       } else {
-        light.intensity = 0;
+        light1.intensity = 0;
+      }
+
+      // Update light 2 properties
+      light2.position.set(
+        params.light2PosX,
+        params.light2PosY,
+        params.light2PosZ
+      );
+      if (params.light2Enabled) {
+        light2.intensity = params.light2Intensity;
+        light2.color = new Color(
+          params.light2ColorR,
+          params.light2ColorG,
+          params.light2ColorB
+        );
+      } else {
+        light2.intensity = 0;
       }
 
       renderer.render(scene, camera);
