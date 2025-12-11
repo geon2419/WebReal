@@ -8,7 +8,7 @@ import {
   PerspectiveCamera,
   OrbitCameraController,
   Texture,
-  PMREMGenerator,
+
 } from "@web-real/core";
 import { Vector3, Color } from "@web-real/math";
 import GUI from "lil-gui";

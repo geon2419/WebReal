@@ -88,7 +88,7 @@ export class SkyboxMaterial implements Material {
    */
   setExposure(value: number): void {
     if (value <= 0) {
-      throw new Error("Exposure must be positive");
+      throw new Error("Exposure must be greater than 0");
     }
     this._exposure = value;
   }
