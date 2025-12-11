@@ -2,12 +2,13 @@ import {
   Engine,
   Renderer,
   SphereGeometry,
-  BasicMaterial,
+  PBRMaterial,
   Mesh,
   Scene,
   PerspectiveCamera,
   OrbitCameraController,
   Texture,
+  PMREMGenerator,
 } from "@web-real/core";
 import { Vector3, Color } from "@web-real/math";
 import GUI from "lil-gui";
@@ -16,6 +17,12 @@ interface EnvironmentMapParams {
   // Skybox
   skyboxExposure: number;
   skyboxRoughness: number;
+  // PBR Material
+  metalness: number;
+  roughness: number;
+  baseColorR: number;
+  baseColorG: number;
+  baseColorB: number;
 }
 
 async function main() {
@@ -48,6 +55,12 @@ async function main() {
       // Skybox
       skyboxExposure: 1.0,
       skyboxRoughness: 0.0,
+      // PBR Material
+      metalness: 1.0,
+      roughness: 0.1,
+      baseColorR: 1.0,
+      baseColorG: 1.0,
+      baseColorB: 1.0,
     };
 
     // Load panorama texture
@@ -59,21 +72,32 @@ async function main() {
     // Create scene
     const scene = new Scene();
 
-    // Set environment from equirectangular panorama (skybox only, no IBL)
+    // TEST: Use envMap directly without PMREM to reproduce the bug
+    console.log(
+      "Testing envMap without PMREM (this should trigger the bind group error before the fix)..."
+    );
     scene.setEnvironmentFromEquirectangular(panoramaTexture, {
       skyboxExposure: params.skyboxExposure,
       skyboxRoughness: params.skyboxRoughness,
     });
 
-    // Create reflective sphere
+    // Create reflective sphere with PBR material
     const sphereGeometry = new SphereGeometry({
       radius: 1.0,
       widthSegments: 64,
       heightSegments: 32,
     });
 
-    const material = new BasicMaterial({
-      color: new Color(0.8, 0.8, 0.8),
+    const material = new PBRMaterial({
+      baseColor: new Color(
+        params.baseColorR,
+        params.baseColorG,
+        params.baseColorB
+      ),
+      metalness: params.metalness,
+      roughness: params.roughness,
+      envMap: panoramaTexture, // Directly use envMap without IBL
+      envMapIntensity: 1.0,
     });
 
     const sphere = new Mesh(sphereGeometry, material);
@@ -113,6 +137,55 @@ async function main() {
       .onChange((value: number) => {
         scene.skyboxRoughness = value;
       });
+    skyboxFolder.open();
+
+    // Material folder
+    const materialFolder = gui.addFolder("PBR Material");
+    materialFolder
+      .add(params, "metalness", 0.0, 1.0, 0.01)
+      .name("Metalness")
+      .onChange((value: number) => {
+        material.metalness = value;
+      });
+    materialFolder
+      .add(params, "roughness", 0.0, 1.0, 0.01)
+      .name("Roughness")
+      .onChange((value: number) => {
+        material.roughness = value;
+      });
+
+    const baseColorFolder = materialFolder.addFolder("Base Color");
+    baseColorFolder
+      .add(params, "baseColorR", 0.0, 1.0, 0.01)
+      .name("R")
+      .onChange(() => {
+        material.baseColor = new Color(
+          params.baseColorR,
+          params.baseColorG,
+          params.baseColorB
+        );
+      });
+    baseColorFolder
+      .add(params, "baseColorG", 0.0, 1.0, 0.01)
+      .name("G")
+      .onChange(() => {
+        material.baseColor = new Color(
+          params.baseColorR,
+          params.baseColorG,
+          params.baseColorB
+        );
+      });
+    baseColorFolder
+      .add(params, "baseColorB", 0.0, 1.0, 0.01)
+      .name("B")
+      .onChange(() => {
+        material.baseColor = new Color(
+          params.baseColorR,
+          params.baseColorG,
+          params.baseColorB
+        );
+      });
+    materialFolder.open();
 
     // Render loop
     engine.run(() => {
