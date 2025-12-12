@@ -26,6 +26,7 @@ interface SkyboxGPUResources {
   uniformBuffer: GPUBuffer;
   bindGroup: GPUBindGroup;
   material: SkyboxMaterial;
+  bindingRevision: number;
 }
 
 /**
@@ -411,6 +412,47 @@ export class Renderer {
       this.skyboxResources = undefined;
     }
 
+    // Same material instance, but bindings have changed (e.g., env map switched).
+    // Rebuild bind group only; keep pipeline and uniform buffer.
+    if (
+      this.skyboxResources &&
+      this.skyboxResources.material === material &&
+      this.skyboxResources.bindingRevision !== material.bindingRevision
+    ) {
+      const textures = material.getTextures(this.device);
+      const cubeTexture = material.getCubeTexture();
+
+      const bindGroupEntries: GPUBindGroupEntry[] = [
+        {
+          binding: 0,
+          resource: { buffer: this.skyboxResources.uniformBuffer },
+        },
+        { binding: 1, resource: textures[0].gpuSampler },
+        { binding: 2, resource: textures[0].gpuTexture.createView() }, // equirect
+      ];
+
+      if (cubeTexture) {
+        bindGroupEntries.push({
+          binding: 3,
+          resource: cubeTexture.cubeView,
+        });
+      } else {
+        bindGroupEntries.push({
+          binding: 3,
+          resource: this.getDummyCubeTexture().createView({
+            dimension: "cube",
+          }),
+        });
+      }
+
+      this.skyboxResources.bindGroup = this.device.createBindGroup({
+        label: "Skybox Bind Group",
+        layout: this.skyboxResources.pipeline.getBindGroupLayout(0),
+        entries: bindGroupEntries,
+      });
+      this.skyboxResources.bindingRevision = material.bindingRevision;
+    }
+
     if (!this.skyboxResources) {
       // Create skybox pipeline with special depth settings
       const vertexShaderModule = this.device.createShaderModule({
@@ -476,18 +518,9 @@ export class Renderer {
           resource: cubeTexture.cubeView,
         });
       } else {
-        // Create a dummy cube view from a 1x1 texture
-        // WebGPU requires the view to exist even if not used
-        const dummyCubeTexture = this.device.createTexture({
-          label: "Dummy Cube Texture",
-          size: [1, 1, 6],
-          format: "rgba8unorm",
-          usage: GPUTextureUsage.TEXTURE_BINDING,
-          dimension: "2d",
-        });
         bindGroupEntries.push({
           binding: 3,
-          resource: dummyCubeTexture.createView({
+          resource: this.getDummyCubeTexture().createView({
             dimension: "cube",
           }),
         });
@@ -504,6 +537,7 @@ export class Renderer {
         uniformBuffer,
         bindGroup,
         material,
+        bindingRevision: material.bindingRevision,
       };
     }
 

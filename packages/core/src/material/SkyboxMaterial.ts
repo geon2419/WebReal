@@ -46,6 +46,7 @@ export class SkyboxMaterial implements Material {
   private _cubeMap?: CubeTexture;
   private _exposure: number;
   private _roughness: number;
+  private _bindingRevision: number = 0;
 
   /**
    * Creates a new SkyboxMaterial with the specified environment map.
@@ -73,6 +74,14 @@ export class SkyboxMaterial implements Material {
 
   get roughness(): number {
     return this._roughness;
+  }
+
+  /**
+   * Revision counter used by the renderer to know when cached GPU bindings (e.g., bind groups)
+   * for this material are no longer valid.
+   */
+  get bindingRevision(): number {
+    return this._bindingRevision;
   }
 
   /**
@@ -105,10 +114,28 @@ export class SkyboxMaterial implements Material {
   }
 
   /**
+   * Marks this material's GPU bindings as dirty.
+   * Use this if underlying texture/sampler state is mutated in-place without replacing
+   * the Texture/CubeTexture object reference.
+   */
+  invalidateBindings(): void {
+    this._bindingRevision++;
+  }
+
+  /**
    * Sets the equirectangular environment map.
    * @param texture - The equirectangular texture to use
    */
   setEquirectangularMap(texture: Texture): void {
+    // Only bump revision when bindings would actually change.
+    // - switching from cube -> equirect always changes bindings
+    // - setting the same equirect texture again should not
+    const isModeSwitch = !!this._cubeMap;
+    const isTextureChange = this._equirectangularMap !== texture;
+    if (isModeSwitch || isTextureChange) {
+      this._bindingRevision++;
+    }
+
     this._equirectangularMap = texture;
     this._cubeMap = undefined;
   }
@@ -118,6 +145,15 @@ export class SkyboxMaterial implements Material {
    * @param texture - The cubemap texture to use
    */
   setCubeMap(texture: CubeTexture): void {
+    // Only bump revision when bindings would actually change.
+    // - switching from equirect -> cube always changes bindings
+    // - setting the same cube texture again should not
+    const isModeSwitch = !!this._equirectangularMap;
+    const isTextureChange = this._cubeMap !== texture;
+    if (isModeSwitch || isTextureChange) {
+      this._bindingRevision++;
+    }
+
     this._cubeMap = texture;
     this._equirectangularMap = undefined;
   }

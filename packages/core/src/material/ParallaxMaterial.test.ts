@@ -116,12 +116,13 @@ describe("ParallaxMaterial", () => {
   });
 
   describe("getUniformBufferSize", () => {
-    it("should return 192 bytes", () => {
+    it("should return 384 bytes", () => {
       const material = new ParallaxMaterial({
         albedo: albedoTexture,
         depth: depthTexture,
       });
-      expect(material.getUniformBufferSize()).toBe(192);
+      // Total UBO size includes MVP (64 bytes) + material-specific block
+      expect(material.getUniformBufferSize()).toBe(384);
     });
   });
 
@@ -145,7 +146,7 @@ describe("ParallaxMaterial", () => {
         normalScale: 1.2,
         shininess: 48.0,
       });
-      const buffer = new ArrayBuffer(256);
+      const buffer = new ArrayBuffer(material.getUniformBufferSize());
       const dataView = new DataView(buffer);
 
       material.writeUniformData(dataView, 64);
@@ -162,21 +163,25 @@ describe("ParallaxMaterial", () => {
         albedo: albedoTexture,
         depth: depthTexture,
       });
-      const buffer = new ArrayBuffer(256);
+      const buffer = new ArrayBuffer(material.getUniformBufferSize());
       const dataView = new DataView(buffer);
 
       material.writeUniformData(dataView, 64);
 
-      // Light position at offset+96 (64+96=160)
-      expect(dataView.getFloat32(160, true)).toBe(2);
-      expect(dataView.getFloat32(164, true)).toBe(2);
-      expect(dataView.getFloat32(168, true)).toBe(3);
+      // No explicit lights provided => ambient fallback and lightCount=0.
+      // Ambient light at offset+96 (64+96=160): rgb=1, intensity=0.1
+      expect(dataView.getFloat32(160, true)).toBe(1);
+      expect(dataView.getFloat32(164, true)).toBe(1);
+      expect(dataView.getFloat32(168, true)).toBe(1);
+      expect(dataView.getFloat32(172, true)).toBeCloseTo(0.1);
 
-      // Light color at offset+112 (64+112=176)
-      expect(dataView.getFloat32(176, true)).toBe(1);
-      expect(dataView.getFloat32(180, true)).toBe(1);
-      expect(dataView.getFloat32(184, true)).toBe(1);
-      expect(dataView.getFloat32(188, true)).toBe(1);
+      // Light count at offset+112 (64+112=176)
+      expect(dataView.getFloat32(176, true)).toBe(0);
+
+      // First light slot begins at offset+128 (64+128=192) and should be zeroed
+      expect(dataView.getFloat32(192, true)).toBe(0);
+      expect(dataView.getFloat32(196, true)).toBe(0);
+      expect(dataView.getFloat32(200, true)).toBe(0);
     });
 
     it("should set hasNormalMap to 0 when no normal texture provided", () => {
@@ -184,7 +189,7 @@ describe("ParallaxMaterial", () => {
         albedo: albedoTexture,
         depth: depthTexture,
       });
-      const buffer = new ArrayBuffer(256);
+      const buffer = new ArrayBuffer(material.getUniformBufferSize());
       const dataView = new DataView(buffer);
 
       material.writeUniformData(dataView, 64);
