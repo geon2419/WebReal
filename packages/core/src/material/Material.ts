@@ -21,8 +21,10 @@ export interface VertexBufferLayout {
  */
 export interface RenderContext {
   camera: Camera;
-  scene: Scene;
-  mesh: Mesh;
+  /** Scene currently being rendered (optional for scene-independent passes like skybox) */
+  scene?: Scene;
+  /** Mesh currently being rendered (optional for scene-independent passes like skybox) */
+  mesh?: Mesh;
   /** Lights collected from the scene (collected once per frame by Renderer) */
   lights: Light[];
 }
@@ -34,6 +36,16 @@ export interface RenderContext {
 export interface Material {
   /** Unique identifier for the material type */
   readonly type: string;
+
+  /**
+   * Revision used to invalidate cached GPU bindings (bind groups) when
+   * texture/sampler resources change without changing material.type/topology.
+   *
+   * - If omitted, Renderer treats it as 0.
+   * - If a material mutates its bound resources (e.g., swapping textures),
+   *   it should increment this value.
+   */
+  readonly bindingRevision?: number;
 
   /**
    * Gets the vertex shader code for this material.
@@ -60,6 +72,19 @@ export interface Material {
   getUniformBufferSize(): number;
 
   /**
+   * Absolute byte offset where material-specific uniforms begin in the uniform buffer.
+   *
+   * Renderer convention:
+   * - 0..64: renderer-owned common block (typically MVP mat4x4f)
+   * - offset..: material-specific block written by writeUniformData()
+   *
+   * Policy:
+   * - If provided, this must be >= 64.
+   * - If omitted, Renderer defaults to 64.
+   */
+  getUniformDataOffset?(): number;
+
+  /**
    * Gets the primitive topology for rendering.
    * @returns GPU primitive topology (e.g., "triangle-list", "line-list")
    */
@@ -69,7 +94,7 @@ export interface Material {
    * Writes material-specific uniform data to the buffer.
    * @param buffer - DataView of the uniform buffer
    * @param offset - Byte offset to start writing (default varies by material, typically 64 after MVP matrix)
-   * @param context - Optional rendering context with camera, scene, and mesh information
+   * @param context - Optional rendering context with camera and optional scene/mesh information
    */
   writeUniformData?(
     buffer: DataView,

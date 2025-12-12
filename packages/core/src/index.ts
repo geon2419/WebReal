@@ -59,7 +59,17 @@ export {
   type TextureOptions,
   SamplerPresets,
   DEFAULT_SAMPLER_OPTIONS,
+  SamplerCache,
   MipmapGenerator,
   calculateMipLevelCount,
   isRenderableFormat,
+  CubeTexture,
+  type CubeTextureOptions,
+  PMREMGenerator,
+  type PMREMOptions,
+  type PMREMResult,
+  HDRLoader,
+  HDRLoaderError,
+  type HDRLoaderOptions,
 } from "./texture";
+export { SkyboxMaterial, type SkyboxMaterialOptions } from "./material";

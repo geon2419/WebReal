@@ -10,6 +10,7 @@ export {
   isRenderableFormat,
 } from "./MipmapGenerator";
 export { DummyTextures } from "./DummyTextures";
+export { SamplerCache } from "./SamplerCache";
 export {
   CubeTexture,
   CubeFace,

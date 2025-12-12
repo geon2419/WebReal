@@ -36,7 +36,8 @@ fn fragmentMain(input: VertexOutput) -> @location(0) vec4f {
       // Tangent space to world space
       let sampleVec = tangentSample.x * right + tangentSample.y * up + tangentSample.z * N;
       
-      let sample = textureSample(envMap, texSampler, sampleVec).rgb;
+      // Use textureSampleLevel to avoid potential non-uniform control flow issues
+      let sample = textureSampleLevel(envMap, texSampler, sampleVec, 0.0).rgb;
       irradiance += sample * cos(theta) * sin(theta);
       sampleCount += 1.0;
     }

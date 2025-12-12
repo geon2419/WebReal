@@ -30,6 +30,10 @@ import parallaxFrag from "./parallax/parallax.frag.wgsl";
 import pbrVert from "./pbr/pbr.vert.wgsl";
 import pbrFrag from "./pbr/pbr.frag.wgsl";
 
+// Skybox shader
+import skyboxVert from "./skybox/skybox.vert.wgsl";
+import skyboxFrag from "./skybox/skybox.frag.wgsl";
+
 export interface ShaderSource {
   vertex: string;
   fragment: string;
@@ -67,6 +71,10 @@ const shaders: Record<string, ShaderSource> = {
   pbr: {
     vertex: pbrVert,
     fragment: pbrFrag,
+  },
+  skybox: {
+    vertex: skyboxVert,
+    fragment: skyboxFrag,
   },
 };
 

@@ -191,23 +191,25 @@ describe("Material Interface", () => {
   describe("RenderContext structure", () => {
     it("should contain required fields", () => {
       const camera = new TestCamera();
-      const scene = new Scene();
-      const geometry = new BoxGeometry();
-      const material = new BasicMaterial();
-      const mesh = new Mesh(geometry, material);
       const light = new PointLight();
 
       const context: RenderContext = {
         camera,
-        scene,
-        mesh,
         lights: [light],
       };
 
       expect(context.camera).toBeDefined();
-      expect(context.scene).toBeDefined();
-      expect(context.mesh).toBeDefined();
       expect(context.lights).toBeDefined();
+    });
+
+    it("should allow omitting scene and mesh", () => {
+      const context: RenderContext = {
+        camera: new TestCamera(),
+        lights: [],
+      };
+
+      expect(context.scene).toBeUndefined();
+      expect(context.mesh).toBeUndefined();
     });
 
     it("should have camera of type Camera", () => {
@@ -216,8 +218,6 @@ describe("Material Interface", () => {
 
       const context: RenderContext = {
         camera,
-        scene: new Scene(),
-        mesh: new Mesh(new BoxGeometry(), new BasicMaterial()),
         lights: [],
       };
 
@@ -238,7 +238,7 @@ describe("Material Interface", () => {
       };
 
       expect(context.scene).toBe(scene);
-      expect(context.scene.children.length).toBeGreaterThan(0);
+      expect(context.scene?.children.length).toBeGreaterThan(0);
     });
 
     it("should have mesh of type Mesh", () => {
@@ -255,8 +255,8 @@ describe("Material Interface", () => {
       };
 
       expect(context.mesh).toBe(mesh);
-      expect(context.mesh.position.x).toBe(5);
-      expect(context.mesh.material).toBe(material);
+      expect(context.mesh?.position.x).toBe(5);
+      expect(context.mesh?.material).toBe(material);
     });
 
     it("should have lights array", () => {
@@ -267,8 +267,6 @@ describe("Material Interface", () => {
 
       const context: RenderContext = {
         camera: new TestCamera(),
-        scene: new Scene(),
-        mesh: new Mesh(new BoxGeometry(), new BasicMaterial()),
         lights: [light1, light2],
       };
 
@@ -281,8 +279,6 @@ describe("Material Interface", () => {
     it("should allow empty lights array", () => {
       const context: RenderContext = {
         camera: new TestCamera(),
-        scene: new Scene(),
-        mesh: new Mesh(new BoxGeometry(), new BasicMaterial()),
         lights: [],
       };
 

@@ -26,8 +26,24 @@
         "lil-gui": "^0.21.0",
       },
     },
+    "examples/environment-map": {
+      "name": "@examples/environment-map",
+      "dependencies": {
+        "@web-real/core": "workspace:*",
+        "@web-real/math": "workspace:*",
+        "lil-gui": "^0.21.0",
+      },
+    },
     "examples/mapping": {
       "name": "@examples/plane-geometry",
+      "dependencies": {
+        "@web-real/core": "workspace:*",
+        "@web-real/math": "workspace:*",
+        "lil-gui": "^0.21.0",
+      },
+    },
+    "examples/mona-lisa": {
+      "name": "@examples/mona-lisa",
       "dependencies": {
         "@web-real/core": "workspace:*",
         "@web-real/math": "workspace:*",
@@ -149,6 +165,10 @@
     "@examples/cube": ["@examples/cube@workspace:examples/box-geometry"],
 
     "@examples/cube-raw": ["@examples/cube-raw@workspace:examples/cube-raw"],
+
+    "@examples/environment-map": ["@examples/environment-map@workspace:examples/environment-map"],
+
+    "@examples/mona-lisa": ["@examples/mona-lisa@workspace:examples/mona-lisa"],
 
     "@examples/orthographic-camera": ["@examples/orthographic-camera@workspace:examples/orthographic-camera"],
 

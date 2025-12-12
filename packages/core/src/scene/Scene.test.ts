@@ -171,6 +171,38 @@ describe("Scene", () => {
       expect(found).toBe(light);
     });
 
+    describe("environment", () => {
+      describe("setEnvironmentFromPMREM", () => {
+        it("should throw if prefilteredMap is missing", () => {
+          const scene = new Scene();
+
+          expect(() =>
+            scene.setEnvironmentFromPMREM({
+              prefilteredMap: undefined as any,
+              irradianceMap: {} as any,
+              brdfLUT: {} as any,
+            } as any)
+          ).toThrow(
+            "Scene.setEnvironmentFromPMREM() requires pmrem.prefilteredMap and pmrem.irradianceMap"
+          );
+        });
+
+        it("should throw if irradianceMap is missing", () => {
+          const scene = new Scene();
+
+          expect(() =>
+            scene.setEnvironmentFromPMREM({
+              prefilteredMap: {} as any,
+              irradianceMap: undefined as any,
+              brdfLUT: {} as any,
+            } as any)
+          ).toThrow(
+            "Scene.setEnvironmentFromPMREM() requires pmrem.prefilteredMap and pmrem.irradianceMap"
+          );
+        });
+      });
+    });
+
     it("should return undefined when no lights exist", () => {
       const scene = new Scene();
       const obj = new Object3D();

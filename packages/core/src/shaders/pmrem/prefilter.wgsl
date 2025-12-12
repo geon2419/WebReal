@@ -4,6 +4,8 @@ const SAMPLE_COUNT: u32 = 1024u;
 struct Uniforms {
   face: u32,
   roughness: f32,
+  maxMipLevel: f32,
+  padding: f32,  // Unused, matches CPU buffer size (16 bytes total)
 }
 
 @group(0) @binding(0) var<uniform> uniforms: Uniforms;
@@ -55,18 +57,21 @@ fn fragmentMain(input: VertexOutput) -> @location(0) vec4f {
   var totalWeight: f32 = 0.0;
   
   let roughness = max(uniforms.roughness, 0.001);
+  let lod = roughness * uniforms.maxMipLevel;
   
   for (var i: u32 = 0u; i < SAMPLE_COUNT; i++) {
     let Xi = hammersley(i, SAMPLE_COUNT);
     let H = importanceSampleGGX(Xi, N, roughness);
     let L = normalize(2.0 * dot(V, H) * H - V);
     
+    // Use textureSampleLevel for explicit LOD control within loops, as required by WGSL when derivatives cannot be computed automatically.
+    let sample = textureSampleLevel(envMap, texSampler, L, lod).rgb;
+    
     let NdotL = max(dot(N, L), 0.0);
-    if (NdotL > 0.0) {
-      let sample = textureSample(envMap, texSampler, L).rgb;
-      prefilteredColor += sample * NdotL;
-      totalWeight += NdotL;
-    }
+    // Use select() to avoid branching - maintains uniform control flow
+    let weight = select(0.0, NdotL, NdotL > 0.0);
+    prefilteredColor += sample * weight;
+    totalWeight += weight;
   }
   
   if (totalWeight > 0.0) {

@@ -94,32 +94,73 @@ export class PBRMaterial implements Material {
     return this._color;
   }
 
+  set color(value: Color | [number, number, number]) {
+    this.setColor(value);
+  }
+
+  /** Alias for color property */
+  get baseColor(): Color {
+    return this._color;
+  }
+
+  set baseColor(value: Color | [number, number, number]) {
+    this.setColor(value);
+  }
+
   get metalness(): number {
     return this._metalness;
+  }
+
+  set metalness(value: number) {
+    this.setMetalness(value);
   }
 
   get roughness(): number {
     return this._roughness;
   }
 
+  set roughness(value: number) {
+    this.setRoughness(value);
+  }
+
   get normalScale(): number {
     return this._normalScale;
+  }
+
+  set normalScale(value: number) {
+    this.setNormalScale(value);
   }
 
   get aoMapIntensity(): number {
     return this._aoMapIntensity;
   }
 
+  set aoMapIntensity(value: number) {
+    this.setAoMapIntensity(value);
+  }
+
   get emissive(): Color {
     return this._emissive;
+  }
+
+  set emissive(value: Color | [number, number, number]) {
+    this.setEmissive(value);
   }
 
   get emissiveIntensity(): number {
     return this._emissiveIntensity;
   }
 
+  set emissiveIntensity(value: number) {
+    this.setEmissiveIntensity(value);
+  }
+
   get envMapIntensity(): number {
     return this._envMapIntensity;
+  }
+
+  set envMapIntensity(value: number) {
+    this.setEnvMapIntensity(value);
   }
 
   /**

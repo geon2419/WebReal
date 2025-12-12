@@ -453,7 +453,7 @@ export class PMREMGenerator {
     });
 
     const uniformBuffer = this._device.createBuffer({
-      size: 16, // face (u32) + roughness (f32) + padding
+      size: 16, // face (u32) + roughness (f32) + maxMipLevel (f32) + padding (f32)
       usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
     });
 
@@ -469,9 +469,11 @@ export class PMREMGenerator {
       for (let face = CubeFace.PositiveX; face <= CubeFace.NegativeZ; face++) {
         const faceEnum = face as CubeFace;
 
-        // Update uniforms: face and roughness
+        // Update uniforms: face, roughness, and maxMipLevel
         uniformDataU32[0] = face;
         uniformDataF32[1] = roughness;
+        uniformDataF32[2] = mipLevelCount - 1; // maxMipLevel for LOD calculation
+        // uniformDataF32[3] is padding
         this._device.queue.writeBuffer(uniformBuffer, 0, this._uniformBuffer!);
 
         const bindGroup = this._device.createBindGroup({
