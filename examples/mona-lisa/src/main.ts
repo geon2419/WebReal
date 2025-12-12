@@ -17,6 +17,7 @@ interface ParallaxParams {
   depthScale: number;
   normalScale: number;
   shininess: number;
+  shadowEnabled: boolean;
   ambientIntensity: number;
   mouseLightEnabled: boolean;
   mouseLightPosZ: number;
@@ -61,6 +62,7 @@ async function main() {
       depthScale: 0.05,
       normalScale: 1.0,
       shininess: 64,
+      shadowEnabled: false,
       ambientIntensity: 0.5,
       mouseLightEnabled: true,
       mouseLightPosZ: 1.0,
@@ -92,6 +94,9 @@ async function main() {
       .add(params, "normalScale", 0.5, 2.0, 0.1)
       .name("Normal Scale");
     parallaxFolder.add(params, "shininess", 1, 128, 1).name("Shininess");
+
+    const shadowFolder = gui.addFolder("Shadow");
+    shadowFolder.add(params, "shadowEnabled").name("Enabled");
 
     const ambientFolder = gui.addFolder("Ambient Light");
     ambientFolder
@@ -176,6 +181,7 @@ async function main() {
       normalScale: params.normalScale,
       shininess: params.shininess,
       generateNormalFromDepth: false,
+      selfShadow: params.shadowEnabled,
     });
 
     const mesh = new Mesh(planeGeometry, parallaxMaterial);
@@ -270,6 +276,7 @@ async function main() {
       parallaxMaterial.depthScale = params.depthScale;
       parallaxMaterial.normalScale = params.normalScale;
       parallaxMaterial.shininess = params.shininess;
+      parallaxMaterial.selfShadow = params.shadowEnabled;
 
       ambientLight.intensity = params.ambientIntensity;
 
