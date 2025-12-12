@@ -119,11 +119,10 @@ fn parallaxMapping(uv: vec2f, viewDir: vec3f, TBN: mat3x3f, params: ParallaxPara
   }
 
   // Prepare step (layers + UV delta)
-  let viewZ = abs(dot(vec3f(0.0, 0.0, 1.0), viewDirTangent));
-  let layersFromAngle = mix(PARALLAX_MAX_LAYERS, PARALLAX_MIN_LAYERS, viewZ);
+  let vzAbs = abs(viewDirTangent.z);
+  let layersFromAngle = mix(PARALLAX_MAX_LAYERS, PARALLAX_MIN_LAYERS, vzAbs);
 
   // Stabilize at grazing angles + clamp max offset to reduce UV tearing.
-  let vzAbs = abs(viewDirTangent.z);
   let angleFade = smoothstep(PARALLAX_ANGLE_FADE_START, PARALLAX_ANGLE_FADE_END, vzAbs);
   let vz = max(vzAbs, PARALLAX_VZ_MIN);
   let baseP = (viewDirTangent.xy / vz) * params.depthScale;
@@ -257,7 +256,7 @@ fn surfaceApplySelfShadow(albedoIn: vec3f, parallaxUV: vec2f, viewDir: vec3f, TB
   }
 
   let strength = params.selfShadowStrength;
-  let Vt = normalize(transpose(TBN) * viewDir);
+  let Vt = transpose(TBN) * viewDir;
   let grazing = 1.0 - clamp(abs(Vt.z), 0.0, 1.0);
   let height = parallaxSampleHeight(parallaxUV, params.flags);
   let cavity = clamp(1.0 - height, 0.0, 1.0);
@@ -384,14 +383,15 @@ fn main(input: FragmentInput) -> @location(0) vec4f {
   let params = uniformsGetParallaxParams();
   let parallax = parallaxComputeResult(input.uv, input.viewDir, TBN, params);
 
+  let viewDir = normalize(input.viewDir);
+
   var albedo = surfaceSampleAlbedo(parallax);
-  albedo = surfaceApplySelfShadow(albedo, parallax.uv, input.viewDir, TBN, params);
+  albedo = surfaceApplySelfShadow(albedo, parallax.uv, viewDir, TBN, params);
 
   let normalTangent = surfaceGetNormalTangent(parallax, params);
   
   let normal = normalize(TBN * normalTangent);
   
-  let viewDir = normalize(input.viewDir);
   let shininess = params.shininess;
   
   let ambient = albedo * uniforms.ambientLight.rgb * uniforms.ambientLight.a;
