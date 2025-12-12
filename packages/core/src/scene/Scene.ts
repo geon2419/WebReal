@@ -54,6 +54,12 @@ export class Scene extends Object3D {
 
   /**
    * Environment intensity for IBL reflections on PBR materials.
+   *
+   * @remarks
+   * This only has an effect when IBL is configured (i.e. both `prefilteredMap` and
+   * `irradianceMap` are set / `hasIBL === true`). If you call
+   * `setEnvironmentFromEquirectangular()`, IBL maps are cleared and this value will
+   * not affect rendering until IBL is set again (e.g. via `setEnvironmentFromPMREM()`).
    */
   get environmentIntensity(): number {
     return this._environmentIntensity;
@@ -112,6 +118,7 @@ export class Scene extends Object3D {
    *
    * @param pmrem - Result from PMREMGenerator.fromEquirectangular()
    * @param options - Additional options for environment setup
+   * @throws {Error} If pmrem is missing prefilteredMap or irradianceMap
    *
    * @example
    * ```ts
@@ -127,6 +134,12 @@ export class Scene extends Object3D {
     pmrem: PMREMResult,
     options?: Partial<SceneEnvironmentOptions>
   ): void {
+    if (!pmrem?.prefilteredMap || !pmrem?.irradianceMap) {
+      throw new Error(
+        "Scene.setEnvironmentFromPMREM() requires pmrem.prefilteredMap and pmrem.irradianceMap"
+      );
+    }
+
     this._prefilteredMap = pmrem.prefilteredMap;
     this._irradianceMap = pmrem.irradianceMap;
 
@@ -150,8 +163,12 @@ export class Scene extends Object3D {
 
   /**
    * Sets the environment using an equirectangular panorama texture.
-   * For skybox background only - does not provide IBL reflections.
-   * Use setEnvironmentFromPMREM() for full IBL support.
+   *
+   * @remarks
+   * This method is for skybox background only and does not provide IBL reflections.
+   * It clears the IBL maps (`prefilteredMap` and `irradianceMap`), so
+   * `environmentIntensity` will not have any effect until IBL is set again.
+   * Use `setEnvironmentFromPMREM()` for full IBL support.
    *
    * @param texture - Equirectangular panorama texture (2:1 aspect ratio)
    * @param options - Additional options for environment setup
