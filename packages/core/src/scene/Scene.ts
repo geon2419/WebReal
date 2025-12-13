@@ -45,31 +45,22 @@ export class Scene extends Object3D {
   private _skyboxRoughness: number = 0.0;
   private _skyboxMaterial?: SkyboxMaterial;
 
-  /**
-   * Gets the equirectangular environment map texture used for the skybox background.
-   */
+  /** Equirectangular environment map texture for skybox background. */
   get equirectangularMap(): Texture | undefined {
     return this._equirectangularMap;
   }
 
-  /**
-   * Gets the pre-filtered specular IBL cubemap for reflections on PBR materials.
-   */
+  /** Pre-filtered specular IBL cubemap for reflections on PBR materials. */
   get prefilteredMap(): CubeTexture | undefined {
     return this._prefilteredMap;
   }
 
-  /**
-   * Gets the diffuse irradiance IBL cubemap for ambient lighting on PBR materials.
-   */
+  /** Diffuse irradiance IBL cubemap for ambient lighting on PBR materials. */
   get irradianceMap(): CubeTexture | undefined {
     return this._irradianceMap;
   }
 
-  /**
-   * Gets or sets the environment intensity for IBL reflections on PBR materials.
-   * Only affects rendering when IBL is configured (hasIBL === true).
-   */
+  /** Environment intensity for IBL reflections (only affects rendering when hasIBL is true). */
   get environmentIntensity(): number {
     return this._environmentIntensity;
   }
@@ -78,9 +69,7 @@ export class Scene extends Object3D {
     this._environmentIntensity = value;
   }
 
-  /**
-   * Gets or sets the skybox exposure value for HDR tone mapping.
-   */
+  /** Skybox exposure value for HDR tone mapping. */
   get skyboxExposure(): number {
     return this._skyboxExposure;
   }
@@ -92,9 +81,7 @@ export class Scene extends Object3D {
     }
   }
 
-  /**
-   * Gets or sets the skybox roughness for blur effect (0 = sharp, 1 = maximum blur).
-   */
+  /** Skybox roughness for blur effect (0 = sharp, 1 = maximum blur). */
   get skyboxRoughness(): number {
     return this._skyboxRoughness;
   }
@@ -106,38 +93,32 @@ export class Scene extends Object3D {
     }
   }
 
-  /**
-   * Gets the internal skybox material used for rendering the environment background.
-   * Automatically created when environment is set.
-   */
+  /** Internal skybox material for rendering the environment background (created when environment is set). */
   get skyboxMaterial(): SkyboxMaterial | undefined {
     return this._skyboxMaterial;
   }
 
-  /**
-   * Checks if the scene has IBL (Image-Based Lighting) fully configured.
-   * Returns true when both prefilteredMap and irradianceMap are set.
-   */
+  /** Checks if IBL (Image-Based Lighting) is fully configured (both prefilteredMap and irradianceMap are set). */
   get hasIBL(): boolean {
     return !!(this._prefilteredMap && this._irradianceMap);
   }
 
+  private _cleanupSkyboxMaterial(): void {
+    // Currently SkyboxMaterial doesn't hold GPU resources directly
+    // (bind groups are cached in Renderer), but we clear the reference
+    // to allow garbage collection and future-proof for when materials
+    // might own GPU resources.
+    this._skyboxMaterial = undefined;
+  }
+
   /**
-   * Sets the environment using PMREM-generated IBL maps for full PBR lighting support.
-   * This is the recommended method for realistic environment reflections and lighting.
-   *
+   * Sets the environment using PMREM-generated IBL maps for full PBR lighting.
    * @param pmrem - Pre-filtered environment maps from PMREMGenerator.fromEquirectangular()
-   * @param options - Optional environment configuration (intensity, exposure, roughness)
-   * @throws Error if pmrem is missing prefilteredMap or irradianceMap
-   *
+   * @param options - Optional configuration for intensity, exposure, and roughness
    * @example
    * ```ts
-   * const hdrTexture = await HDRLoader.load(device, 'environment.hdr');
    * const pmrem = await PMREMGenerator.fromEquirectangular(device, hdrTexture);
-   * scene.setEnvironmentFromPMREM(pmrem, {
-   *   environmentIntensity: 1.0,
-   *   skyboxExposure: 1.5
-   * });
+   * scene.setEnvironmentFromPMREM(pmrem, { environmentIntensity: 1.0 });
    * ```
    */
   setEnvironmentFromPMREM(
@@ -149,6 +130,9 @@ export class Scene extends Object3D {
         "Scene.setEnvironmentFromPMREM() requires pmrem.prefilteredMap and pmrem.irradianceMap"
       );
     }
+
+    // Clean up existing skybox material to prevent memory leaks
+    this._cleanupSkyboxMaterial();
 
     this._prefilteredMap = pmrem.prefilteredMap;
     this._irradianceMap = pmrem.irradianceMap;
@@ -172,25 +156,22 @@ export class Scene extends Object3D {
   }
 
   /**
-   * Sets the environment using an equirectangular panorama texture for skybox only.
-   * Clears IBL maps, so this method does not provide reflections on materials.
-   * Use setEnvironmentFromPMREM() for full IBL support.
-   *
-   * @param texture - Equirectangular panorama texture (2:1 aspect ratio, HDR or LDR)
-   * @param options - Optional skybox configuration (exposure, roughness)
-   *
+   * Sets the environment using an equirectangular panorama texture for skybox only (no IBL reflections).
+   * @param texture - Equirectangular panorama texture (2:1 aspect ratio)
+   * @param options - Optional configuration for exposure and roughness
    * @example
    * ```ts
    * const hdrTexture = await HDRLoader.load(device, 'panorama.hdr');
-   * scene.setEnvironmentFromEquirectangular(hdrTexture, {
-   *   skyboxExposure: 1.2
-   * });
+   * scene.setEnvironmentFromEquirectangular(hdrTexture, { skyboxExposure: 1.2 });
    * ```
    */
   setEnvironmentFromEquirectangular(
     texture: Texture,
     options?: Partial<SceneEnvironmentOptions>
   ): void {
+    // Clean up existing skybox material to prevent memory leaks
+    this._cleanupSkyboxMaterial();
+
     this._equirectangularMap = texture;
     this._prefilteredMap = undefined;
     this._irradianceMap = undefined;
@@ -212,11 +193,12 @@ export class Scene extends Object3D {
 
   /**
    * Sets the full environment configuration with manual control over all maps.
-   * For most use cases, prefer setEnvironmentFromPMREM() or setEnvironmentFromEquirectangular().
-   *
    * @param options - Complete environment configuration including maps and parameters
    */
   setEnvironment(options: SceneEnvironmentOptions): void {
+    // Clean up existing skybox material to prevent memory leaks
+    this._cleanupSkyboxMaterial();
+
     this._equirectangularMap = options.equirectangularMap;
     this._prefilteredMap = options.prefilteredMap;
     this._irradianceMap = options.irradianceMap;
@@ -251,15 +233,29 @@ export class Scene extends Object3D {
    * Clears all environment settings including skybox and IBL maps.
    */
   clearEnvironment(): void {
+    // Clean up skybox material
+    this._cleanupSkyboxMaterial();
+
+    // Clear texture references (borrowed resources, not owned by Scene)
     this._equirectangularMap = undefined;
     this._prefilteredMap = undefined;
     this._irradianceMap = undefined;
-    this._skyboxMaterial = undefined;
+  }
+
+  /**
+   * Disposes all resources owned by this scene (skybox material only, not textures or children).
+   * @example
+   * ```ts
+   * engine.stop();
+   * scene.dispose();
+   * ```
+   */
+  dispose(): void {
+    this.clearEnvironment();
   }
 
   /**
    * Updates the world transformation matrices for this scene and all children.
-   * Called automatically by the renderer before rendering.
    */
   updateMatrixWorld(): void {
     this.updateWorldMatrix(false, true);
@@ -267,10 +263,8 @@ export class Scene extends Object3D {
 
   /**
    * Finds the first light of the specified type in the scene graph.
-   * Traverses all children to locate a matching light.
-   *
-   * @param type - Optional light constructor to filter by specific type
-   * @returns The first matching light, or undefined if none exists
+   * @param type - Optional light constructor to filter by
+   * @returns The first matching light, or undefined if not found
    */
   findFirstLight<T extends Light = Light>(
     type?: new (...args: any[]) => T
