@@ -1,5 +1,5 @@
 export { Engine, type EngineOptions } from "./Engine";
-export { Renderer } from "./Renderer";
+export { Renderer } from "./renderer/Renderer";
 export {
   BoxGeometry,
   FrustumGeometry,
