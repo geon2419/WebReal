@@ -75,7 +75,6 @@ export class FallbackResources {
 
   /**
    * Destroys any created fallback textures and releases references.
-   * @returns Nothing
    */
   dispose(): void {
     this._dummyCubeTexture?.destroy();

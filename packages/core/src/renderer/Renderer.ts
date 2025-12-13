@@ -143,7 +143,6 @@ export class Renderer {
 
   /**
    * Disposes all GPU resources owned by the renderer.
-   * @returns Nothing
    */
   dispose(): void {
     this._renderTargets.dispose();
@@ -156,7 +155,6 @@ export class Renderer {
   /**
    * Disposes GPU resources associated with a specific mesh.
    * @param mesh - Mesh to remove from internal caches
-   * @returns Nothing
    */
   disposeMesh(mesh: Mesh): void {
     this._meshResources.disposeMesh(mesh);

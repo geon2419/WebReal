@@ -53,7 +53,6 @@ export class SkyboxPass {
    * @param passEncoder - Active render pass encoder to record draw commands into
    * @param material - Skybox material providing shaders and textures
    * @param camera - Camera used to build skybox uniforms
-   * @returns Nothing
    */
   render(
     passEncoder: GPURenderPassEncoder,
@@ -80,7 +79,6 @@ export class SkyboxPass {
 
   /**
    * Releases any cached GPU resources owned by this pass.
-   * @returns Nothing
    */
   dispose(): void {
     if (this._resources) {

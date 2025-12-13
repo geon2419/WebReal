@@ -313,7 +313,6 @@ export class MeshResourceCache {
 
   /**
    * Disposes all tracked mesh GPU resources.
-   * @returns Nothing
    */
   disposeAll(): void {
     for (const resources of this._trackedMeshResources) {

@@ -93,7 +93,6 @@ export class PipelineCache {
 
   /**
    * Clears all cached pipelines.
-   * @returns Nothing
    */
   clear(): void {
     this._pipelineCache.clear();

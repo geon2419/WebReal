@@ -98,7 +98,6 @@ export class RenderTargets {
 
   /**
    * Destroys owned textures and disconnects the resize observer.
-   * @returns Nothing
    */
   dispose(): void {
     this._resizeObserver.disconnect();

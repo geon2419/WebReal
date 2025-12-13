@@ -45,7 +45,6 @@ export class MeshPass {
    * @param options.lights - Lights to include in the material render context
    * @param options.scene - Scene used for material render context
    * @param options.camera - Camera providing view/projection matrices
-   * @returns Nothing
    */
   render(options: {
     passEncoder: GPURenderPassEncoder;
