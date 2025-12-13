@@ -72,29 +72,10 @@ export class MeshResourceCache {
 
     if (resources && resources.bindingRevision !== currentBindingRevision) {
       const uniformBuffer = resources.uniformBuffer;
-
-      const bindGroupEntries: GPUBindGroupEntry[] = [
-        {
-          binding: 0,
-          resource: { buffer: uniformBuffer },
-        },
-      ];
-
-      if (mesh.material.getTextures) {
-        const textures = mesh.material.getTextures(this._device);
-        if (textures.length > 0) {
-          bindGroupEntries.push({
-            binding: 1,
-            resource: textures[0].gpuSampler,
-          });
-          textures.forEach((texture, index) => {
-            bindGroupEntries.push({
-              binding: 2 + index,
-              resource: texture.gpuTexture.createView(),
-            });
-          });
-        }
-      }
+      const bindGroupEntries = this._createMeshBindGroupEntries(
+        mesh,
+        uniformBuffer
+      );
 
       resources.bindGroup = this._device.createBindGroup({
         label: "Mesh Bind Group",
@@ -193,30 +174,10 @@ export class MeshResourceCache {
         usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
       });
 
-      const bindGroupEntries: GPUBindGroupEntry[] = [
-        {
-          binding: 0,
-          resource: { buffer: uniformBuffer },
-        },
-      ];
-
-      if (mesh.material.getTextures) {
-        const textures = mesh.material.getTextures(this._device);
-
-        if (textures.length > 0) {
-          bindGroupEntries.push({
-            binding: 1,
-            resource: textures[0].gpuSampler,
-          });
-
-          textures.forEach((texture, index) => {
-            bindGroupEntries.push({
-              binding: 2 + index,
-              resource: texture.gpuTexture.createView(),
-            });
-          });
-        }
-      }
+      const bindGroupEntries = this._createMeshBindGroupEntries(
+        mesh,
+        uniformBuffer
+      );
 
       const bindGroup = this._device.createBindGroup({
         label: "Mesh Bind Group",
@@ -329,5 +290,41 @@ export class MeshResourceCache {
     resources.indexBuffer.destroy();
     resources.uniformBuffer.destroy();
     this._trackedMeshResources.delete(resources);
+  }
+
+  /**
+   * Creates bind group entries for a mesh, including uniform buffer and texture bindings.
+   * @param mesh - Mesh providing material and texture information
+   * @param uniformBuffer - GPU buffer containing uniform data
+   * @returns Array of bind group entries ready for bind group creation
+   */
+  private _createMeshBindGroupEntries(
+    mesh: Mesh,
+    uniformBuffer: GPUBuffer
+  ): GPUBindGroupEntry[] {
+    const entries: GPUBindGroupEntry[] = [
+      {
+        binding: 0,
+        resource: { buffer: uniformBuffer },
+      },
+    ];
+
+    if (mesh.material.getTextures) {
+      const textures = mesh.material.getTextures(this._device);
+      if (textures.length > 0) {
+        entries.push({
+          binding: 1,
+          resource: textures[0].gpuSampler,
+        });
+        textures.forEach((texture, index) => {
+          entries.push({
+            binding: 2 + index,
+            resource: texture.gpuTexture.createView(),
+          });
+        });
+      }
+    }
+
+    return entries;
   }
 }

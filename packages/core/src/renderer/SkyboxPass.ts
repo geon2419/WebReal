@@ -87,6 +87,39 @@ export class SkyboxPass {
     }
   }
 
+  /**
+   * Creates bind group entries for the skybox material.
+   * @param uniformBuffer - The uniform buffer to bind
+   * @param material - Skybox material providing textures
+   * @returns Array of bind group entries
+   */
+  private _createBindGroupEntries(
+    uniformBuffer: GPUBuffer,
+    material: SkyboxMaterial
+  ): GPUBindGroupEntry[] {
+    const textures = material.getTextures(this._device);
+    const cubeTexture = material.getCubeTexture();
+
+    const bindGroupEntries: GPUBindGroupEntry[] = [
+      { binding: 0, resource: { buffer: uniformBuffer } },
+      { binding: 1, resource: textures[0].gpuSampler },
+      { binding: 2, resource: textures[0].gpuTexture.createView() },
+    ];
+
+    if (cubeTexture) {
+      bindGroupEntries.push({ binding: 3, resource: cubeTexture.cubeView });
+    } else {
+      bindGroupEntries.push({
+        binding: 3,
+        resource: this._fallback
+          .getDummyCubeTexture()
+          .createView({ dimension: "cube" }),
+      });
+    }
+
+    return bindGroupEntries;
+  }
+
   private _getOrCreateResources(material: SkyboxMaterial): SkyboxGPUResources {
     if (this._resources && this._resources.material !== material) {
       this._resources.uniformBuffer.destroy();
@@ -98,28 +131,10 @@ export class SkyboxPass {
       this._resources.material === material &&
       this._resources.bindingRevision !== material.bindingRevision
     ) {
-      const textures = material.getTextures(this._device);
-      const cubeTexture = material.getCubeTexture();
-
-      const bindGroupEntries: GPUBindGroupEntry[] = [
-        {
-          binding: 0,
-          resource: { buffer: this._resources.uniformBuffer },
-        },
-        { binding: 1, resource: textures[0].gpuSampler },
-        { binding: 2, resource: textures[0].gpuTexture.createView() },
-      ];
-
-      if (cubeTexture) {
-        bindGroupEntries.push({ binding: 3, resource: cubeTexture.cubeView });
-      } else {
-        bindGroupEntries.push({
-          binding: 3,
-          resource: this._fallback
-            .getDummyCubeTexture()
-            .createView({ dimension: "cube" }),
-        });
-      }
+      const bindGroupEntries = this._createBindGroupEntries(
+        this._resources.uniformBuffer,
+        material
+      );
 
       this._resources.bindGroup = this._device.createBindGroup({
         label: "Skybox Bind Group",
@@ -174,25 +189,10 @@ export class SkyboxPass {
         usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
       });
 
-      const textures = material.getTextures(this._device);
-      const cubeTexture = material.getCubeTexture();
-
-      const bindGroupEntries: GPUBindGroupEntry[] = [
-        { binding: 0, resource: { buffer: uniformBuffer } },
-        { binding: 1, resource: textures[0].gpuSampler },
-        { binding: 2, resource: textures[0].gpuTexture.createView() },
-      ];
-
-      if (cubeTexture) {
-        bindGroupEntries.push({ binding: 3, resource: cubeTexture.cubeView });
-      } else {
-        bindGroupEntries.push({
-          binding: 3,
-          resource: this._fallback
-            .getDummyCubeTexture()
-            .createView({ dimension: "cube" }),
-        });
-      }
+      const bindGroupEntries = this._createBindGroupEntries(
+        uniformBuffer,
+        material
+      );
 
       const bindGroup = this._device.createBindGroup({
         label: "Skybox Bind Group",

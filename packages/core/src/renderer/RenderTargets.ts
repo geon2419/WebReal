@@ -66,7 +66,8 @@ export class RenderTargets {
     commandEncoder: GPUCommandEncoder;
     clearColor: Color;
   }): { passEncoder: GPURenderPassEncoder } {
-    const textureView = this._context.getCurrentTexture().createView();
+    const currentTexture = this._context.getCurrentTexture();
+    const textureView = currentTexture.createView();
 
     const renderPassDescriptor: GPURenderPassDescriptor = {
       colorAttachments: [
@@ -91,9 +92,10 @@ export class RenderTargets {
       },
     };
 
-    return {
-      passEncoder: options.commandEncoder.beginRenderPass(renderPassDescriptor),
-    };
+    const passEncoder =
+      options.commandEncoder.beginRenderPass(renderPassDescriptor);
+
+    return { passEncoder };
   }
 
   /**

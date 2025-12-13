@@ -31,7 +31,7 @@ export class Renderer {
   private _pipelines: PipelineCache;
   private _meshResources: MeshResourceCache;
   private _meshPass: MeshPass;
-  private _skyboxPass: SkyboxPass;
+  private _skyboxPass?: SkyboxPass;
 
   /**
    * Creates a new renderer for an engine instance.
@@ -66,13 +66,6 @@ export class Renderer {
       pipelines: this._pipelines,
       meshResources: this._meshResources,
     });
-
-    this._skyboxPass = new SkyboxPass({
-      device: this.device,
-      format: this.format,
-      sampleCount: this.sampleCount,
-      fallback: this._fallback,
-    });
   }
 
   private get device(): GPUDevice {
@@ -85,6 +78,18 @@ export class Renderer {
 
   private get format(): GPUTextureFormat {
     return this.engine.format;
+  }
+
+  private getSkyboxPass(): SkyboxPass {
+    if (!this._skyboxPass) {
+      this._skyboxPass = new SkyboxPass({
+        device: this.device,
+        format: this.format,
+        sampleCount: this.sampleCount,
+        fallback: this._fallback,
+      });
+    }
+    return this._skyboxPass;
   }
 
   /**
@@ -125,7 +130,8 @@ export class Renderer {
     });
 
     if (scene.skyboxMaterial) {
-      this._skyboxPass.render(passEncoder, scene.skyboxMaterial, camera);
+      const skyboxPass = this.getSkyboxPass();
+      skyboxPass.render(passEncoder, scene.skyboxMaterial, camera);
     }
 
     this._meshPass.render({
@@ -147,7 +153,7 @@ export class Renderer {
     this._renderTargets.dispose();
     this._meshResources.disposeAll();
     this._pipelines.clear();
-    this._skyboxPass.dispose();
+    this._skyboxPass?.dispose();
     this._fallback.dispose();
   }
 
