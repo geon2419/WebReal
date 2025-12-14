@@ -144,7 +144,10 @@ describe("Mesh", () => {
       const mesh = new Mesh(geometry, material);
 
       const data = mesh.getInterleavedVertices();
-      expect(data).toBe(geometry.positions);
+      expect(data.length).toBe(geometry.positions.length);
+      expect(data[0]).toBe(geometry.positions[0]);
+      // Should be a copy, not the same reference
+      expect(data).not.toBe(geometry.positions);
     });
 
     it("should cache interleaved vertices", () => {

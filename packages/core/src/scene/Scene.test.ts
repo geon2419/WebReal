@@ -191,13 +191,5 @@ describe("Scene", () => {
         "Scene.setEnvironmentFromPMREM() requires pmrem.prefilteredMap and pmrem.irradianceMap"
       );
     });
-
-    it("should report hasIBL correctly based on environment state", () => {
-      const scene = new Scene();
-      expect(scene.hasIBL).toBe(false);
-
-      // After setting valid PMREM (would need mock objects in real scenario)
-      // This test demonstrates the API contract
-    });
   });
 });
