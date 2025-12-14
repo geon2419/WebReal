@@ -35,4 +35,6 @@ coverage
 PLAN.md
 CLAUDE.md
 AGENTS.md
+GEMINI.md
+.playwright-mcp
 .github/agents
