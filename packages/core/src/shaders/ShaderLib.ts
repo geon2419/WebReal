@@ -26,6 +26,10 @@ import textureFrag from "./texture/texture.frag.wgsl";
 import parallaxVert from "./parallax/parallax.vert.wgsl";
 import parallaxFrag from "./parallax/parallax.frag.wgsl";
 
+// ParallaxPBR shader
+import parallaxPbrVert from "./parallaxPbr/parallaxPbr.vert.wgsl";
+import parallaxPbrFrag from "./parallaxPbr/parallaxPbr.frag.wgsl";
+
 // PBR shader
 import pbrVert from "./pbr/pbr.vert.wgsl";
 import pbrFrag from "./pbr/pbr.frag.wgsl";
@@ -67,6 +71,10 @@ const shaders: Record<string, ShaderSource> = {
   parallax: {
     vertex: parallaxVert,
     fragment: parallaxFrag,
+  },
+  parallaxPbr: {
+    vertex: parallaxPbrVert,
+    fragment: parallaxPbrFrag,
   },
   pbr: {
     vertex: pbrVert,
