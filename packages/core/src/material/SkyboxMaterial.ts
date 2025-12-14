@@ -47,6 +47,7 @@ export class SkyboxMaterial implements Material {
   private _exposure: number;
   private _roughness: number;
   private _bindingRevision: number = 0;
+  private _disposed: boolean = false;
 
   /**
    * Creates a new SkyboxMaterial with the specified environment map.
@@ -156,6 +157,48 @@ export class SkyboxMaterial implements Material {
 
     this._cubeMap = texture;
     this._equirectangularMap = undefined;
+  }
+
+  /**
+   * Releases GPU resources held by this material.
+   * Does NOT destroy textures (they are externally owned).
+   *
+   * Currently, SkyboxMaterial doesn't directly own GPU resources like buffers
+   * or bind groups (those are cached in Renderer), but this method exists for:
+   * - Clearing texture references to allow GC
+   * - Future-proofing if materials own GPU resources
+   * - Marking the material as disposed to prevent reuse
+   *
+   * After disposal, this material should not be used for rendering.
+   *
+   * @example
+   * ```ts
+   * const material = new SkyboxMaterial({ cubeMap: envMap });
+   * // ... use material ...
+   * material.dispose(); // Clean up when done
+   * ```
+   */
+  dispose(): void {
+    if (this._disposed) {
+      return;
+    }
+
+    // Clear texture references (but don't destroy - externally owned)
+    this._equirectangularMap = undefined;
+    this._cubeMap = undefined;
+
+    // Mark as disposed
+    this._disposed = true;
+
+    // Increment binding revision to invalidate cached bind groups in Renderer
+    this._bindingRevision++;
+  }
+
+  /**
+   * Gets whether this material has been disposed.
+   */
+  get isDisposed(): boolean {
+    return this._disposed;
   }
 
   /**

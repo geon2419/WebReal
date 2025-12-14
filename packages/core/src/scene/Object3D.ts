@@ -1,5 +1,17 @@
 import { Matrix4, Vector3 } from "@web-real/math";
 
+/**
+ * Represents a node in the 3D scene graph with transform properties and parent-child hierarchy.
+ *
+ * @example
+ * ```ts
+ * const parent = new Object3D();
+ * const child = new Object3D();
+ * parent.add(child);
+ * child.position = new Vector3(1, 2, 3);
+ * parent.updateWorldMatrix();
+ * ```
+ */
 export class Object3D {
   private _position: Vector3 = new Vector3(0, 0, 0);
   private _rotation: Vector3 = new Vector3(0, 0, 0);
@@ -13,6 +25,10 @@ export class Object3D {
   /** World transformation matrix (includes parent transforms) */
   public readonly worldMatrix: Matrix4 = new Matrix4();
 
+  /**
+   * Gets the local position of this object in 3D space.
+   * @returns The position vector
+   */
   get position(): Vector3 {
     return this._position;
   }
@@ -21,6 +37,10 @@ export class Object3D {
     this._position = value;
   }
 
+  /**
+   * Gets the local rotation of this object in radians (Euler angles).
+   * @returns The rotation vector (x, y, z)
+   */
   get rotation(): Vector3 {
     return this._rotation;
   }
@@ -29,6 +49,10 @@ export class Object3D {
     this._rotation = value;
   }
 
+  /**
+   * Gets the local scale of this object.
+   * @returns The scale vector (x, y, z)
+   */
   get scale(): Vector3 {
     return this._scale;
   }
@@ -37,6 +61,11 @@ export class Object3D {
     this._scale = value;
   }
 
+  /**
+   * Adds a child object to this object's hierarchy.
+   * @param child - The object to add as a child
+   * @returns This object for method chaining
+   */
   add(child: Object3D): this {
     if (child.parent !== null) {
       child.parent.remove(child);
@@ -46,6 +75,11 @@ export class Object3D {
     return this;
   }
 
+  /**
+   * Removes a child object from this object's hierarchy.
+   * @param child - The object to remove
+   * @returns This object for method chaining
+   */
   remove(child: Object3D): this {
     const index = this.children.indexOf(child);
     if (index !== -1) {
@@ -78,7 +112,8 @@ export class Object3D {
 
   /**
    * Updates the world matrix by combining parent's world matrix with local matrix.
-   * Recursively updates all children.
+   * @param updateParents - Whether to update parent chain first (default: false)
+   * @param updateChildren - Whether to recursively update children (default: true)
    */
   updateWorldMatrix(updateParents = false, updateChildren = true): void {
     // Optionally update parent chain first
@@ -103,10 +138,41 @@ export class Object3D {
     }
   }
 
+  /**
+   * Recursively traverses this object and all children, executing a callback on each.
+   * @param callback - Function to call for each object in the hierarchy
+   */
   traverse(callback: (object: Object3D) => void): void {
     callback(this);
     for (const child of this.children) {
       child.traverse(callback);
+    }
+  }
+
+  /**
+   * Recursively disposes this object and all children in the hierarchy.
+   *
+   * @example
+   * ```ts
+   * // Cleanup entire scene graph
+   * scene.disposeHierarchy();
+   * ```
+   */
+  disposeHierarchy(): void {
+    // Dispose children first (depth-first)
+    for (const child of [...this.children]) {
+      child.disposeHierarchy();
+    }
+
+    // Dispose self if the method exists
+    if ("dispose" in this && typeof (this as any).dispose === "function") {
+      (this as any).dispose();
+    }
+
+    // Clear parent/child relationships
+    this.children.length = 0;
+    if (this.parent) {
+      this.parent.remove(this);
     }
   }
 }
