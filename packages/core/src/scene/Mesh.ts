@@ -147,8 +147,7 @@ export class Mesh extends Object3D {
         return this._interleavePositionColor();
 
       case "line":
-        // Line material only needs positions
-        return positions;
+        return new Float32Array(positions);
 
       case "blinnPhong":
         return this._interleaveFullPBR(true);
