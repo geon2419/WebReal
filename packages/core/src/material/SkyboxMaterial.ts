@@ -180,9 +180,6 @@ export class SkyboxMaterial implements Material {
    */
   dispose(): void {
     if (this._disposed) {
-      console.warn(
-        "SkyboxMaterial.dispose() called on already disposed material"
-      );
       return;
     }
 

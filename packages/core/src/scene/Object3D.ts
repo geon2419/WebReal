@@ -160,7 +160,7 @@ export class Object3D {
    */
   disposeHierarchy(): void {
     // Dispose children first (depth-first)
-    for (const child of this.children) {
+    for (const child of [...this.children]) {
       child.disposeHierarchy();
     }
 

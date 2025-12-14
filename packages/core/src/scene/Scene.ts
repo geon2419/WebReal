@@ -235,7 +235,7 @@ export class Scene extends Object3D {
     // Clean up skybox material
     this._cleanupSkyboxMaterial();
 
-    // Clear texture references (borrowed resources, not owned by Scene)
+    // Dispose and clear skybox material (owned by Scene), and clear texture references (borrowed resources, not owned by Scene)
     this._equirectangularMap = undefined;
     this._prefilteredMap = undefined;
     this._irradianceMap = undefined;
