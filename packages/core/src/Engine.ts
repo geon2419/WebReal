@@ -30,6 +30,7 @@ export class Engine {
   private _device!: GPUDevice;
   private _context!: GPUCanvasContext;
   private _format!: GPUTextureFormat;
+  private _isDisposed = false;
 
   private _running = false;
   private _lastTime = 0;
@@ -104,6 +105,10 @@ export class Engine {
       requiredFeatures: supportedFeatures,
     });
     this._device.lost.then((info) => {
+      if (this._isDisposed || info.reason === "destroyed") {
+        return;
+      }
+
       console.error(`WebGPU device lost: ${info.message}`);
       this.stop();
     });
@@ -166,6 +171,10 @@ export class Engine {
    * Stops the render loop and destroys the WebGPU device.
    */
   dispose(): void {
+    if (this._isDisposed) {
+      return;
+    }
+    this._isDisposed = true;
     this.stop();
     this._device.destroy();
   }
