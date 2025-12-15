@@ -336,7 +336,9 @@ export class ParallaxPBRMaterial implements Material {
 
   /**
    * Gets the vertex buffer layout configuration.
-   * @returns Layout with position, normal, UV, tangent, and bitangent attributes (56 bytes stride)
+   * The layout is: position (vec3, 12 bytes), normal (vec3, 12 bytes), UV (vec2, 8 bytes),
+   * tangent (vec3, 12 bytes), bitangent (vec3, 12 bytes); total stride is 56 bytes.
+   * @returns Layout with position, normal, UV, tangent, and bitangent attributes
    */
   getVertexBufferLayout(): VertexBufferLayout {
     return {
@@ -353,7 +355,20 @@ export class ParallaxPBRMaterial implements Material {
 
   /**
    * Gets the uniform buffer size required for this material.
-   * @returns 512 bytes (includes matrices, PBR params, lights, and environment data)
+   * Layout (absolute buffer positions from start):
+   * - 0-64: mvpMatrix (renderer)
+   * - 64-128: modelMatrix
+   * - 128-192: normalMatrix
+   * - 192-208: cameraPosition (xyz, w unused)
+   * - 208-224: pbrParams (metalness, roughness, aoIntensity, normalScale)
+   * - 224-240: parallaxParams (depthScale, selfShadowStrength, flags, hasNormalMap)
+   * - 240-256: envParams (envMapIntensity, lightCount, envMode, maxMipLevel)
+   * - 256-272: ambientLight (rgb + intensity)
+   * - 272-464: lights[4] (48 bytes each: position 16 + color 16 + params 16)
+   * - 464-512: padding
+   *
+   * Note: writeUniformData() receives an offset parameter (default 64) and uses relative offsets.
+   * @returns Size in bytes (512 bytes total)
    */
   getUniformBufferSize(): number {
     return 512;
@@ -369,6 +384,9 @@ export class ParallaxPBRMaterial implements Material {
 
   /**
    * Creates a 1x1 default normal texture with up-facing normal.
+   * The normal is encoded as RGBA (128, 128, 255, 255), representing a (0, 0, 1) tangent-space normal.
+   * @param device - WebGPU device for creating the texture
+   * @returns The created dummy normal texture
    */
   private static createDummyNormalTexture(device: GPUDevice): Texture {
     if (!this._dummyNormalTexture) {
@@ -407,13 +425,7 @@ export class ParallaxPBRMaterial implements Material {
    * @param device - WebGPU device for creating fallback dummy textures
    * @returns Array of 8 textures in binding order: albedo, depth, normal, roughness, metalness, ao, emissive, envMap
    */
-  getTextures(device?: GPUDevice): Texture[] {
-    if (!device) {
-      throw new Error(
-        "ParallaxPBRMaterial.getTextures() requires a GPUDevice parameter"
-      );
-    }
-
+  getTextures(device: GPUDevice): Texture[] {
     const whiteTex = DummyTextures.getWhite(device);
     const normalTex =
       this.normal || ParallaxPBRMaterial.createDummyNormalTexture(device);

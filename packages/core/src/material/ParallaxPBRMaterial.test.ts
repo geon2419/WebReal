@@ -232,19 +232,6 @@ describe("ParallaxPBRMaterial", () => {
     });
   });
 
-  describe("getTextures", () => {
-    it("should throw error when device is not provided", () => {
-      const material = new ParallaxPBRMaterial({
-        albedo: mockAlbedo,
-        depth: mockDepth,
-      });
-
-      expect(() => {
-        material.getTextures();
-      }).toThrow("requires a GPUDevice parameter");
-    });
-  });
-
   describe("getVertexBufferLayout", () => {
     it("should return correct layout with 5 attributes", () => {
       const material = new ParallaxPBRMaterial({

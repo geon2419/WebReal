@@ -82,8 +82,10 @@ export class MeshResourceCache {
         entries: bindGroupEntries,
       });
 
-      // Check if material supports IBL via interface method
-      if (mesh.material.getIBLTextures) {
+      if (
+        mesh.material.getIBLTextures &&
+        typeof mesh.material.getIBLTextures === "function"
+      ) {
         resources.iblBindGroup = this._createIBLBindGroup(mesh, pipeline);
       }
 
@@ -141,7 +143,10 @@ export class MeshResourceCache {
 
       // Check if material supports IBL via interface method
       let iblBindGroup: GPUBindGroup | undefined;
-      if (mesh.material.getIBLTextures) {
+      if (
+        mesh.material.getIBLTextures &&
+        typeof mesh.material.getIBLTextures === "function"
+      ) {
         iblBindGroup = this._createIBLBindGroup(mesh, pipeline);
       }
 
