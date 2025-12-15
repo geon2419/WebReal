@@ -40,4 +40,4 @@ GEMINI.md
 .github/agents
 
 # Examples
-/examples/compute-shader/assets/*.csv
+/examples/**/*/*.csv
