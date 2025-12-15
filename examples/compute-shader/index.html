@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebReal - Compute Shader Bitcoin Transaction Analysis</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: linear-gradient(135deg, #0d1117 0%, #161b22 100%);
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: #e6edf3;
+      padding: 24px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    header h1 {
+      font-size: 28px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, #58a6ff 0%, #a371f7 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    header p {
+      color: #8b949e;
+      font-size: 14px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background: #21262d;
+      border: 1px solid #30363d;
+      border-radius: 12px;
+      padding: 20px;
+      transition: border-color 0.2s;
+    }
+
+    .card:hover {
+      border-color: #58a6ff;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .card-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+
+    .card-icon.blue { background: rgba(88, 166, 255, 0.15); }
+    .card-icon.green { background: rgba(63, 185, 80, 0.15); }
+    .card-icon.orange { background: rgba(210, 153, 34, 0.15); }
+    .card-icon.purple { background: rgba(163, 113, 247, 0.15); }
+
+    .card-title {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .stat-item {
+      background: #161b22;
+      border-radius: 8px;
+      padding: 12px;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: #8b949e;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+
+    .stat-value {
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    .stat-value.blue { color: #58a6ff; }
+    .stat-value.green { color: #3fb950; }
+    .stat-value.red { color: #f85149; }
+    .stat-value.orange { color: #d29922; }
+    .stat-value.purple { color: #a371f7; }
+
+    .distribution-bar {
+      display: flex;
+      height: 24px;
+      border-radius: 6px;
+      overflow: hidden;
+      margin-top: 16px;
+      background: #161b22;
+    }
+
+    .distribution-bar .segment {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 500;
+      transition: width 0.5s ease;
+    }
+
+    .distribution-bar .licit { background: #238636; }
+    .distribution-bar .illicit { background: #da3633; }
+    .distribution-bar .unknown { background: #6e7681; }
+
+    .distribution-legend {
+      display: flex;
+      gap: 16px;
+      margin-top: 12px;
+      font-size: 12px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .legend-dot.licit { background: #238636; }
+    .legend-dot.illicit { background: #da3633; }
+    .legend-dot.unknown { background: #6e7681; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    th, td {
+      padding: 10px 12px;
+      text-align: left;
+      border-bottom: 1px solid #30363d;
+    }
+
+    th {
+      color: #8b949e;
+      font-weight: 500;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    tbody tr:hover {
+      background: rgba(88, 166, 255, 0.05);
+    }
+
+    .risk-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .risk-badge.high { background: rgba(248, 81, 73, 0.2); color: #f85149; }
+    .risk-badge.medium { background: rgba(210, 153, 34, 0.2); color: #d29922; }
+    .risk-badge.low { background: rgba(63, 185, 80, 0.2); color: #3fb950; }
+
+    .performance-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid #30363d;
+    }
+
+    .performance-item:last-child {
+      border-bottom: none;
+    }
+
+    .performance-label {
+      color: #8b949e;
+      font-size: 13px;
+    }
+
+    .performance-value {
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 20px;
+      text-align: center;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid #30363d;
+      border-top-color: #58a6ff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 16px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+      color: #8b949e;
+      font-size: 14px;
+    }
+
+    .error {
+      background: rgba(248, 81, 73, 0.1);
+      border: 1px solid rgba(248, 81, 73, 0.3);
+      border-radius: 8px;
+      padding: 16px;
+      color: #f85149;
+      text-align: center;
+    }
+
+    .full-width {
+      grid-column: 1 / -1;
+    }
+
+    #app {
+      min-height: 400px;
+    }
+
+    canvas {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Bitcoin Transaction Graph Analysis</h1>
+      <p>Parallel processing of Elliptic dataset using GPU Compute Shader</p>
+    </header>
+
+    <div id="app">
+      <div class="card full-width">
+        <div class="loading">
+          <div class="spinner"></div>
+          <div class="loading-text">Initializing WebGPU and loading data...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hidden canvas for WebGPU context -->
+  <canvas id="canvas" width="1" height="1"></canvas>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

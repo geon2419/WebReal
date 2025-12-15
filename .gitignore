@@ -38,3 +38,6 @@ AGENTS.md
 GEMINI.md
 .playwright-mcp
 .github/agents
+
+# Examples
+/examples/compute-shader/assets/*.csv
