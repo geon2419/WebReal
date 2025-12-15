@@ -18,12 +18,14 @@ async function main() {
       engine = await Engine.create({ canvas });
     }
 
+    const NODE_COUNT = 200000;
+
     const analysisResult = await runAnalysis(
       engine.device,
       {
         classesUrl: "/assets/elliptic_txs_classes.csv",
         edgesUrl: "/assets/elliptic_txs_edgelist.csv",
-        targetNodeCount: 1500,
+        targetNodeCount: NODE_COUNT,
       },
       updateLoadingText
     );

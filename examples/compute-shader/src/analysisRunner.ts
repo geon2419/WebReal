@@ -5,61 +5,9 @@ import {
   ComputeShader,
 } from "@web-real/core";
 import type { Edge, RiskNode, TransactionClass } from "./analysis";
+import neighborAnalysisShader from "./shaders/neighborAnalysis.wgsl?raw";
 
-const NEIGHBOR_ANALYSIS_SHADER = /* wgsl */ `
-  @group(0) @binding(0) var<storage, read> nodeClasses: array<u32>;
-  @group(0) @binding(1) var<storage, read> edges: array<u32>;
-  @group(0) @binding(2) var<storage, read_write> results: array<u32>;
-  @group(0) @binding(3) var<uniform> params: vec2<u32>;
-
-  @compute @workgroup_size(64)
-  fn main(@builtin(global_invocation_id) globalId: vec3<u32>) {
-    let nodeIdx = globalId.x;
-    let nodeCount = params.x;
-    let edgeCount = params.y;
-    
-    if (nodeIdx >= nodeCount) {
-      return;
-    }
-    
-    var totalNeighbors: u32 = 0;
-    var illicitNeighbors: u32 = 0;
-    var licitNeighbors: u32 = 0;
-    var unknownNeighbors: u32 = 0;
-    
-    for (var i: u32 = 0; i < edgeCount; i++) {
-      let src = edges[i * 2];
-      let dst = edges[i * 2 + 1];
-      
-      var neighborIdx: u32 = 0xFFFFFFFF;
-      
-      if (src == nodeIdx) {
-        neighborIdx = dst;
-      } else if (dst == nodeIdx) {
-        neighborIdx = src;
-      }
-      
-      if (neighborIdx != 0xFFFFFFFF && neighborIdx < nodeCount) {
-        totalNeighbors++;
-        let neighborClass = nodeClasses[neighborIdx];
-        
-        if (neighborClass == 2) {
-          illicitNeighbors++;
-        } else if (neighborClass == 1) {
-          licitNeighbors++;
-        } else {
-          unknownNeighbors++;
-        }
-      }
-    }
-    
-    let resultIdx = nodeIdx * 4;
-    results[resultIdx] = totalNeighbors;
-    results[resultIdx + 1] = illicitNeighbors;
-    results[resultIdx + 2] = licitNeighbors;
-    results[resultIdx + 3] = unknownNeighbors;
-  }
-`;
+const NEIGHBOR_ANALYSIS_SHADER = neighborAnalysisShader;
 
 export interface GpuNeighborAnalysisResult {
   results: Uint32Array;
@@ -68,6 +16,13 @@ export interface GpuNeighborAnalysisResult {
   nodeIdMapping: Map<number, number>;
 }
 
+/**
+ * Runs neighbor analysis on the GPU using a compute shader.
+ * @param device - GPUDevice to use for computation
+ * @param classes - Array of TransactionClass objects
+ * @param edges - Array of Edge objects
+ * @returns Promise resolving to GpuNeighborAnalysisResult
+ */
 export async function runNeighborAnalysisGpu(
   device: GPUDevice,
   classes: TransactionClass[],
@@ -81,7 +36,6 @@ export async function runNeighborAnalysisGpu(
   });
 
   const nodeCount = classes.length;
-  const edgeCount = edges.length;
 
   const nodeClassData = new Uint32Array(nodeCount);
   classes.forEach((c, idx) => {
@@ -90,15 +44,20 @@ export async function runNeighborAnalysisGpu(
     else nodeClassData[idx] = 0;
   });
 
-  const edgeData = new Uint32Array(edgeCount * 2);
-  edges.forEach((e, idx) => {
+  const edgePairs: number[] = [];
+  for (const e of edges) {
     const srcIdx = nodeIdMapping.get(e.txId1);
     const dstIdx = nodeIdMapping.get(e.txId2);
-    if (srcIdx !== undefined && dstIdx !== undefined) {
-      edgeData[idx * 2] = srcIdx;
-      edgeData[idx * 2 + 1] = dstIdx;
-    }
-  });
+    if (srcIdx === undefined || dstIdx === undefined) continue;
+    edgePairs.push(srcIdx, dstIdx);
+  }
+
+  const edgeCount = edgePairs.length / 2;
+  if (edgeCount === 0) {
+    throw new Error("No valid edges after mapping transaction IDs to indices.");
+  }
+
+  const edgeData = new Uint32Array(edgePairs);
 
   const paramsData = new Uint32Array([nodeCount, edgeCount]);
   const resultSize = nodeCount * 4 * 4;
@@ -127,6 +86,8 @@ export async function runNeighborAnalysisGpu(
     nodeClassBuffer.write(nodeClassData);
     edgeBuffer.write(edgeData);
     paramsBuffer.write(paramsData);
+    // Atomic accumulation requires deterministic zero-initialization
+    resultBuffer.write(new Uint32Array(nodeCount * 4));
 
     const shader = new ComputeShader(device, {
       code: NEIGHBOR_ANALYSIS_SHADER,
@@ -155,7 +116,7 @@ export async function runNeighborAnalysisGpu(
 
     pass.setBindGroup(0, bindGroup);
 
-    const workgroupCount = Math.ceil(nodeCount / 64);
+    const workgroupCount = Math.ceil(edgeCount / 256);
     await pass.dispatchAsync(workgroupCount);
 
     let gpuTimeMs = 0;
@@ -177,6 +138,12 @@ export async function runNeighborAnalysisGpu(
   }
 }
 
+/**
+ * Runs neighbor analysis on the CPU.
+ * @param classes - Array of TransactionClass objects
+ * @param edges - Array of Edge objects
+ * @returns Time taken in milliseconds
+ */
 export function runNeighborAnalysisCpu(
   classes: TransactionClass[],
   edges: Edge[]
@@ -224,6 +191,13 @@ export function runNeighborAnalysisCpu(
   return performance.now() - cpuStartTime;
 }
 
+/**
+ * Computes risk nodes based on neighbor analysis results.
+ * @param results - Uint32Array containing neighbor analysis results
+ * @param classes - Array of TransactionClass objects
+ * @param nodeIdMapping - Map from transaction IDs to node indices
+ * @returns Array of RiskNode objects sorted by risk score
+ */
 export function computeRiskNodes(
   results: Uint32Array,
   classes: TransactionClass[],

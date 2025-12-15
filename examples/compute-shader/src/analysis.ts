@@ -45,6 +45,11 @@ export interface AnalysisOptions {
 
 export type StatusCallback = (text: string) => void;
 
+/**
+ * Parses CSV data for transaction classes.
+ * @param csv - CSV string
+ * @returns Array of TransactionClass objects
+ */
 function parseClassesCSV(csv: string): TransactionClass[] {
   const lines = csv.trim().split("\n");
   const results: TransactionClass[] = [];
@@ -62,6 +67,11 @@ function parseClassesCSV(csv: string): TransactionClass[] {
   return results;
 }
 
+/**
+ * Parses CSV data for edges.
+ * @param csv - CSV string
+ * @returns Array of Edge objects
+ */
 function parseEdgelistCSV(csv: string): Edge[] {
   const lines = csv.trim().split("\n");
   const results: Edge[] = [];
@@ -79,6 +89,13 @@ function parseEdgelistCSV(csv: string): Edge[] {
   return results;
 }
 
+/**
+ * Samples a connected subgraph from the full dataset.
+ * @param classes - Array of TransactionClass objects
+ * @param edges - Array of Edge objects
+ * @param targetNodeCount - Desired number of nodes in the sampled subgraph
+ * @returns Object containing sampled classes and edges
+ */
 function sampleConnectedSubgraph(
   classes: TransactionClass[],
   edges: Edge[],
@@ -111,10 +128,39 @@ function sampleConnectedSubgraph(
 
   const visited = new Set<number>();
   const queue: number[] = [...illicitNodes.slice(0, 10)];
+  let queueHead = 0;
+  const allNodes = Array.from(adjacency.keys());
+  let seedIndex = 0;
 
-  while (visited.size < targetNodeCount && queue.length > 0) {
-    const current = queue.shift()!;
-    if (visited.has(current)) continue;
+  /**
+   * Enqueues the next seed node that hasn't been visited yet.
+   * @returns boolean indicating if a new seed was enqueued
+   */
+  const enqueueNextSeed = (): boolean => {
+    while (seedIndex < allNodes.length && visited.has(allNodes[seedIndex])) {
+      seedIndex++;
+    }
+    if (seedIndex >= allNodes.length) return false;
+    queue.push(allNodes[seedIndex]);
+    seedIndex++;
+    return true;
+  };
+
+  while (visited.size < targetNodeCount) {
+    // If the queue is empty, enqueue the next seed node
+    if (queueHead >= queue.length) {
+      if (!enqueueNextSeed()) {
+        break;
+      }
+
+      continue;
+    }
+
+    const current = queue[queueHead++];
+    if (visited.has(current)) {
+      continue;
+    }
+
     visited.add(current);
 
     const neighbors = adjacency.get(current);
@@ -138,6 +184,13 @@ function sampleConnectedSubgraph(
   return { sampledClasses, sampledEdges };
 }
 
+/**
+ * Runs the full analysis pipeline using GPU and CPU computations.
+ * @param device - GPUDevice to use for GPU computations
+ * @param options - AnalysisOptions containing data URLs and target node count
+ * @param onStatus - Optional callback for status updates
+ * @returns Promise resolving to AnalysisResult
+ */
 export async function runAnalysis(
   device: GPUDevice,
   options: AnalysisOptions,

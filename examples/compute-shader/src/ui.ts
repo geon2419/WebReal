@@ -1,5 +1,9 @@
 import type { AnalysisResult } from "./analysis";
 
+/**
+ * Renders the analysis results into the UI.
+ * @param result - AnalysisResult object containing stats and risk nodes
+ */
 export function renderResults(result: AnalysisResult): void {
   const app = document.getElementById("app")!;
 
@@ -158,6 +162,10 @@ export function renderResults(result: AnalysisResult): void {
   `;
 }
 
+/**
+ * Renders an error message into the UI.
+ * @param message - Error message string
+ */
 export function renderError(message: string): void {
   const app = document.getElementById("app")!;
   app.innerHTML = `
@@ -170,10 +178,13 @@ export function renderError(message: string): void {
   `;
 }
 
+/**
+ * Updates the loading text in the UI.
+ * @param text - Loading text string
+ */
 export function updateLoadingText(text: string): void {
   const loadingText = document.querySelector(".loading-text");
   if (loadingText) {
     loadingText.textContent = text;
   }
 }
-
