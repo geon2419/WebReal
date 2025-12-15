@@ -369,13 +369,14 @@ export class Matrix4 {
     const m = new Matrix4();
     const e = m._data;
 
-    // Orthographic projection for WebGPU depth range [0, 1]
+    // Orthographic projection for WebGPU depth range [0, 1] using a right-handed
+    // view space where visible geometry is in front of the camera at z ∈ [-near, -far].
     e[0] = 2 / (right - left);
     e[5] = 2 / (top - bottom);
-    e[10] = 1 / (far - near);
+    e[10] = 1 / (near - far);
     e[12] = -(right + left) / (right - left);
     e[13] = -(top + bottom) / (top - bottom);
-    e[14] = -near / (far - near);
+    e[14] = near / (near - far);
     e[15] = 1;
 
     // Reset any remaining terms to zero (matrix starts as identity)
