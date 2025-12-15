@@ -214,10 +214,13 @@ fn calculateIBLContribution(
 
 struct ParallaxParams {
   depthScale: f32,
-  normalScale: f32,
-  hasNormalMap: bool,
   flags: u32,
   selfShadowStrength: f32,
+}
+
+struct NormalParams {
+  normalScale: f32,
+  hasNormalMap: bool,
 }
 
 struct ParallaxResult {
@@ -231,10 +234,16 @@ fn getParallaxParams() -> ParallaxParams {
   let flags = u32(clamp(round(uniforms.parallaxParams.z), 0.0, 255.0));
   return ParallaxParams(
     uniforms.parallaxParams.x,
-    uniforms.pbrParams.w,
-    uniforms.parallaxParams.w > 0.5,
     flags,
     uniforms.parallaxParams.y,
+  );
+}
+
+// Extracts normal mapping parameters from uniforms (separate from parallax concerns)
+fn getNormalParams() -> NormalParams {
+  return NormalParams(
+    uniforms.pbrParams.w,
+    uniforms.parallaxParams.w > 0.5,
   );
 }
 
@@ -333,8 +342,8 @@ fn parallaxComputeResult(inputUV: vec2f, viewDir: vec3f, TBN: mat3x3f, params: P
   return ParallaxResult(parallaxUV, uvDx, uvDy);
 }
 
-// Generates a tangent-space normal map from depth texture using Sobel operator
-// Useful when only a height/depth map is available without an explicit normal map
+// Generates an *unnormalized* tangent-space normal from depth texture using a Sobel operator.
+// The result is intended to be scaled (normalScale) and normalized by the caller.
 fn parallaxGenerateNormalFromDepth(uv: vec2f, texelSize: vec2f, params: ParallaxParams) -> vec3f {
   let invertHeight = (params.flags & PARALLAX_FLAG_INVERT_HEIGHT) != 0u;
 
@@ -359,8 +368,7 @@ fn parallaxGenerateNormalFromDepth(uv: vec2f, texelSize: vec2f, params: Parallax
   let dx = (d20 + 2.0 * d21 + d22) - (d00 + 2.0 * d01 + d02);
   let dy = (d02 + 2.0 * d12 + d22) - (d00 + 2.0 * d10 + d20);
 
-  let slopeScale = params.depthScale * params.normalScale;
-  return normalize(vec3f(-dx * slopeScale, -dy * slopeScale, 1.0));
+  return vec3f(-dx * params.depthScale, -dy * params.depthScale, 1.0);
 }
 
 // Constructs an orthonormal tangent-bitangent-normal (TBN) matrix for transforming normals
@@ -381,11 +389,11 @@ fn surfaceSampleAlbedo(parallax: ParallaxResult) -> vec3f {
   return srgbToLinear(srgb);  // Convert sRGB texture to linear space for PBR
 }
 
-// Applies self-shadowing/cavity occlusion based on depth and viewing angle
-// Creates darker crevices and depth-based shading for more realistic surface detail
-fn surfaceApplySelfShadow(albedoIn: vec3f, parallaxUV: vec2f, viewDir: vec3f, TBN: mat3x3f, params: ParallaxParams) -> vec3f {
+// Computes parallax self-shadowing/cavity occlusion factor based on depth and viewing angle.
+// Returns 1.0 when disabled, so it can be applied as a simple multiplier.
+fn parallaxComputeSelfShadowOcclusion(parallaxUV: vec2f, viewDir: vec3f, TBN: mat3x3f, params: ParallaxParams) -> f32 {
   if ((params.flags & PARALLAX_FLAG_SELF_SHADOW) == 0u) {
-    return albedoIn;
+    return 1.0;
   }
   let strength = params.selfShadowStrength;
   let Vt = transpose(TBN) * viewDir;
@@ -393,23 +401,23 @@ fn surfaceApplySelfShadow(albedoIn: vec3f, parallaxUV: vec2f, viewDir: vec3f, TB
   let height = parallaxSampleHeight(parallaxUV, params.flags);
   let cavity = clamp(1.0 - height, 0.0, 1.0);
   let occlusion = 1.0 - cavity * strength * (0.25 + 0.75 * grazing);
-  return albedoIn * clamp(occlusion, 0.0, 1.0);
+  return clamp(occlusion, 0.0, 1.0);
 }
 
 // Retrieves tangent-space normal from normal map, generates it from depth, or returns default
 // Supports normal map scaling and procedural normal generation
-fn surfaceGetNormalTangent(parallax: ParallaxResult, params: ParallaxParams) -> vec3f {
-  if (params.hasNormalMap) {
+fn normalGetTangent(parallax: ParallaxResult, parallaxParams: ParallaxParams, normalParams: NormalParams) -> vec3f {
+  if (normalParams.hasNormalMap) {
     let normalMapSample = textureSampleGrad(normalTexture, textureSampler, parallax.uv, parallax.uvDx, parallax.uvDy).rgb;
-    var n = normalize(normalMapSample * 2.0 - 1.0);
-    n = normalize(vec3f(n.x * params.normalScale, n.y * params.normalScale, n.z));
-    return n;
+    let n = normalMapSample * 2.0 - 1.0;
+    return normalize(vec3f(n.x * normalParams.normalScale, n.y * normalParams.normalScale, n.z));
   }
 
-  if ((params.flags & PARALLAX_FLAG_GENERATE_NORMAL_FROM_DEPTH) != 0u) {
+  if ((parallaxParams.flags & PARALLAX_FLAG_GENERATE_NORMAL_FROM_DEPTH) != 0u) {
     let dims = vec2f(textureDimensions(depthTexture, 0));
     let texelSize = 1.0 / max(dims, vec2f(1.0));
-    return parallaxGenerateNormalFromDepth(parallax.uv, texelSize, params);
+    let nFromDepth = parallaxGenerateNormalFromDepth(parallax.uv, texelSize, parallaxParams);
+    return normalize(vec3f(nFromDepth.x * normalParams.normalScale, nFromDepth.y * normalParams.normalScale, nFromDepth.z));
   }
 
   return vec3f(0.0, 0.0, 1.0);
@@ -448,16 +456,17 @@ fn gammaCorrect(color: vec3f) -> vec3f {
 @fragment
 fn main(input: FragmentInput) -> @location(0) vec4f {
   let TBN = buildTBN(input.worldNormal, input.worldTangent, input.worldBitangent);
-  let params = getParallaxParams();
-  let parallax = parallaxComputeResult(input.uv, input.viewDir, TBN, params);
+  let parallaxParams = getParallaxParams();
+  let normalParams = getNormalParams();
+  let parallax = parallaxComputeResult(input.uv, input.viewDir, TBN, parallaxParams);
   let viewDir = normalize(input.viewDir);
 
   // Sample albedo with parallax UV
   var albedo = surfaceSampleAlbedo(parallax);
-  albedo = surfaceApplySelfShadow(albedo, parallax.uv, viewDir, TBN, params);
+  albedo *= parallaxComputeSelfShadowOcclusion(parallax.uv, viewDir, TBN, parallaxParams);
 
   // Get normal
-  let normalTangent = surfaceGetNormalTangent(parallax, params);
+  let normalTangent = normalGetTangent(parallax, parallaxParams, normalParams);
   let N = normalize(TBN * normalTangent);
   let V = viewDir;
 
