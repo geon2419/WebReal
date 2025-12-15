@@ -5,6 +5,12 @@ export interface EngineOptions {
   canvas: HTMLCanvasElement;
   format?: GPUTextureFormat;
   powerPreference?: GPUPowerPreference;
+  /**
+   * Optional GPU features to request when creating the device.
+   * Use this to enable features like 'timestamp-query' for compute profiling.
+   * @example ['timestamp-query']
+   */
+  requiredFeatures?: GPUFeatureName[];
 }
 
 /**
@@ -77,7 +83,26 @@ export class Engine {
       throw new Error("Failed to get GPU adapter");
     }
 
-    this._device = await adapter.requestDevice();
+    // Filter requested features to only those supported by the adapter
+    const requestedFeatures = options.requiredFeatures ?? [];
+    const supportedFeatures = requestedFeatures.filter((feature) =>
+      adapter.features.has(feature)
+    );
+
+    if (supportedFeatures.length < requestedFeatures.length) {
+      const unsupported = requestedFeatures.filter(
+        (f) => !supportedFeatures.includes(f)
+      );
+      console.warn(
+        `[Engine] Some requested features are not supported: ${unsupported.join(
+          ", "
+        )}`
+      );
+    }
+
+    this._device = await adapter.requestDevice({
+      requiredFeatures: supportedFeatures,
+    });
     this._device.lost.then((info) => {
       console.error(`WebGPU device lost: ${info.message}`);
       this.stop();

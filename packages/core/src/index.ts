@@ -1,6 +1,18 @@
 export { Engine, type EngineOptions } from "./Engine";
 export { Renderer } from "./renderer/Renderer";
 export {
+  ComputeShaderError,
+  ComputePipelineCache,
+  ComputeBuffer,
+  type ComputeBufferOptions,
+  ComputeShader,
+  type ComputeShaderOptions,
+  ComputePass,
+  type ComputePassOptions,
+  ComputeProfiler,
+  type ComputeProfilerOptions,
+} from "./compute";
+export {
   BoxGeometry,
   FrustumGeometry,
   type FrustumColors,
