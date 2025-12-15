@@ -1,5 +1,4 @@
 import { getIndexFormat } from "../geometry/Geometry";
-import { PBRMaterial } from "../material/PBRMaterial";
 import type { Mesh } from "../scene/Mesh";
 import { FallbackResources } from "./FallbackResources";
 
@@ -83,54 +82,11 @@ export class MeshResourceCache {
         entries: bindGroupEntries,
       });
 
-      if (mesh.material instanceof PBRMaterial) {
-        const iblTextures = mesh.material.getIBLTextures(this._device);
-
-        if (iblTextures) {
-          resources.iblBindGroup = this._device.createBindGroup({
-            label: "IBL Bind Group",
-            layout: pipeline.getBindGroupLayout(1),
-            entries: [
-              {
-                binding: 0,
-                resource: iblTextures.prefilteredMap.gpuSampler,
-              },
-              {
-                binding: 1,
-                resource: iblTextures.prefilteredMap.cubeView,
-              },
-              {
-                binding: 2,
-                resource: iblTextures.irradianceMap.cubeView,
-              },
-              {
-                binding: 3,
-                resource: iblTextures.brdfLUT.gpuTexture.createView(),
-              },
-            ],
-          });
-        } else {
-          const dummyCube = this._fallback.getDummyCubeTexture();
-          const dummyBrdf = this._fallback.getDummyBrdfLUT();
-          const dummySampler = this._fallback.getLinearSampler();
-
-          resources.iblBindGroup = this._device.createBindGroup({
-            label: "Dummy IBL Bind Group",
-            layout: pipeline.getBindGroupLayout(1),
-            entries: [
-              { binding: 0, resource: dummySampler },
-              {
-                binding: 1,
-                resource: dummyCube.createView({ dimension: "cube" }),
-              },
-              {
-                binding: 2,
-                resource: dummyCube.createView({ dimension: "cube" }),
-              },
-              { binding: 3, resource: dummyBrdf.createView() },
-            ],
-          });
-        }
+      if (
+        mesh.material.getIBLTextures &&
+        typeof mesh.material.getIBLTextures === "function"
+      ) {
+        resources.iblBindGroup = this._createIBLBindGroup(mesh, pipeline);
       }
 
       resources.bindingRevision = currentBindingRevision;
@@ -185,58 +141,13 @@ export class MeshResourceCache {
         entries: bindGroupEntries,
       });
 
+      // Check if material supports IBL via interface method
       let iblBindGroup: GPUBindGroup | undefined;
-      if (mesh.material instanceof PBRMaterial) {
-        const iblTextures = mesh.material.getIBLTextures(this._device);
-
-        if (iblTextures) {
-          iblBindGroup = this._device.createBindGroup({
-            label: "IBL Bind Group",
-            layout: pipeline.getBindGroupLayout(1),
-            entries: [
-              {
-                binding: 0,
-                resource: iblTextures.prefilteredMap.gpuSampler,
-              },
-              {
-                binding: 1,
-                resource: iblTextures.prefilteredMap.cubeView,
-              },
-              {
-                binding: 2,
-                resource: iblTextures.irradianceMap.cubeView,
-              },
-              {
-                binding: 3,
-                resource: iblTextures.brdfLUT.gpuTexture.createView(),
-              },
-            ],
-          });
-        } else {
-          const dummyCube = this._fallback.getDummyCubeTexture();
-          const dummyBrdf = this._fallback.getDummyBrdfLUT();
-          const dummySampler = this._fallback.getLinearSampler();
-
-          iblBindGroup = this._device.createBindGroup({
-            label: "Dummy IBL Bind Group",
-            layout: pipeline.getBindGroupLayout(1),
-            entries: [
-              { binding: 0, resource: dummySampler },
-              {
-                binding: 1,
-                resource: dummyCube.createView({ dimension: "cube" }),
-              },
-              {
-                binding: 2,
-                resource: dummyCube.createView({ dimension: "cube" }),
-              },
-              {
-                binding: 3,
-                resource: dummyBrdf.createView(),
-              },
-            ],
-          });
-        }
+      if (
+        mesh.material.getIBLTextures &&
+        typeof mesh.material.getIBLTextures === "function"
+      ) {
+        iblBindGroup = this._createIBLBindGroup(mesh, pipeline);
       }
 
       resources = {
@@ -326,5 +237,65 @@ export class MeshResourceCache {
     }
 
     return entries;
+  }
+
+  /**
+   * Creates an IBL bind group for materials that support image-based lighting.
+   * @param mesh - Mesh with material that implements getIBLTextures
+   * @param pipeline - Pipeline used to query bind group layout
+   * @returns IBL bind group with prefilteredMap, irradianceMap, and brdfLUT
+   */
+  private _createIBLBindGroup(
+    mesh: Mesh,
+    pipeline: GPURenderPipeline
+  ): GPUBindGroup {
+    const iblTextures = mesh.material.getIBLTextures?.(this._device);
+
+    if (iblTextures) {
+      return this._device.createBindGroup({
+        label: "IBL Bind Group",
+        layout: pipeline.getBindGroupLayout(1),
+        entries: [
+          {
+            binding: 0,
+            resource: iblTextures.prefilteredMap.gpuSampler,
+          },
+          {
+            binding: 1,
+            resource: iblTextures.prefilteredMap.cubeView,
+          },
+          {
+            binding: 2,
+            resource: iblTextures.irradianceMap.cubeView,
+          },
+          {
+            binding: 3,
+            resource: iblTextures.brdfLUT.gpuTexture.createView(),
+          },
+        ],
+      });
+    } else {
+      // Create dummy IBL bind group
+      const dummyCube = this._fallback.getDummyCubeTexture();
+      const dummyBrdf = this._fallback.getDummyBrdfLUT();
+      const dummySampler = this._fallback.getLinearSampler();
+
+      return this._device.createBindGroup({
+        label: "Dummy IBL Bind Group",
+        layout: pipeline.getBindGroupLayout(1),
+        entries: [
+          { binding: 0, resource: dummySampler },
+          {
+            binding: 1,
+            resource: dummyCube.createView({ dimension: "cube" }),
+          },
+          {
+            binding: 2,
+            resource: dummyCube.createView({ dimension: "cube" }),
+          },
+          { binding: 3, resource: dummyBrdf.createView() },
+        ],
+      });
+    }
   }
 }

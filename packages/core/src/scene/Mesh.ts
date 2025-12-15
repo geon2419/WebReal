@@ -140,6 +140,7 @@ export class Mesh extends Object3D {
         return this._interleavePositionNormalUV();
 
       case "parallax":
+      case "parallaxPbr":
         return this._interleaveFullPBR(false);
 
       case "vertexColor":

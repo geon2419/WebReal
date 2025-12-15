@@ -108,4 +108,16 @@ export interface Material {
    * @returns Array of Texture objects to be bound to the shader
    */
   getTextures?(device?: GPUDevice): Texture[];
+
+  /**
+   * Gets IBL (Image-Based Lighting) textures for physically-based rendering.
+   * Used by materials that support environment-based lighting.
+   * @param device - GPUDevice for creating BRDF LUT if needed
+   * @returns Object with prefilteredMap, irradianceMap, and brdfLUT, or null if IBL not configured
+   */
+  getIBLTextures?(device: GPUDevice): {
+    prefilteredMap: import("../texture").CubeTexture;
+    irradianceMap: import("../texture").CubeTexture;
+    brdfLUT: Texture;
+  } | null;
 }

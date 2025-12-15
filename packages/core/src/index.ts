@@ -21,6 +21,7 @@ export {
   type LineColorMaterialOptions,
   type TextureMaterialOptions,
   type ParallaxMaterialOptions,
+  type ParallaxPBRMaterialOptions,
   type PBRMaterialOptions,
   BasicMaterial,
   BlinnPhongMaterial,
@@ -29,6 +30,7 @@ export {
   LineColorMaterial,
   TextureMaterial,
   ParallaxMaterial,
+  ParallaxPBRMaterial,
   PBRMaterial,
 } from "./material";
 export { ShaderLib, type ShaderSource } from "./shaders";

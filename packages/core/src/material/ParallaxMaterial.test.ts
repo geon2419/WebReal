@@ -269,7 +269,6 @@ describe("ParallaxMaterial", () => {
         RENDER_ATTACHMENT: 0x10,
       };
 
-      const mockTexture = createMockTexture();
       const mockDevice = {
         createTexture: () => ({} as GPUTexture),
         createSampler: () => ({} as GPUSampler),

@@ -2,7 +2,7 @@ import {
   Engine,
   Renderer,
   PlaneGeometry,
-  ParallaxMaterial,
+  ParallaxPBRMaterial,
   Mesh,
   Scene,
   PerspectiveCamera,
@@ -13,18 +13,31 @@ import {
 import { Color, Vector3 } from "@web-real/math";
 import GUI from "lil-gui";
 
-interface ParallaxParams {
+interface ParallaxPBRParams {
+  // PBR Parameters
+  metalness: number;
+  roughness: number;
+  aoMapIntensity: number;
+  envMapIntensity: number;
+
+  // Parallax Parameters
   depthScale: number;
   normalScale: number;
-  shininess: number;
-  shadowEnabled: boolean;
+  selfShadowEnabled: boolean;
+  selfShadowStrength: number;
+
+  // Ambient Light
   ambientIntensity: number;
+
+  // Mouse Light (Main)
   mouseLightEnabled: boolean;
   mouseLightPosZ: number;
   mouseLightIntensity: number;
   mouseLightColorR: number;
   mouseLightColorG: number;
   mouseLightColorB: number;
+
+  // Fill Light (Secondary)
   fillLightEnabled: boolean;
   fillLightPosX: number;
   fillLightPosY: number;
@@ -33,8 +46,12 @@ interface ParallaxParams {
   fillLightColorR: number;
   fillLightColorG: number;
   fillLightColorB: number;
+
+  // Mouse Control
   mouseEnabled: boolean;
   mouseRange: number;
+
+  // Tilt Effect
   tiltEnabled: boolean;
   tiltAmount: number;
 }
@@ -58,18 +75,31 @@ async function main() {
     const renderer = new Renderer(engine);
     renderer.setClearColor([0.02, 0.02, 0.03]);
 
-    const params: ParallaxParams = {
+    const params: ParallaxPBRParams = {
+      // PBR Parameters
+      metalness: 0.0,
+      roughness: 0.6,
+      aoMapIntensity: 1.0,
+      envMapIntensity: 0.0,
+
+      // Parallax Parameters
       depthScale: 0.05,
       normalScale: 1.0,
-      shininess: 64,
-      shadowEnabled: false,
-      ambientIntensity: 0.5,
+      selfShadowEnabled: false,
+      selfShadowStrength: 0.35,
+
+      // Ambient Light
+      ambientIntensity: 0.7,
+
+      // Mouse Light (Main)
       mouseLightEnabled: true,
       mouseLightPosZ: 1.0,
-      mouseLightIntensity: 0.5,
+      mouseLightIntensity: 0.4,
       mouseLightColorR: 1.0,
-      mouseLightColorG: 1.0,
-      mouseLightColorB: 1.0,
+      mouseLightColorG: 0.95,
+      mouseLightColorB: 0.9,
+
+      // Fill Light (Secondary)
       fillLightEnabled: true,
       fillLightPosX: -0.8,
       fillLightPosY: 0.5,
@@ -78,26 +108,40 @@ async function main() {
       fillLightColorR: 1.0,
       fillLightColorG: 0.9,
       fillLightColorB: 0.7,
+
+      // Mouse Control
       mouseEnabled: true,
       mouseRange: 2.0,
+
+      // Tilt Effect
       tiltEnabled: true,
       tiltAmount: 0.3,
     };
 
-    const gui = new GUI({ title: "2.5D Parallax Controls" });
+    const gui = new GUI({ title: "ParallaxPBR 2.5D Controls" });
 
+    // PBR Folder
+    const pbrFolder = gui.addFolder("PBR Material");
+    pbrFolder.add(params, "metalness", 0, 1, 0.01).name("Metalness");
+    pbrFolder.add(params, "roughness", 0.04, 1, 0.01).name("Roughness");
+    pbrFolder.add(params, "aoMapIntensity", 0, 1, 0.01).name("AO Intensity");
+    pbrFolder.add(params, "envMapIntensity", 0, 2, 0.01).name("Env Intensity");
+
+    // Parallax Folder
     const parallaxFolder = gui.addFolder("Parallax Effect");
     parallaxFolder
       .add(params, "depthScale", 0.01, 0.15, 0.005)
       .name("Depth Scale");
     parallaxFolder
-      .add(params, "normalScale", 0.5, 2.0, 0.1)
+      .add(params, "normalScale", 0.0, 3.0, 0.1)
       .name("Normal Scale");
-    parallaxFolder.add(params, "shininess", 1, 128, 1).name("Shininess");
 
-    const shadowFolder = gui.addFolder("Shadow");
-    shadowFolder.add(params, "shadowEnabled").name("Enabled");
+    // Shadow Folder
+    const shadowFolder = gui.addFolder("Self Shadow");
+    shadowFolder.add(params, "selfShadowEnabled").name("Enabled");
+    shadowFolder.add(params, "selfShadowStrength", 0, 1, 0.05).name("Strength");
 
+    // Ambient Folder
     const ambientFolder = gui.addFolder("Ambient Light");
     ambientFolder
       .add(params, "ambientIntensity", 0, 1.0, 0.01)
@@ -153,11 +197,13 @@ async function main() {
     tiltFolder.add(params, "tiltEnabled").name("Enabled");
     tiltFolder.add(params, "tiltAmount", 0.0, 1.0, 0.05).name("Amount");
 
-    const [albedoTexture, depthTexture, normalTexture] = await Promise.all([
-      Texture.fromURL(engine.device, "/assets/monalisa.jpg"),
-      Texture.fromURL(engine.device, "/assets/monalisa-depth-map.png"),
-      Texture.fromURL(engine.device, "/assets/monalisa-normal-map.png"),
-    ]);
+    const [albedoTexture, depthTexture, normalTexture, pbrTexture] =
+      await Promise.all([
+        Texture.fromURL(engine.device, "/assets/monalisa.jpg"),
+        Texture.fromURL(engine.device, "/assets/monalisa-depth-map.png"),
+        Texture.fromURL(engine.device, "/assets/monalisa-normal-map.png"),
+        Texture.fromURL(engine.device, "/assets/monalisa-pbr.png"),
+      ]);
 
     const scene = new Scene();
 
@@ -173,18 +219,32 @@ async function main() {
       orientation: "XY",
     });
 
-    const parallaxMaterial = new ParallaxMaterial({
+    // Create ParallaxPBR material
+    const parallaxPBRMaterial = new ParallaxPBRMaterial({
       albedo: albedoTexture,
       depth: depthTexture,
       normal: normalTexture,
+
+      // PBR texture maps (R=AO, G=Roughness, B=Metalness)
+      aoMap: pbrTexture,
+      roughnessMap: pbrTexture,
+      metalnessMap: pbrTexture,
+
+      // PBR settings
+      metalness: params.metalness,
+      roughness: params.roughness,
+      aoMapIntensity: params.aoMapIntensity,
+      envMapIntensity: params.envMapIntensity,
+
+      // Parallax settings
       depthScale: params.depthScale,
       normalScale: params.normalScale,
-      shininess: params.shininess,
       generateNormalFromDepth: false,
-      selfShadow: params.shadowEnabled,
+      selfShadow: params.selfShadowEnabled,
+      selfShadowStrength: params.selfShadowStrength,
     });
 
-    const mesh = new Mesh(planeGeometry, parallaxMaterial);
+    const mesh = new Mesh(planeGeometry, parallaxPBRMaterial);
     scene.add(mesh);
 
     const ambientLight = new AmbientLight(
@@ -273,11 +333,19 @@ async function main() {
         mesh.rotation.set(0, 0, 0);
       }
 
-      parallaxMaterial.depthScale = params.depthScale;
-      parallaxMaterial.normalScale = params.normalScale;
-      parallaxMaterial.shininess = params.shininess;
-      parallaxMaterial.selfShadow = params.shadowEnabled;
+      // Update PBR material parameters
+      parallaxPBRMaterial.metalness = params.metalness;
+      parallaxPBRMaterial.roughness = params.roughness;
+      parallaxPBRMaterial.aoMapIntensity = params.aoMapIntensity;
+      parallaxPBRMaterial.envMapIntensity = params.envMapIntensity;
 
+      // Update Parallax parameters
+      parallaxPBRMaterial.depthScale = params.depthScale;
+      parallaxPBRMaterial.normalScale = params.normalScale;
+      parallaxPBRMaterial.selfShadow = params.selfShadowEnabled;
+      parallaxPBRMaterial.selfShadowStrength = params.selfShadowStrength;
+
+      // Update ambient light
       ambientLight.intensity = params.ambientIntensity;
 
       if (params.mouseEnabled) {
