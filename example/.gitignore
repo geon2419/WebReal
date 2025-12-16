@@ -9,13 +9,8 @@ lerna-debug.log*
 
 node_modules
 dist
-dist-demo
 dist-ssr
-packages/*/dist
-packages/*/dist-demo
-packages/*/coverage
 *.local
-coverage
 
 # Editor directories and files
 .vscode/*
@@ -27,18 +22,3 @@ coverage
 *.njsproj
 *.sln
 *.sw?
-
-# TypeScript
-*.tsbuildinfo
-
-# For Prompt Engineering
-PLAN.md
-CLAUDE.md
-AGENTS.md
-GEMINI.md
-.playwright-mcp
-.github/agents
-
-# Examples
-/examples/**/**/*.csv
-/example/**/**/*.csv

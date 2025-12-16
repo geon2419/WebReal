@@ -11,7 +11,8 @@
   "workspaces": [
     "packages/math",
     "packages/core",
-    "examples/*"
+    "examples/*",
+    "example"
   ],
   "scripts": {
     "build:core": "bun --filter './packages/core' build",
