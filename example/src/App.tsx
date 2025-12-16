@@ -1,6 +1,7 @@
 import HomePage from "./routes/HomePage";
 import NotFoundPage from "./routes/NotFoundPage";
 import MonaLisaPage from "./routes/mona-lisa/MonaLisaPage";
+import PerspectiveCameraPage from "./routes/perspective-camera/PerspectiveCameraPage";
 import VisualComputeShaderPage from "./routes/visual-compute-shader/VisualComputeShaderPage";
 import { usePathname } from "./routing";
 
@@ -9,6 +10,7 @@ export default function App() {
 
   if (pathname === "/") return <HomePage />;
   if (pathname === "/mona-lisa") return <MonaLisaPage />;
+  if (pathname === "/perspective-camera") return <PerspectiveCameraPage />;
   if (pathname === "/visual-compute-shader") return <VisualComputeShaderPage />;
   return <NotFoundPage pathname={pathname} />;
 }

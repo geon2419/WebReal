@@ -42,6 +42,23 @@ export default function HomePage() {
             }}
           >
             <div style={{ fontSize: 12, opacity: 0.75, marginBottom: 6 }}>
+              /perspective-camera
+            </div>
+            <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 10 }}>
+              Perspective Camera
+            </div>
+            <Link to="/perspective-camera">Open</Link>
+          </div>
+
+          <div
+            style={{
+              border: "1px solid rgba(255,255,255,0.12)",
+              borderRadius: 12,
+              padding: 16,
+              background: "rgba(255,255,255,0.04)",
+            }}
+          >
+            <div style={{ fontSize: 12, opacity: 0.75, marginBottom: 6 }}>
               /visual-compute-shader
             </div>
             <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 10 }}>
