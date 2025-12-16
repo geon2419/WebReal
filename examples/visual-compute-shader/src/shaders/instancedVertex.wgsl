@@ -10,7 +10,7 @@ struct Instance {
 }
 
 @group(0) @binding(0) var<uniform> uniforms: Uniforms;
-@group(0) @binding(1) var<storage, read> instances: array<Instance>;
+@group(2) @binding(0) var<storage, read> instances: array<Instance>;
 
 struct VertexInput {
   @location(0) position: vec3f,
