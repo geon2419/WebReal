@@ -1,0 +1,13 @@
+{
+  "name": "@examples/compute-shader",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bunx --bun vite"
+  },
+  "dependencies": {
+    "@web-real/core": "workspace:*",
+    "@web-real/math": "workspace:*",
+    "lil-gui": "^0.21.0"
+  }
+}

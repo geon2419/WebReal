@@ -47,6 +47,15 @@ export class MeshResourceCache {
   }
 
   /**
+   * Aligns a byte length to the next multiple of 4 bytes.
+   * @param byteLength - Original byte length
+   * @returns Aligned byte length
+   */
+  private static _alignTo4Bytes(byteLength: number): number {
+    return (byteLength + 3) & ~3;
+  }
+
+  /**
    * Returns cached GPU resources for the mesh, creating or updating them as needed.
    * @param mesh - Mesh providing geometry, indices, and material bindings
    * @param pipeline - Pipeline used to query bind group layouts
@@ -110,18 +119,33 @@ export class MeshResourceCache {
           ? mesh.getWireframeIndices()
           : mesh.indices;
       const indexFormat = getIndexFormat(indexData);
+
+      const indexBufferSize = Math.max(
+        4,
+        MeshResourceCache._alignTo4Bytes(indexData.byteLength)
+      );
       const indexBuffer = this._device.createBuffer({
         label: "Mesh Index Buffer",
-        size: indexData.byteLength,
+        size: indexBufferSize,
         usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST,
       });
-      this._device.queue.writeBuffer(
-        indexBuffer,
-        0,
-        indexData instanceof Uint32Array
-          ? (indexData as Uint32Array<ArrayBuffer>)
-          : (indexData as Uint16Array<ArrayBuffer>)
-      );
+
+      if (indexData.byteLength > 0) {
+        this._device.queue.writeBuffer(
+          indexBuffer,
+          0,
+          indexData instanceof Uint32Array
+            ? (indexData as Uint32Array<ArrayBuffer>)
+            : (indexData as Uint16Array<ArrayBuffer>)
+        );
+      } else {
+        const bufferOffset = 0;
+        const zeroInitData =
+          indexData instanceof Uint32Array
+            ? new Uint32Array([0])
+            : new Uint16Array([0, 0]);
+        this._device.queue.writeBuffer(indexBuffer, bufferOffset, zeroInitData);
+      }
 
       const uniformBufferSize = mesh.material.getUniformBufferSize();
       const uniformBuffer = this._device.createBuffer({
@@ -196,6 +220,10 @@ export class MeshResourceCache {
     this._meshBuffers = new WeakMap();
   }
 
+  /**
+   * Destroys GPU buffers associated with the given mesh resources.
+   * @param resources - MeshGPUResources to destroy
+   */
   private _destroyMeshResources(resources: MeshGPUResources): void {
     resources.vertexBuffer.destroy();
     resources.indexBuffer.destroy();

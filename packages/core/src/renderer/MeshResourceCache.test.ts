@@ -97,6 +97,57 @@ describe("MeshResourceCache", () => {
       expect(mockDevice.createBindGroup).toHaveBeenCalledTimes(1);
     });
 
+    it("should not create zero-sized index buffers for non-indexed meshes", () => {
+      // Simulate WebGPU validation: buffer size must be > 0 and aligned to 4 bytes.
+      mockDevice.createBuffer = mock((descriptor: GPUBufferDescriptor) => {
+        if (descriptor.size <= 0) {
+          throw new Error("GPUBufferDescriptor.size must be > 0");
+        }
+        if (descriptor.size % 4 !== 0) {
+          throw new Error("GPUBufferDescriptor.size must be 4-byte aligned");
+        }
+        return mockBuffer;
+      }) as unknown as any;
+
+      const cache = new MeshResourceCache({
+        device: mockDevice,
+        fallback: mockFallback,
+      });
+
+      const mockMaterial: Material = {
+        type: "basic",
+        bindingRevision: 0,
+        getPrimitiveTopology: () => "triangle-list",
+        getVertexShader: () => "",
+        getFragmentShader: () => "",
+        getVertexBufferLayout: () => ({
+          arrayStride: 24,
+          attributes: [],
+        }),
+        getUniformBufferSize: () => 64,
+        writeUniformData: () => {},
+      };
+
+      const geometry = {
+        positions: new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]),
+        normals: new Float32Array([0, 0, 1, 0, 0, 1, 0, 0, 1]),
+        indices: new Uint16Array(0),
+        vertexCount: 3,
+        indexCount: 0,
+      } as any;
+
+      const mesh = new Mesh(geometry, mockMaterial);
+
+      expect(() => cache.getOrCreate(mesh, mockPipeline)).not.toThrow();
+
+      const calls = (mockDevice.createBuffer as any).mock.calls as any[];
+      // 0: vertex buffer, 1: index buffer, 2: uniform buffer
+      expect(calls.length).toBe(3);
+      expect(calls[1][0].label).toBe("Mesh Index Buffer");
+      expect(calls[1][0].size).toBeGreaterThanOrEqual(4);
+      expect(calls[1][0].size % 4).toBe(0);
+    });
+
     it("should return cached resources for the same mesh", () => {
       const cache = new MeshResourceCache({
         device: mockDevice,

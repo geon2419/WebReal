@@ -154,11 +154,11 @@ describe("Matrix4", () => {
       // Check scale factors
       expect(m.data[0]).toBeCloseTo(2 / 20); // 2/(right-left)
       expect(m.data[5]).toBeCloseTo(2 / 20); // 2/(top-bottom)
-      expect(m.data[10]).toBeCloseTo(1 / (100 - 0.1)); // 1/(far-near)
+      expect(m.data[10]).toBeCloseTo(1 / (0.1 - 100)); // 1/(near-far)
       // Check translation
       expect(m.data[12]).toBeCloseTo(0); // -(right+left)/(right-left)
       expect(m.data[13]).toBeCloseTo(0); // -(top+bottom)/(top-bottom)
-      expect(m.data[14]).toBeCloseTo(-0.1 / (100 - 0.1)); // -near/(far-near)
+      expect(m.data[14]).toBeCloseTo(0.1 / (0.1 - 100)); // near/(near-far)
       expect(m.data[15]).toBeCloseTo(1);
     });
 
