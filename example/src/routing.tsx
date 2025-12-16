@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from "react";
+import type { CSSProperties, ReactNode, JSX } from "react";
 import { useEffect, useMemo, useState } from "react";
 
 function normalizePath(path: string): string {
