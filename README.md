@@ -20,8 +20,8 @@ bun install
 # Build all packages (math + core)
 bun run build:all
 
-# Run examples
-cd examples/*
+# Run example
+cd example
 bun install
 bun run dev
 
@@ -44,5 +44,5 @@ WebReal/
 ├── packages/
 │   ├── math/      # Vector3, Matrix4, Color utilities
 │   └── core/      # Engine, Scene, Mesh, Renderer
-└── examples/      # Example applications
+└── example/      # Example applications
 ```
