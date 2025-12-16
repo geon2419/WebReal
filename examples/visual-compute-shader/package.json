@@ -1,5 +1,5 @@
 {
-  "name": "@examples/raw-compute-shader",
+  "name": "@examples/visual-compute-shader",
   "private": true,
   "type": "module",
   "scripts": {

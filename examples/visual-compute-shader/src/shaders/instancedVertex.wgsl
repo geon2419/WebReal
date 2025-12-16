@@ -1,5 +1,3 @@
-// Vertex shader for instanced rendering with storage buffer
-export const instancedVertexShader = `
 struct Uniforms {
   mvpMatrix: mat4x4f,
   instanceScale: vec4f,
@@ -29,32 +27,14 @@ struct VertexOutput {
 @vertex
 fn main(input: VertexInput) -> VertexOutput {
   let instance = instances[input.instanceIdx];
-  
+
   var output: VertexOutput;
-  
+
   // Scale per-instance (uniform) and apply instance position
   let worldPos = (input.position * uniforms.instanceScale.x) + instance.position;
   output.position = uniforms.mvpMatrix * vec4f(worldPos, 1.0);
   output.normal = input.normal;
   output.color = instance.color;
-  
+
   return output;
 }
-`;
-
-// Fragment shader
-export const instancedFragmentShader = `
-struct FragmentInput {
-  @location(0) normal: vec3f,
-  @location(1) color: vec4f,
-}
-
-@fragment
-fn main(input: FragmentInput) -> @location(0) vec4f {
-  // Simple lighting with normal
-  let light = normalize(vec3f(1.0, 1.0, 1.0));
-  let diffuse = max(dot(normalize(input.normal), light), 0.3);
-  
-  return vec4f(input.color.rgb * diffuse, input.color.a);
-}
-`;

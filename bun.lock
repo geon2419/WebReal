@@ -90,8 +90,22 @@
         "lil-gui": "^0.21.0",
       },
     },
-    "examples/raw-compute-shader": {
-      "name": "@examples/raw-compute-shader",
+    "examples/raycaster": {
+      "name": "@examples/raycaster",
+      "dependencies": {
+        "@web-real/core": "workspace:*",
+        "@web-real/math": "workspace:*",
+      },
+    },
+    "examples/texture": {
+      "name": "@examples/texture",
+      "dependencies": {
+        "@web-real/core": "workspace:*",
+        "@web-real/math": "workspace:*",
+      },
+    },
+    "examples/visual-compute-shader": {
+      "name": "@examples/visual-compute-shader",
       "dependencies": {
         "@web-real/core": "workspace:*",
         "@web-real/math": "workspace:*",
@@ -112,20 +126,6 @@
         "eslint-plugin-react-refresh": "^0.4.24",
         "globals": "^16.5.0",
         "typescript-eslint": "^8.46.4",
-      },
-    },
-    "examples/raycaster": {
-      "name": "@examples/raycaster",
-      "dependencies": {
-        "@web-real/core": "workspace:*",
-        "@web-real/math": "workspace:*",
-      },
-    },
-    "examples/texture": {
-      "name": "@examples/texture",
-      "dependencies": {
-        "@web-real/core": "workspace:*",
-        "@web-real/math": "workspace:*",
       },
     },
     "packages/core": {
@@ -264,11 +264,11 @@
 
     "@examples/point-light": ["@examples/point-light@workspace:examples/point-light"],
 
-    "@examples/raw-compute-shader": ["@examples/raw-compute-shader@workspace:examples/raw-compute-shader"],
-
     "@examples/raycaster": ["@examples/raycaster@workspace:examples/raycaster"],
 
     "@examples/texture": ["@examples/texture@workspace:examples/texture"],
+
+    "@examples/visual-compute-shader": ["@examples/visual-compute-shader@workspace:examples/visual-compute-shader"],
 
     "@humanfs/core": ["@humanfs/core@0.19.1", "", {}, "sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA=="],
 
