@@ -229,7 +229,7 @@ export class GraphController {
         return;
       }
 
-      console.log(`Reinitd with ${this._nodes.length} nodes`);
+      console.log(`Reinitialized with ${this._nodes.length} nodes`);
     } catch (error) {
       // Aborts are expected during rapid UI changes.
       if (error instanceof DOMException && error.name === "AbortError") {
