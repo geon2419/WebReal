@@ -138,6 +138,13 @@ export class MeshResourceCache {
             ? (indexData as Uint32Array<ArrayBuffer>)
             : (indexData as Uint16Array<ArrayBuffer>)
         );
+      } else {
+        const bufferOffset = 0;
+        const zeroInitData =
+          indexData instanceof Uint32Array
+            ? new Uint32Array([0])
+            : new Uint16Array([0, 0]);
+        this._device.queue.writeBuffer(indexBuffer, bufferOffset, zeroInitData);
       }
 
       const uniformBufferSize = mesh.material.getUniformBufferSize();
