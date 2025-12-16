@@ -118,6 +118,10 @@ export class MeshPass {
         options.passEncoder.setBindGroup(1, resources.iblBindGroup);
       }
 
+      if (resources.instanceBindGroup) {
+        options.passEncoder.setBindGroup(2, resources.instanceBindGroup);
+      }
+
       options.passEncoder.setVertexBuffer(0, resources.vertexBuffer);
 
       // Use instance count from resources (defaults to 1 for non-instanced materials)

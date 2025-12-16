@@ -37,6 +37,8 @@ const POSITION_INSTANCE_SIZE = 32; // vec3<f32>(12) + padding(4) + vec4<f32>(16)
  * A mesh that can render multiple instances in a single draw call using GPU instancing.
  * GPU instancing dramatically improves performance when rendering many identical
  * geometries with different transforms/colors by reducing draw calls from N to 1.
+ *
+ * The renderer binds the instance storage buffer to `@group(2) @binding(0)` for use in WGSL.
  * @example
  * ```ts
  * const mesh = new InstancedMesh(

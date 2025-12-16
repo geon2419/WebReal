@@ -13,6 +13,7 @@ export interface MeshGPUResources {
   storageBuffer?: GPUBuffer;
   bindGroup: GPUBindGroup;
   iblBindGroup?: GPUBindGroup;
+  instanceBindGroup?: GPUBindGroup;
   materialType: string;
   topology: GPUPrimitiveTopology;
   bindingRevision: number;
@@ -37,6 +38,10 @@ export class MeshResourceCache {
 
   private _meshBuffers: WeakMap<Mesh, MeshGPUResources> = new WeakMap();
   private _trackedMeshResources: Set<MeshGPUResources> = new Set();
+
+  private static readonly _MESH_BIND_GROUP_INDEX = 0;
+  private static readonly _IBL_BIND_GROUP_INDEX = 1;
+  private static readonly _INSTANCE_BIND_GROUP_INDEX = 2;
 
   /**
    * Creates a new MeshResourceCache.
@@ -90,7 +95,7 @@ export class MeshResourceCache {
 
       resources.bindGroup = this._device.createBindGroup({
         label: "Mesh Bind Group",
-        layout: pipeline.getBindGroupLayout(0),
+        layout: pipeline.getBindGroupLayout(MeshResourceCache._MESH_BIND_GROUP_INDEX),
         entries: bindGroupEntries,
       });
 
@@ -164,7 +169,7 @@ export class MeshResourceCache {
 
       const bindGroup = this._device.createBindGroup({
         label: "Mesh Bind Group",
-        layout: pipeline.getBindGroupLayout(0),
+        layout: pipeline.getBindGroupLayout(MeshResourceCache._MESH_BIND_GROUP_INDEX),
         entries: bindGroupEntries,
       });
 
@@ -178,10 +183,16 @@ export class MeshResourceCache {
       }
 
       let storageBuffer: GPUBuffer | undefined;
+      let instanceBindGroup: GPUBindGroup | undefined;
       let instanceCount = 1;
 
       if (mesh instanceof InstancedMesh) {
         storageBuffer = mesh.getStorageBuffer(this._device);
+        instanceBindGroup = this._createInstanceBindGroup(
+          storageBuffer,
+          pipeline,
+          currentMaterialType
+        );
         instanceCount = mesh.instanceCount;
       }
 
@@ -192,6 +203,7 @@ export class MeshResourceCache {
         storageBuffer,
         bindGroup,
         iblBindGroup,
+        instanceBindGroup,
         materialType: currentMaterialType,
         topology: currentTopology,
         bindingRevision: currentBindingRevision,
@@ -261,15 +273,7 @@ export class MeshResourceCache {
       },
     ];
 
-    // Check for storage buffer via InstancedMesh
-    if (mesh instanceof InstancedMesh) {
-      const storageBuffer = mesh.getStorageBuffer(this._device);
-      entries.push({
-        binding: 1,
-        resource: { buffer: storageBuffer },
-      });
-    } else if (mesh.material.getTextures) {
-      // Only add texture bindings if not using storage buffer
+    if (mesh.material.getTextures) {
       const textures = mesh.material.getTextures(this._device);
       if (textures.length > 0) {
         entries.push({
@@ -288,6 +292,34 @@ export class MeshResourceCache {
     return entries;
   }
 
+  private _createInstanceBindGroup(
+    storageBuffer: GPUBuffer,
+    pipeline: GPURenderPipeline,
+    materialType: string
+  ): GPUBindGroup {
+    let layout: GPUBindGroupLayout;
+    try {
+      layout = pipeline.getBindGroupLayout(
+        MeshResourceCache._INSTANCE_BIND_GROUP_INDEX
+      );
+    } catch {
+      throw new Error(
+        `Material "${materialType}" used with InstancedMesh requires shaders to declare @group(${MeshResourceCache._INSTANCE_BIND_GROUP_INDEX}) @binding(0) var<storage, read> instances: ...`
+      );
+    }
+
+    return this._device.createBindGroup({
+      label: "InstancedMesh Bind Group",
+      layout,
+      entries: [
+        {
+          binding: 0,
+          resource: { buffer: storageBuffer },
+        },
+      ],
+    });
+  }
+
   /**
    * Creates an IBL bind group for materials that support image-based lighting.
    * @param mesh - Mesh with material that implements getIBLTextures
@@ -303,7 +335,7 @@ export class MeshResourceCache {
     if (iblTextures) {
       return this._device.createBindGroup({
         label: "IBL Bind Group",
-        layout: pipeline.getBindGroupLayout(1),
+        layout: pipeline.getBindGroupLayout(MeshResourceCache._IBL_BIND_GROUP_INDEX),
         entries: [
           {
             binding: 0,
@@ -331,7 +363,7 @@ export class MeshResourceCache {
 
       return this._device.createBindGroup({
         label: "Dummy IBL Bind Group",
-        layout: pipeline.getBindGroupLayout(1),
+        layout: pipeline.getBindGroupLayout(MeshResourceCache._IBL_BIND_GROUP_INDEX),
         entries: [
           { binding: 0, resource: dummySampler },
           {

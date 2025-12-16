@@ -9,6 +9,7 @@ import type { Material, VertexBufferLayout } from "./Material";
  * - Uniform buffer binding: `@group(0) @binding(0) var<uniform> uniforms: Uniforms;`
  * - First field in Uniforms struct: `mvpMatrix: mat4x4f` (64 bytes at offset 0)
  *   - Written by Renderer as P*V*M (local -> clip)
+ * - (Optional) InstancedMesh storage binding: `@group(2) @binding(0) var<storage, read> instances: ...`
  */
 export interface ShaderMaterialOptions {
   vertexShader: string;

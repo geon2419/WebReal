@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, mock } from "bun:test";
 import { MeshResourceCache } from "./MeshResourceCache";
 import { FallbackResources } from "./FallbackResources";
 import { Mesh } from "../scene/Mesh";
+import { InstancedMesh } from "../scene/InstancedMesh";
 import type { Material } from "../material/Material";
 import { BoxGeometry } from "../geometry/BoxGeometry";
 
@@ -11,6 +12,7 @@ if (typeof globalThis.GPUBufferUsage === "undefined") {
     VERTEX: 0x0020,
     INDEX: 0x0010,
     UNIFORM: 0x0040,
+    STORAGE: 0x0080,
     COPY_DST: 0x0008,
   };
 }
@@ -95,6 +97,48 @@ describe("MeshResourceCache", () => {
       // Should create 3 buffers: vertex, index, uniform
       expect(mockDevice.createBuffer).toHaveBeenCalledTimes(3);
       expect(mockDevice.createBindGroup).toHaveBeenCalledTimes(1);
+    });
+
+    it("should create a separate bind group for InstancedMesh storage", () => {
+      const meshBindGroup = {} as GPUBindGroup;
+      const instanceBindGroup = {} as GPUBindGroup;
+      let bindGroupCreateCount = 0;
+      mockDevice.createBindGroup = mock(() => {
+        bindGroupCreateCount++;
+        return bindGroupCreateCount === 1 ? meshBindGroup : instanceBindGroup;
+      }) as unknown as any;
+
+      const cache = new MeshResourceCache({
+        device: mockDevice,
+        fallback: mockFallback,
+      });
+
+      const mockMaterial: Material = {
+        type: "test-material",
+        bindingRevision: 0,
+        getPrimitiveTopology: () => "triangle-list",
+        getVertexShader: () => "",
+        getFragmentShader: () => "",
+        getVertexBufferLayout: () => ({
+          arrayStride: 32,
+          attributes: [],
+        }),
+        getUniformBufferSize: () => 64,
+        writeUniformData: () => {},
+      };
+
+      const geometry = new BoxGeometry(1, 1, 1);
+      const mesh = new InstancedMesh(geometry, mockMaterial, 3, {
+        mode: "position",
+      });
+
+      const resources = cache.getOrCreate(mesh, mockPipeline);
+
+      expect(resources.bindGroup).toBe(meshBindGroup);
+      expect(resources.instanceBindGroup).toBe(instanceBindGroup);
+      expect(mockDevice.createBindGroup).toHaveBeenCalledTimes(2);
+      expect(mockPipeline.getBindGroupLayout).toHaveBeenCalledWith(0);
+      expect(mockPipeline.getBindGroupLayout).toHaveBeenCalledWith(2);
     });
 
     it("should not create zero-sized index buffers for non-indexed meshes", () => {

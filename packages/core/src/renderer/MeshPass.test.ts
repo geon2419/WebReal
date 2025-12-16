@@ -210,6 +210,47 @@ describe("MeshPass", () => {
       expect(setBindGroupCalls[0][0]).toBe(0);
     });
 
+    it("should set instance bind group when present", () => {
+      const mockDevice = createMockDevice();
+      const mockPipelines = createMockPipelineCache();
+      const mockInstanceBindGroup = {} as GPUBindGroup;
+      const mockResources = {
+        uniformBuffer: {} as GPUBuffer,
+        bindGroup: {} as GPUBindGroup,
+        vertexBuffer: {} as GPUBuffer,
+        indexBuffer: {} as GPUBuffer,
+        indexFormat: "uint16" as GPUIndexFormat,
+        indexCount: 0,
+        iblBindGroup: null,
+        instanceBindGroup: mockInstanceBindGroup,
+        instanceCount: 2,
+      };
+      const mockMeshResources = createMockMeshResourceCache(mockResources);
+
+      const meshPass = new MeshPass({
+        device: mockDevice,
+        pipelines: mockPipelines,
+        meshResources: mockMeshResources,
+      });
+
+      const mockMesh = createMockMesh();
+      const mockCamera = createMockCamera();
+      const mockPassEncoder = createMockPassEncoder();
+
+      meshPass.render({
+        passEncoder: mockPassEncoder,
+        meshes: [mockMesh],
+        lights: [],
+        scene: {} as any,
+        camera: mockCamera,
+      });
+
+      expect(mockPassEncoder.setBindGroup).toHaveBeenCalledWith(
+        2,
+        mockInstanceBindGroup
+      );
+    });
+
     it("should write custom uniform data when material provides writeUniformData", () => {
       // Arrange
       const mockDevice = createMockDevice();
