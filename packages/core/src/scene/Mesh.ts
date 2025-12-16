@@ -25,6 +25,15 @@ export class Mesh extends Object3D {
   public needsUpdate: boolean = false;
 
   /**
+   * Invalidates cached CPU-side geometry data derived from the current geometry/material.
+   * Call this when the underlying geometry attribute arrays have changed in place.
+   */
+  invalidateGeometryCache(): void {
+    this._boundingBox = null;
+    this._interleavedVertices = null;
+  }
+
+  /**
    * Creates a new Mesh instance.
    * @param geometry - The geometry defining the mesh's shape
    * @param material - The material defining the mesh's appearance
