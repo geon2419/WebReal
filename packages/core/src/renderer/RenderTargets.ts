@@ -158,8 +158,8 @@ export class RenderTargets {
 
     const dpr =
       typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1;
-    const width = Math.max(1, Math.round(widthCss * dpr));
-    const height = Math.max(1, Math.round(heightCss * dpr));
+    const width = Math.max(1, Math.floor(widthCss * dpr));
+    const height = Math.max(1, Math.floor(heightCss * dpr));
 
     if (this._canvas.width !== width) {
       this._canvas.width = width;
