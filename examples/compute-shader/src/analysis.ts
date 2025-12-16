@@ -152,7 +152,6 @@ function sampleConnectedSubgraph(
       if (!enqueueNextSeed()) {
         break;
       }
-
       continue;
     }
 
