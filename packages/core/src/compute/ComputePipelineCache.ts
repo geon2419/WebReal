@@ -12,7 +12,7 @@ export class ComputePipelineCache {
 
   /**
    * Generates a simple hash from shader code for cache key.
-   * Uses djb2 algorithm for fast string hashing.
+   * Uses djb2a (XOR variant of djb2) algorithm for fast string hashing.
    * @param str - The input string (shader code)
    * @returns The hash code as a base36 string
    */

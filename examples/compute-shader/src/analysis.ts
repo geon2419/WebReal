@@ -203,6 +203,12 @@ export async function runAnalysis(
     fetch(options.edgesUrl),
   ]);
 
+  if (!classesResponse.ok) {
+    throw new Error(`Failed to fetch classes CSV: ${classesResponse.status} ${classesResponse.statusText}`);
+  }
+  if (!edgesResponse.ok) {
+    throw new Error(`Failed to fetch edges CSV: ${edgesResponse.status} ${edgesResponse.statusText}`);
+  }
   const classesCSV = await classesResponse.text();
   const edgesCSV = await edgesResponse.text();
 
