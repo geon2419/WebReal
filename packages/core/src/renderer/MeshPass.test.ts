@@ -51,6 +51,7 @@ describe("MeshPass", () => {
         indexFormat: "uint16" as GPUIndexFormat,
         indexCount: 36,
         iblBindGroup: null,
+        instanceCount: 1,
       };
       const mockMeshResources = createMockMeshResourceCache(mockResources);
 
@@ -78,7 +79,7 @@ describe("MeshPass", () => {
         mockResources.indexBuffer,
         mockResources.indexFormat
       );
-      expect(mockPassEncoder.drawIndexed).toHaveBeenCalledWith(36);
+      expect(mockPassEncoder.drawIndexed).toHaveBeenCalledWith(36, 1);
       expect(mockPassEncoder.draw).not.toHaveBeenCalled();
     });
 
@@ -94,6 +95,7 @@ describe("MeshPass", () => {
         indexFormat: "uint16" as GPUIndexFormat,
         indexCount: 0,
         iblBindGroup: null,
+        instanceCount: 1,
       };
       const mockMeshResources = createMockMeshResourceCache(mockResources);
 
@@ -120,7 +122,7 @@ describe("MeshPass", () => {
       // Assert
       expect(mockPassEncoder.setIndexBuffer).not.toHaveBeenCalled();
       expect(mockPassEncoder.drawIndexed).not.toHaveBeenCalled();
-      expect(mockPassEncoder.draw).toHaveBeenCalledWith(24);
+      expect(mockPassEncoder.draw).toHaveBeenCalledWith(24, 1);
     });
 
     it("should set IBL bind group when present", () => {
@@ -136,6 +138,7 @@ describe("MeshPass", () => {
         indexFormat: "uint16" as GPUIndexFormat,
         indexCount: 0,
         iblBindGroup: mockIBLBindGroup,
+        instanceCount: 1,
       };
       const mockMeshResources = createMockMeshResourceCache(mockResources);
 
@@ -177,6 +180,7 @@ describe("MeshPass", () => {
         indexFormat: "uint16" as GPUIndexFormat,
         indexCount: 0,
         iblBindGroup: null,
+        instanceCount: 1,
       };
       const mockMeshResources = createMockMeshResourceCache(mockResources);
 
@@ -333,6 +337,7 @@ function createMockMeshResourceCache(resources?: any): any {
           indexFormat: "uint16" as GPUIndexFormat,
           indexCount: 0,
           iblBindGroup: null,
+          instanceCount: 1,
         }
       );
     }),

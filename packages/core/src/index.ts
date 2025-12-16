@@ -57,7 +57,14 @@ export {
   type AttenuationType,
   PointLightHelper,
 } from "./light";
-export { Object3D, Scene, Mesh } from "./scene";
+export {
+  Object3D,
+  Scene,
+  Mesh,
+  InstancedMesh,
+  type InstancedMeshMode,
+  type InstancedMeshOptions,
+} from "./scene";
 export {
   PerspectiveCameraHelper,
   type PerspectiveCameraHelperOptions,

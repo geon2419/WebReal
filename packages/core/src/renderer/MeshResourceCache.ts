@@ -1,5 +1,6 @@
 import { getIndexFormat } from "../geometry/Geometry";
 import type { Mesh } from "../scene/Mesh";
+import { InstancedMesh } from "../scene/InstancedMesh";
 import { FallbackResources } from "./FallbackResources";
 
 /**
@@ -9,6 +10,7 @@ export interface MeshGPUResources {
   vertexBuffer: GPUBuffer;
   indexBuffer: GPUBuffer;
   uniformBuffer: GPUBuffer;
+  storageBuffer?: GPUBuffer;
   bindGroup: GPUBindGroup;
   iblBindGroup?: GPUBindGroup;
   materialType: string;
@@ -16,6 +18,7 @@ export interface MeshGPUResources {
   bindingRevision: number;
   indexCount: number;
   indexFormat: GPUIndexFormat;
+  instanceCount: number;
 }
 
 /**
@@ -174,10 +177,19 @@ export class MeshResourceCache {
         iblBindGroup = this._createIBLBindGroup(mesh, pipeline);
       }
 
+      let storageBuffer: GPUBuffer | undefined;
+      let instanceCount = 1;
+
+      if (mesh instanceof InstancedMesh) {
+        storageBuffer = mesh.getStorageBuffer(this._device);
+        instanceCount = mesh.instanceCount;
+      }
+
       resources = {
         vertexBuffer,
         indexBuffer,
         uniformBuffer,
+        storageBuffer,
         bindGroup,
         iblBindGroup,
         materialType: currentMaterialType,
@@ -185,6 +197,7 @@ export class MeshResourceCache {
         bindingRevision: currentBindingRevision,
         indexCount: indexData.length,
         indexFormat,
+        instanceCount,
       };
 
       this._meshBuffers.set(mesh, resources);
@@ -248,7 +261,15 @@ export class MeshResourceCache {
       },
     ];
 
-    if (mesh.material.getTextures) {
+    // Check for storage buffer via InstancedMesh
+    if (mesh instanceof InstancedMesh) {
+      const storageBuffer = mesh.getStorageBuffer(this._device);
+      entries.push({
+        binding: 1,
+        resource: { buffer: storageBuffer },
+      });
+    } else if (mesh.material.getTextures) {
+      // Only add texture bindings if not using storage buffer
       const textures = mesh.material.getTextures(this._device);
       if (textures.length > 0) {
         entries.push({
