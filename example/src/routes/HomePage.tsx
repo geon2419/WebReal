@@ -6,7 +6,7 @@ export default function HomePage() {
       <div style={{ maxWidth: 880, margin: "0 auto" }}>
         <h1 style={{ margin: "0 0 12px" }}>WebReal Examples</h1>
         <p style={{ margin: "0 0 24px", opacity: 0.8 }}>
-          Select an example. Routes are client-side (History API).
+          Select an example.
         </p>
 
         <div
@@ -24,9 +24,6 @@ export default function HomePage() {
               background: "rgba(255,255,255,0.04)",
             }}
           >
-            <div style={{ fontSize: 12, opacity: 0.75, marginBottom: 6 }}>
-              /mona-lisa
-            </div>
             <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 10 }}>
               Mona Lisa (Parallax PBR)
             </div>
@@ -41,9 +38,6 @@ export default function HomePage() {
               background: "rgba(255,255,255,0.04)",
             }}
           >
-            <div style={{ fontSize: 12, opacity: 0.75, marginBottom: 6 }}>
-              /perspective-camera
-            </div>
             <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 10 }}>
               Perspective Camera
             </div>
@@ -58,9 +52,6 @@ export default function HomePage() {
               background: "rgba(255,255,255,0.04)",
             }}
           >
-            <div style={{ fontSize: 12, opacity: 0.75, marginBottom: 6 }}>
-              /visual-compute-shader
-            </div>
             <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 10 }}>
               Visual Compute Shader
             </div>
