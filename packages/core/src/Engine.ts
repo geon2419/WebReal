@@ -105,12 +105,16 @@ export class Engine {
       requiredFeatures: supportedFeatures,
     });
     this._device.lost.then((info) => {
-      if (this._isDisposed || info.reason === "destroyed") {
+      if (this._isDisposed) {
         return;
       }
 
-      console.error(`WebGPU device lost: ${info.message}`);
+      if (info.reason === "destroyed") {
+        return;
+      }
+
       this.stop();
+      console.error(`WebGPU device lost: ${info.message}`);
     });
 
     const context = this._canvas.getContext("webgpu");
