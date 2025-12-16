@@ -10,6 +10,18 @@ describe("RenderTargets", () => {
   let mockCommandEncoder: GPUCommandEncoder;
   let mockPassEncoder: GPURenderPassEncoder;
   let originalResizeObserver: any;
+  let originalGPUTextureUsage: any;
+
+  const createMockCanvas = (cssWidth: number, cssHeight: number) =>
+    ({
+      width: cssWidth,
+      height: cssHeight,
+      getBoundingClientRect: () =>
+        ({
+          width: cssWidth,
+          height: cssHeight,
+        }) as DOMRect,
+    }) as unknown as HTMLCanvasElement;
 
   beforeEach(() => {
     // Mock ResizeObserver for test environment
@@ -19,6 +31,13 @@ describe("RenderTargets", () => {
       disconnect = mock(() => {});
       unobserve = mock(() => {});
     } as any;
+
+    // Bun test environment doesn't provide WebGPU constants.
+    originalGPUTextureUsage = (globalThis as any).GPUTextureUsage;
+    (globalThis as any).GPUTextureUsage = {
+      RENDER_ATTACHMENT: 1,
+    };
+
     mockTexture = {
       destroy: mock(() => {}),
       createView: mock(() => ({} as GPUTextureView)),
@@ -42,10 +61,7 @@ describe("RenderTargets", () => {
       beginRenderPass: mock(() => mockPassEncoder),
     } as unknown as GPUCommandEncoder;
 
-    mockCanvas = {
-      width: 800,
-      height: 600,
-    } as HTMLCanvasElement;
+    mockCanvas = createMockCanvas(800, 600);
   });
 
   describe("constructor", () => {
@@ -111,10 +127,7 @@ describe("RenderTargets", () => {
     });
 
     it("should create textures matching canvas dimensions", () => {
-      const customCanvas = {
-        width: 1920,
-        height: 1080,
-      } as HTMLCanvasElement;
+      const customCanvas = createMockCanvas(1920, 1080);
 
       new RenderTargets({
         device: mockDevice,
@@ -253,6 +266,11 @@ describe("RenderTargets", () => {
   afterEach(() => {
     if (originalResizeObserver) {
       globalThis.ResizeObserver = originalResizeObserver;
+    }
+    if (typeof originalGPUTextureUsage === "undefined") {
+      delete (globalThis as any).GPUTextureUsage;
+    } else {
+      (globalThis as any).GPUTextureUsage = originalGPUTextureUsage;
     }
   });
 });
