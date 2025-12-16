@@ -81,6 +81,7 @@ export class MeshResourceCache {
         resources.topology !== currentTopology ||
         mesh.needsUpdate)
     ) {
+      mesh.invalidateGeometryCache();
       this._destroyMeshResources(resources);
       resources = undefined;
       mesh.needsUpdate = false;

@@ -337,6 +337,41 @@ describe("MeshResourceCache", () => {
       expect(mesh.needsUpdate).toBe(false);
     });
 
+    it("should refresh cached vertex data when geometry mutates and needsUpdate is set", () => {
+      const cache = new MeshResourceCache({
+        device: mockDevice,
+        fallback: mockFallback,
+      });
+
+      const mockMaterial: Material = {
+        type: "line",
+        bindingRevision: 0,
+        getPrimitiveTopology: () => "line-list",
+        getVertexShader: () => "",
+        getFragmentShader: () => "",
+        getVertexBufferLayout: () => ({
+          arrayStride: 12,
+          attributes: [],
+        }),
+        getUniformBufferSize: () => 64,
+        writeUniformData: () => {},
+      };
+
+      const geometry = new BoxGeometry(1, 1, 1);
+      const mesh = new Mesh(geometry, mockMaterial);
+
+      cache.getOrCreate(mesh, mockPipeline);
+      const firstVertexData = (mockQueue.writeBuffer as any).mock.calls[0][2] as Float32Array;
+
+      geometry.positions[0] = geometry.positions[0] + 123.0;
+      mesh.needsUpdate = true;
+
+      cache.getOrCreate(mesh, mockPipeline);
+      const secondVertexData = (mockQueue.writeBuffer as any).mock.calls[2][2] as Float32Array;
+
+      expect(secondVertexData[0]).not.toBe(firstVertexData[0]);
+    });
+
     it("should update only bindGroup when bindingRevision changes", () => {
       const cache = new MeshResourceCache({
         device: mockDevice,
