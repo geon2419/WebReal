@@ -35,6 +35,7 @@ export {
   type ParallaxMaterialOptions,
   type ParallaxPBRMaterialOptions,
   type PBRMaterialOptions,
+  type ShaderMaterialOptions,
   BasicMaterial,
   BlinnPhongMaterial,
   VertexColorMaterial,
@@ -44,6 +45,7 @@ export {
   ParallaxMaterial,
   ParallaxPBRMaterial,
   PBRMaterial,
+  ShaderMaterial,
 } from "./material";
 export { ShaderLib, type ShaderSource } from "./shaders";
 export * from "./camera";
