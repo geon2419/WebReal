@@ -39,6 +39,25 @@ export class ComputePipelineCache {
     layout: GPUPipelineLayout | "auto" = "auto",
     label?: string
   ): GPUComputePipeline {
+    // Short-term safety: do not cache pipelines created with explicit layouts.
+    // Otherwise, the cache could return a pipeline created with a different layout
+    // for the same shader code.
+    if (layout !== "auto") {
+      const shaderModule = device.createShaderModule({
+        label: label ? `${label} ShaderModule` : undefined,
+        code: shaderCode,
+      });
+
+      return device.createComputePipeline({
+        label: label ? `${label} Pipeline` : undefined,
+        layout,
+        compute: {
+          module: shaderModule,
+          entryPoint: "main",
+        },
+      });
+    }
+
     let deviceCache = this._cache.get(device);
     if (!deviceCache) {
       deviceCache = new Map();
@@ -74,7 +93,7 @@ export class ComputePipelineCache {
    *
    * @param device - The WebGPU device
    * @param shaderCode - WGSL compute shader source code
-   * @returns True if pipeline is cached
+   * @returns True if an "auto"-layout pipeline is cached
    */
   static has(device: GPUDevice, shaderCode: string): boolean {
     const deviceCache = this._cache.get(device);

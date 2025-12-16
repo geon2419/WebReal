@@ -59,7 +59,74 @@ describe("ComputePipelineCache", () => {
   });
 
   // Note: getOrCreate tests require actual GPUDevice and would be integration tests
-  // The following tests verify the interface contract without GPU
+  // The following tests verify caching behavior using a mocked GPUDevice
+
+  describe("getOrCreate", () => {
+    it("should cache pipelines when layout is auto", () => {
+      let createPipelineCalls = 0;
+      const mockDevice = {
+        createShaderModule: (descriptor: any) => ({ descriptor }),
+        createComputePipeline: (descriptor: any) => {
+          createPipelineCalls++;
+          return { descriptor, id: createPipelineCalls };
+        },
+      } as unknown as GPUDevice;
+
+      ComputePipelineCache.clear(mockDevice);
+
+      const shaderCode = "@compute fn main() {}";
+      const pipeline1 = ComputePipelineCache.getOrCreate(
+        mockDevice,
+        shaderCode,
+        "auto",
+        "Test"
+      );
+      const pipeline2 = ComputePipelineCache.getOrCreate(
+        mockDevice,
+        shaderCode,
+        "auto",
+        "Test"
+      );
+
+      expect(pipeline1).toBe(pipeline2);
+      expect(createPipelineCalls).toBe(1);
+      expect(ComputePipelineCache.has(mockDevice, shaderCode)).toBe(true);
+    });
+
+    it("should not cache pipelines when layout is explicit", () => {
+      let createPipelineCalls = 0;
+      const mockDevice = {
+        createShaderModule: (descriptor: any) => ({ descriptor }),
+        createComputePipeline: (descriptor: any) => {
+          createPipelineCalls++;
+          return { descriptor, id: createPipelineCalls };
+        },
+      } as unknown as GPUDevice;
+
+      ComputePipelineCache.clear(mockDevice);
+
+      const shaderCode = "@compute fn main() {}";
+      const explicitLayout = {} as GPUPipelineLayout;
+
+      const pipeline1 = ComputePipelineCache.getOrCreate(
+        mockDevice,
+        shaderCode,
+        explicitLayout,
+        "Test"
+      );
+      const pipeline2 = ComputePipelineCache.getOrCreate(
+        mockDevice,
+        shaderCode,
+        explicitLayout,
+        "Test"
+      );
+
+      expect(pipeline1).not.toBe(pipeline2);
+      expect(createPipelineCalls).toBe(2);
+      // Explicit-layout pipelines should not populate the cache used by has().
+      expect(ComputePipelineCache.has(mockDevice, shaderCode)).toBe(false);
+    });
+  });
 
   describe("cache key generation", () => {
     it("should generate unique keys for shaders with whitespace differences", () => {
