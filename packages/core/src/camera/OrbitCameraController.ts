@@ -136,9 +136,10 @@ export class OrbitCameraController {
 
     // Attach event listeners
     this.canvas.addEventListener("mousedown", this.onMouseDownBound);
-    this.canvas.addEventListener("mousemove", this.onMouseMoveBound);
-    this.canvas.addEventListener("mouseup", this.onMouseUpBound);
-    this.canvas.addEventListener("mouseleave", this.onMouseUpBound);
+    // Track drag across the whole window so mouseup outside the canvas
+    // doesn't leave the controller in a "stuck dragging" state.
+    window.addEventListener("mousemove", this.onMouseMoveBound);
+    window.addEventListener("mouseup", this.onMouseUpBound);
     this.canvas.addEventListener("wheel", this.onWheelBound, {
       passive: false,
     });
@@ -310,9 +311,8 @@ export class OrbitCameraController {
    */
   dispose(): void {
     this.canvas.removeEventListener("mousedown", this.onMouseDownBound);
-    this.canvas.removeEventListener("mousemove", this.onMouseMoveBound);
-    this.canvas.removeEventListener("mouseup", this.onMouseUpBound);
-    this.canvas.removeEventListener("mouseleave", this.onMouseUpBound);
+    window.removeEventListener("mousemove", this.onMouseMoveBound);
+    window.removeEventListener("mouseup", this.onMouseUpBound);
     this.canvas.removeEventListener("wheel", this.onWheelBound);
     this.canvas.removeEventListener("contextmenu", this.onContextMenuBound);
   }

@@ -2,6 +2,7 @@ import type { Camera } from "../camera/Camera";
 import type { Light } from "../light/Light";
 import type { RenderContext } from "../material/Material";
 import type { Mesh } from "../scene/Mesh";
+import { InstancedMesh } from "../scene/InstancedMesh";
 import type { Scene } from "../scene/Scene";
 import { MeshResourceCache } from "./MeshResourceCache";
 import { PipelineCache } from "./PipelineCache";
@@ -106,6 +107,10 @@ export class MeshPass {
         }
       }
 
+      if (mesh instanceof InstancedMesh) {
+        mesh.updateStorageBuffer(this._device);
+      }
+
       options.passEncoder.setPipeline(pipeline);
       options.passEncoder.setBindGroup(0, resources.bindGroup);
 
@@ -113,16 +118,23 @@ export class MeshPass {
         options.passEncoder.setBindGroup(1, resources.iblBindGroup);
       }
 
+      if (resources.instanceBindGroup) {
+        options.passEncoder.setBindGroup(2, resources.instanceBindGroup);
+      }
+
       options.passEncoder.setVertexBuffer(0, resources.vertexBuffer);
+
+      // Use instance count from resources (defaults to 1 for non-instanced materials)
+      const instanceCount = resources.instanceCount;
 
       if (resources.indexCount > 0) {
         options.passEncoder.setIndexBuffer(
           resources.indexBuffer,
           resources.indexFormat
         );
-        options.passEncoder.drawIndexed(resources.indexCount);
+        options.passEncoder.drawIndexed(resources.indexCount, instanceCount);
       } else {
-        options.passEncoder.draw(mesh.vertexCount);
+        options.passEncoder.draw(mesh.vertexCount, instanceCount);
       }
     }
   }

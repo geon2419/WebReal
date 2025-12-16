@@ -44,10 +44,22 @@ export class RenderTargets {
     this._canvas = options.canvas;
     this._sampleCount = options.sampleCount;
 
+    // Ensure canvas pixel size matches its CSS size (handles HiDPI/retina).
+    this._syncCanvasPixelSize();
+
     this._createDepthTexture();
     this._createMSAATexture();
 
-    this._resizeObserver = new ResizeObserver(() => {
+    this._resizeObserver = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (entry) {
+        this._syncCanvasPixelSize(
+          entry.contentRect.width,
+          entry.contentRect.height
+        );
+      } else {
+        this._syncCanvasPixelSize();
+      }
       this._createDepthTexture();
       this._createMSAATexture();
     });
@@ -111,6 +123,10 @@ export class RenderTargets {
   private _createDepthTexture(): void {
     this._depthTexture?.destroy();
 
+    if (this._canvas.width <= 0 || this._canvas.height <= 0) {
+      return;
+    }
+
     this._depthTexture = this._device.createTexture({
       size: [this._canvas.width, this._canvas.height],
       format: "depth24plus",
@@ -122,11 +138,34 @@ export class RenderTargets {
   private _createMSAATexture(): void {
     this._msaaTexture?.destroy();
 
+    if (this._canvas.width <= 0 || this._canvas.height <= 0) {
+      return;
+    }
+
     this._msaaTexture = this._device.createTexture({
       size: [this._canvas.width, this._canvas.height],
       format: this._format,
       usage: GPUTextureUsage.RENDER_ATTACHMENT,
       sampleCount: this._sampleCount,
     });
+  }
+
+  private _syncCanvasPixelSize(cssWidth?: number, cssHeight?: number): void {
+    // Use ResizeObserver contentRect when available; fallback to bounding box.
+    const rect = this._canvas.getBoundingClientRect();
+    const widthCss = cssWidth ?? rect.width;
+    const heightCss = cssHeight ?? rect.height;
+
+    const dpr =
+      typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1;
+    const width = Math.max(1, Math.floor(widthCss * dpr));
+    const height = Math.max(1, Math.floor(heightCss * dpr));
+
+    if (this._canvas.width !== width) {
+      this._canvas.width = width;
+    }
+    if (this._canvas.height !== height) {
+      this._canvas.height = height;
+    }
   }
 }
