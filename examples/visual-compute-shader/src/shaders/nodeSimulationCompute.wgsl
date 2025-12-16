@@ -26,7 +26,7 @@ fn main(@builtin(global_invocation_id) id: vec3<u32>) {
   let pos_i = nodes[i].position;
 
   // Repulsion (sampled) - avoids O(N^2)
-  let samples = min(128u, max(params.nodeCount, 1u));
+  let samples = min(128u, params.nodeCount);
   var seed = i * 1664525u + 1013904223u;
   for (var k = 0u; k < samples; k++) {
     seed = seed * 1664525u + 1013904223u;
