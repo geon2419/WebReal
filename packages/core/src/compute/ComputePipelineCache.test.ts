@@ -93,6 +93,44 @@ describe("ComputePipelineCache", () => {
       expect(ComputePipelineCache.has(mockDevice, shaderCode)).toBe(true);
     });
 
+    it("should not reuse cached pipelines across different entry points", () => {
+      let createPipelineCalls = 0;
+      const mockDevice = {
+        createShaderModule: (descriptor: any) => ({ descriptor }),
+        createComputePipeline: (descriptor: any) => {
+          createPipelineCalls++;
+          return { descriptor, id: createPipelineCalls };
+        },
+      } as unknown as GPUDevice;
+
+      ComputePipelineCache.clear(mockDevice);
+
+      const shaderCode = "@compute fn main() {}";
+      const pipelineMain = ComputePipelineCache.getOrCreate(
+        mockDevice,
+        shaderCode,
+        "auto",
+        "Test",
+        "main"
+      );
+      const pipelineOther = ComputePipelineCache.getOrCreate(
+        mockDevice,
+        shaderCode,
+        "auto",
+        "Test",
+        "other"
+      );
+
+      expect(pipelineMain).not.toBe(pipelineOther);
+      expect(createPipelineCalls).toBe(2);
+      expect(ComputePipelineCache.has(mockDevice, shaderCode, "main")).toBe(
+        true
+      );
+      expect(ComputePipelineCache.has(mockDevice, shaderCode, "other")).toBe(
+        true
+      );
+    });
+
     it("should not cache pipelines when layout is explicit", () => {
       let createPipelineCalls = 0;
       const mockDevice = {

@@ -142,12 +142,14 @@ export class ComputeShader {
     const layout = this._pipelineLayout ?? "auto";
 
     if (this._useCache && !this._pipelineLayout) {
-      // Use cache only for auto layout (explicit layouts are unique)
+      // Cache only auto layout; explicit layouts aren't cached.
+      // Cache key doesn't include bind group layout config, so reuse could be incorrect.
       this._pipeline = ComputePipelineCache.getOrCreate(
         this._device,
         this._code,
         layout,
-        this._label
+        this._label,
+        this._entryPoint
       );
     } else {
       // Create pipeline directly for explicit layouts or when caching disabled

@@ -37,11 +37,10 @@ export class ComputePipelineCache {
     device: GPUDevice,
     shaderCode: string,
     layout: GPUPipelineLayout | "auto" = "auto",
-    label?: string
+    label?: string,
+    entryPoint: string = "main"
   ): GPUComputePipeline {
     // Short-term safety: do not cache pipelines created with explicit layouts.
-    // Otherwise, the cache could return a pipeline created with a different layout
-    // for the same shader code.
     if (layout !== "auto") {
       const shaderModule = device.createShaderModule({
         label: label ? `${label} ShaderModule` : undefined,
@@ -53,7 +52,7 @@ export class ComputePipelineCache {
         layout,
         compute: {
           module: shaderModule,
-          entryPoint: "main",
+          entryPoint,
         },
       });
     }
@@ -64,7 +63,10 @@ export class ComputePipelineCache {
       this._cache.set(device, deviceCache);
     }
 
-    const cacheKey = this._hashCode(shaderCode);
+    // Cache key must include entryPoint: the same WGSL module can expose
+    // multiple entry points, and using the wrong one would produce an invalid
+    // pipeline for the caller.
+    const cacheKey = `${this._hashCode(shaderCode)}:${entryPoint}`;
     let pipeline = deviceCache.get(cacheKey);
 
     if (!pipeline) {
@@ -78,7 +80,7 @@ export class ComputePipelineCache {
         layout,
         compute: {
           module: shaderModule,
-          entryPoint: "main",
+          entryPoint,
         },
       });
 
@@ -95,11 +97,15 @@ export class ComputePipelineCache {
    * @param shaderCode - WGSL compute shader source code
    * @returns True if an "auto"-layout pipeline is cached
    */
-  static has(device: GPUDevice, shaderCode: string): boolean {
+  static has(
+    device: GPUDevice,
+    shaderCode: string,
+    entryPoint: string = "main"
+  ): boolean {
     const deviceCache = this._cache.get(device);
     if (!deviceCache) return false;
 
-    const cacheKey = this._hashCode(shaderCode);
+    const cacheKey = `${this._hashCode(shaderCode)}:${entryPoint}`;
     return deviceCache.has(cacheKey);
   }
 

@@ -43,6 +43,7 @@ function createMockDevice(): GPUDevice {
     createComputePipeline: (descriptor: GPUComputePipelineDescriptor) => {
       const pipeline = {
         label: descriptor.label,
+        descriptor,
         getBindGroupLayout: (index: number) => bindGroupLayouts[index],
       } as GPUComputePipeline;
       pipelines.push(pipeline);
@@ -220,6 +221,20 @@ describe("ComputeShader", () => {
 
       const pipeline = shader.getPipeline();
       expect(pipeline).toBeDefined();
+    });
+
+    it("should respect custom entry point when caching is enabled", () => {
+      const mockDevice = createMockDevice();
+      const shader = new ComputeShader(mockDevice, {
+        code: SIMPLE_SHADER,
+        entryPoint: "computeMain",
+        useCache: true,
+      });
+
+      const pipeline = shader.getPipeline();
+      expect((pipeline as any).descriptor.compute.entryPoint).toBe(
+        "computeMain"
+      );
     });
   });
 
