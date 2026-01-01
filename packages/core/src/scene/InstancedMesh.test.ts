@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi, beforeAll } from "vitest";
+import { describe, it, expect, beforeEach, vi, beforeAll } from "bun:test";
 import { Matrix4, Vector3 } from "@web-real/math";
 import { InstancedMesh } from "./InstancedMesh";
 import type { Geometry } from "../geometry/Geometry";
@@ -120,7 +120,10 @@ describe("InstancedMesh", () => {
         (mesh: InstancedMesh, index: number) =>
           mesh.setMatrixAt(index, new Matrix4()),
       ],
-      ["getMatrixAt", (mesh: InstancedMesh, index: number) => mesh.getMatrixAt(index)],
+      [
+        "getMatrixAt",
+        (mesh: InstancedMesh, index: number) => mesh.getMatrixAt(index),
+      ],
     ])("validates instance index bounds for %s", (_name, call) => {
       const mesh = new InstancedMesh(geometry, material, 10);
       expect(() => call(mesh, -1)).toThrow(/Instance index -1 out of bounds/);
@@ -154,9 +157,13 @@ describe("InstancedMesh", () => {
     it.each([
       [
         "setPositionAt",
-        (mesh: InstancedMesh, index: number) => mesh.setPositionAt(index, 0, 0, 0),
+        (mesh: InstancedMesh, index: number) =>
+          mesh.setPositionAt(index, 0, 0, 0),
       ],
-      ["getPositionAt", (mesh: InstancedMesh, index: number) => mesh.getPositionAt(index)],
+      [
+        "getPositionAt",
+        (mesh: InstancedMesh, index: number) => mesh.getPositionAt(index),
+      ],
     ])("validates instance index bounds for %s", (_name, call) => {
       const mesh = new InstancedMesh(geometry, material, 10, {
         mode: "position",
@@ -198,9 +205,13 @@ describe("InstancedMesh", () => {
     it.each([
       [
         "setColorAt",
-        (mesh: InstancedMesh, index: number) => mesh.setColorAt(index, 1, 1, 1, 1),
+        (mesh: InstancedMesh, index: number) =>
+          mesh.setColorAt(index, 1, 1, 1, 1),
       ],
-      ["getColorAt", (mesh: InstancedMesh, index: number) => mesh.getColorAt(index)],
+      [
+        "getColorAt",
+        (mesh: InstancedMesh, index: number) => mesh.getColorAt(index),
+      ],
     ])("validates instance index bounds for %s", (_name, call) => {
       const mesh = new InstancedMesh(geometry, material, 10);
       expect(() => call(mesh, -1)).toThrow(/Instance index -1 out of bounds/);
@@ -307,4 +318,3 @@ describe("InstancedMesh", () => {
     });
   });
 });
-

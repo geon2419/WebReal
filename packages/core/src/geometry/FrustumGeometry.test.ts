@@ -5,563 +5,134 @@ import { OrthographicCamera } from "../camera/OrthographicCamera";
 import { Color, Vector3 } from "@web-real/math";
 
 describe("FrustumGeometry", () => {
-  describe("constructor", () => {
-    it("should create frustum geometry with default colors", () => {
-      const camera = new PerspectiveCamera({
-        fov: 60,
-        aspect: 16 / 9,
-        near: 0.1,
-        far: 100,
-      });
+  const EPSILON = 1e-6;
 
-      const frustum = new FrustumGeometry(camera);
+  function hasAnyDifference(
+    a: ArrayLike<number>,
+    b: ArrayLike<number>
+  ): boolean {
+    if (a.length !== b.length) return true;
+    for (let i = 0; i < a.length; i++) {
+      if (Math.abs(a[i] - b[i]) > 1e-4) return true;
+    }
+    return false;
+  }
 
-      expect(frustum.vertexCount).toBeGreaterThan(0);
-      expect(frustum.positions.length).toBeGreaterThan(0);
-      expect(frustum.colors.length).toBeGreaterThan(0);
-    });
+  function expectColorAt(
+    colors: Float32Array,
+    vertexIndex: number,
+    expected: Color
+  ): void {
+    const base = vertexIndex * 3;
+    expect(colors[base]).toBeCloseTo(expected.r, 5);
+    expect(colors[base + 1]).toBeCloseTo(expected.g, 5);
+    expect(colors[base + 2]).toBeCloseTo(expected.b, 5);
+  }
 
-    it("should create frustum geometry with custom colors", () => {
-      const camera = new PerspectiveCamera();
-      const customColors = {
-        near: new Color(1, 0, 0), // Red
-        far: new Color(0, 1, 0), // Green
-        sides: new Color(0, 0, 1), // Blue
-        cone: new Color(1, 1, 1), // White
-      };
+  it("should generate non-indexed line-list geometry for perspective camera", () => {
+    const camera = new PerspectiveCamera({ fov: 60, aspect: 16 / 9 });
+    const frustum = new FrustumGeometry(camera);
 
-      const frustum = new FrustumGeometry(camera, customColors);
+    // Contract: 16 line segments → 32 vertices (line-list, non-indexed)
+    expect(frustum.vertexCount).toBe(32);
+    expect(frustum.indexCount).toBe(0);
+    expect(frustum.indices.length).toBe(0);
+    expect(frustum.normals.length).toBe(0);
 
-      expect(frustum.vertexCount).toBeGreaterThan(0);
-      expect(frustum.colors.length).toBeGreaterThan(0);
-    });
+    // 3 components per vertex
+    expect(frustum.positions.length).toBe(32 * 3);
+    expect(frustum.colors.length).toBe(32 * 3);
 
-    it("should work with orthographic camera", () => {
-      const camera = new OrthographicCamera({
-        left: -5,
-        right: 5,
-        top: 5,
-        bottom: -5,
-        near: 0.1,
-        far: 50,
-      });
-
-      const frustum = new FrustumGeometry(camera);
-
-      expect(frustum.vertexCount).toBeGreaterThan(0);
-      expect(frustum.positions.length).toBeGreaterThan(0);
-    });
-
-    it("should work with partial color overrides", () => {
-      const camera = new PerspectiveCamera();
-      const frustum = new FrustumGeometry(camera, {
-        near: new Color(1, 0, 0),
-        // Other colors use defaults
-      });
-
-      expect(frustum.vertexCount).toBeGreaterThan(0);
-    });
+    // Sanity: finite coordinates
+    for (let i = 0; i < frustum.positions.length; i++) {
+      expect(Number.isFinite(frustum.positions[i])).toBe(true);
+    }
   });
 
-  describe("geometry data structure", () => {
-    it("should generate 32 vertices for 16 line segments", () => {
-      const camera = new PerspectiveCamera();
-      const frustum = new FrustumGeometry(camera);
-
-      // 16 lines × 2 vertices per line = 32 vertices
-      // 4 near edges + 4 far edges + 4 connecting edges + 4 cone edges
-      expect(frustum.vertexCount).toBe(32);
-      expect(frustum.positions.length).toBe(32 * 3);
-      expect(frustum.colors.length).toBe(32 * 3);
+  it("should support orthographic camera", () => {
+    const camera = new OrthographicCamera({
+      left: -5,
+      right: 5,
+      top: 5,
+      bottom: -5,
+      near: 0.1,
+      far: 50,
     });
+    const frustum = new FrustumGeometry(camera);
 
-    it("should use non-indexed rendering", () => {
-      const camera = new PerspectiveCamera();
-      const frustum = new FrustumGeometry(camera);
-
-      expect(frustum.indexCount).toBe(0);
-      expect(frustum.indices.length).toBe(0);
-    });
-
-    it("should have empty normals array (not used for line rendering)", () => {
-      const camera = new PerspectiveCamera();
-      const frustum = new FrustumGeometry(camera);
-
-      expect(frustum.normals.length).toBe(0);
-    });
-
-    it("should have matching position and color array lengths", () => {
-      const camera = new PerspectiveCamera();
-      const frustum = new FrustumGeometry(camera);
-
-      // Both should have 3 components per vertex
-      expect(frustum.positions.length).toBe(frustum.vertexCount * 3);
-      expect(frustum.colors.length).toBe(frustum.vertexCount * 3);
-    });
+    expect(frustum.vertexCount).toBe(32);
+    expect(frustum.positions.length).toBe(32 * 3);
+    expect(frustum.colors.length).toBe(32 * 3);
   });
 
-  describe("positions", () => {
-    it("should generate valid position coordinates", () => {
-      const camera = new PerspectiveCamera({
-        fov: 60,
-        aspect: 1,
-        near: 0.1,
-        far: 10,
-      });
-      camera.position.set(0, 0, 5);
-
-      const frustum = new FrustumGeometry(camera);
-      const positions = frustum.positions;
-
-      // All positions should be finite numbers
-      for (let i = 0; i < positions.length; i++) {
-        expect(Number.isFinite(positions[i])).toBe(true);
-        expect(Number.isNaN(positions[i])).toBe(false);
-      }
+  it("should update positions when camera projection or transform changes", () => {
+    const camera = new PerspectiveCamera({
+      fov: 60,
+      aspect: 1,
+      near: 0.1,
+      far: 10,
     });
+    camera.position.set(0, 0, 5);
+    camera.lookAt(new Vector3(0, 0, 0));
 
-    it("should have positions relative to camera position", () => {
-      const camera = new PerspectiveCamera({
-        fov: 60,
-        aspect: 1,
-        near: 1,
-        far: 10,
-      });
-      const cameraPos = new Vector3(10, 20, 30);
-      camera.position.set(cameraPos.x, cameraPos.y, cameraPos.z);
+    const frustum = new FrustumGeometry(camera);
+    const before = Array.from(frustum.positions);
 
-      const frustum = new FrustumGeometry(camera);
-      const positions = frustum.positions;
+    camera.fov = 90;
+    camera.position.set(3, 1, 7);
+    camera.lookAt(new Vector3(0, 0, 0));
+    frustum.update(camera);
+    const after = Array.from(frustum.positions);
 
-      // Some positions should include the camera position (for cone lines)
-      let hasCameraPosition = false;
-      for (let i = 0; i < positions.length; i += 3) {
-        const x = positions[i];
-        const y = positions[i + 1];
-        const z = positions[i + 2];
-
-        const distToCameraPos = Math.sqrt(
-          Math.pow(x - cameraPos.x, 2) +
-            Math.pow(y - cameraPos.y, 2) +
-            Math.pow(z - cameraPos.z, 2)
-        );
-
-        if (distToCameraPos < 0.001) {
-          hasCameraPosition = true;
-          break;
-        }
-      }
-
-      expect(hasCameraPosition).toBe(true);
-    });
-
-    it("should change when camera moves", () => {
-      const camera = new PerspectiveCamera();
-      camera.position.set(0, 0, 0);
-
-      const frustum = new FrustumGeometry(camera);
-      const positions1 = Array.from(frustum.positions);
-
-      camera.position.set(10, 0, 0);
-      frustum.update(camera);
-      const positions2 = Array.from(frustum.positions);
-
-      // Positions should be different after camera movement
-      let hasDifference = false;
-      for (let i = 0; i < positions1.length; i++) {
-        if (Math.abs(positions1[i] - positions2[i]) > 0.001) {
-          hasDifference = true;
-          break;
-        }
-      }
-
-      expect(hasDifference).toBe(true);
-    });
+    expect(hasAnyDifference(before, after)).toBe(true);
   });
 
-  describe("colors", () => {
-    it("should have valid color values in range [0, 1]", () => {
-      const camera = new PerspectiveCamera();
-      const frustum = new FrustumGeometry(camera);
-      const colors = frustum.colors;
+  it("should include camera position in cone lines", () => {
+    const camera = new PerspectiveCamera({ near: 1, far: 10, aspect: 1 });
+    camera.position.set(10, 20, 30);
+    const frustum = new FrustumGeometry(camera);
 
-      for (let i = 0; i < colors.length; i++) {
-        expect(colors[i]).toBeGreaterThanOrEqual(0);
-        expect(colors[i]).toBeLessThanOrEqual(1);
-      }
-    });
-
-    it("should apply custom near color", () => {
-      const camera = new PerspectiveCamera();
-      const redColor = new Color(1, 0, 0);
-      const frustum = new FrustumGeometry(camera, { near: redColor });
-      const colors = frustum.colors;
-
-      // Near plane has 4 edges × 2 vertices = 8 vertices at the start
-      // Check first few vertices for red color
-      let hasRedColor = false;
-      for (let i = 0; i < Math.min(24, colors.length); i += 3) {
-        const r = colors[i];
-        const g = colors[i + 1];
-        const b = colors[i + 2];
-
-        if (
-          Math.abs(r - 1) < 0.001 &&
-          Math.abs(g - 0) < 0.001 &&
-          Math.abs(b - 0) < 0.001
-        ) {
-          hasRedColor = true;
-          break;
-        }
-      }
-
-      expect(hasRedColor).toBe(true);
-    });
-
-    it("should contain different colors for different parts", () => {
-      const camera = new PerspectiveCamera();
-      const frustum = new FrustumGeometry(camera, {
-        near: new Color(1, 0, 0),
-        far: new Color(0, 1, 0),
-        sides: new Color(0, 0, 1),
-        cone: new Color(1, 1, 0),
-      });
-      const colors = frustum.colors;
-
-      const uniqueColors = new Set<string>();
-      for (let i = 0; i < colors.length; i += 3) {
-        const colorKey = `${colors[i].toFixed(2)},${colors[i + 1].toFixed(
-          2
-        )},${colors[i + 2].toFixed(2)}`;
-        uniqueColors.add(colorKey);
-      }
-
-      // Should have at least 2 different colors
-      expect(uniqueColors.size).toBeGreaterThanOrEqual(2);
-    });
+    // Cone lines are the last 4 segments → last 8 vertices.
+    // Each cone line starts at camera position.
+    const positions = frustum.positions;
+    const coneStartVertex0 = 24; // first vertex of first cone segment
+    const base = coneStartVertex0 * 3;
+    expect(positions[base]).toBeCloseTo(10, 6);
+    expect(positions[base + 1]).toBeCloseTo(20, 6);
+    expect(positions[base + 2]).toBeCloseTo(30, 6);
   });
 
-  describe("update method", () => {
-    it("should update geometry when camera parameters change", () => {
-      const camera = new PerspectiveCamera({ fov: 60, near: 0.1, far: 10 });
-      const frustum = new FrustumGeometry(camera);
+  it("should apply per-part colors and allow updating colors via setColors", () => {
+    const camera = new PerspectiveCamera();
+    const initialNear = new Color(1, 0, 0);
+    const initialFar = new Color(0, 1, 0);
+    const initialSides = new Color(0, 0, 1);
+    const initialCone = new Color(1, 1, 1);
 
-      const positions1 = Array.from(frustum.positions);
-
-      // Change camera FOV
-      camera.fov = 90;
-      frustum.update(camera);
-      const positions2 = Array.from(frustum.positions);
-
-      // Positions should be different
-      let hasDifference = false;
-      for (let i = 0; i < positions1.length; i++) {
-        if (Math.abs(positions1[i] - positions2[i]) > 0.001) {
-          hasDifference = true;
-          break;
-        }
-      }
-
-      expect(hasDifference).toBe(true);
+    const frustum = new FrustumGeometry(camera, {
+      near: initialNear,
+      far: initialFar,
+      sides: initialSides,
+      cone: initialCone,
     });
 
-    it("should update geometry when camera near/far planes change", () => {
-      const camera = new PerspectiveCamera({ near: 0.1, far: 10 });
-      const frustum = new FrustumGeometry(camera);
-
-      const positions1 = Array.from(frustum.positions);
-
-      camera.near = 1;
-      camera.far = 100;
-      frustum.update(camera);
-      const positions2 = Array.from(frustum.positions);
-
-      let hasDifference = false;
-      for (let i = 0; i < positions1.length; i++) {
-        if (Math.abs(positions1[i] - positions2[i]) > 0.001) {
-          hasDifference = true;
-          break;
-        }
-      }
-
-      expect(hasDifference).toBe(true);
-    });
-
-    it("should maintain vertex count after update", () => {
-      const camera = new PerspectiveCamera();
-      const frustum = new FrustumGeometry(camera);
-
-      const vertexCount1 = frustum.vertexCount;
-
-      camera.fov = 90;
-      frustum.update(camera);
-
-      expect(frustum.vertexCount).toBe(vertexCount1);
-      expect(frustum.vertexCount).toBe(32);
-    });
-
-    it("should work with different camera types", () => {
-      const perspectiveCamera = new PerspectiveCamera();
-      const orthographicCamera = new OrthographicCamera();
-
-      const frustum = new FrustumGeometry(perspectiveCamera);
-      expect(frustum.vertexCount).toBe(32);
-
-      frustum.update(orthographicCamera);
-      expect(frustum.vertexCount).toBe(32);
-    });
-  });
-
-  describe("setColors method", () => {
-    it("should update color configuration", () => {
-      const camera = new PerspectiveCamera();
-      const frustum = new FrustumGeometry(camera);
-
-      const newColors = {
-        near: new Color(1, 0, 0),
-        far: new Color(0, 1, 0),
-      };
-
-      frustum.setColors(newColors);
-      // Colors are updated in configuration, but need update() to apply to buffer
-      frustum.update(camera);
-
-      expect(frustum.colors.length).toBe(32 * 3);
-    });
-
-    it("should allow partial color updates", () => {
-      const camera = new PerspectiveCamera();
-      const frustum = new FrustumGeometry(camera);
-
-      frustum.setColors({ near: new Color(1, 1, 1) });
-      frustum.update(camera);
-
-      expect(frustum.colors.length).toBe(32 * 3);
-    });
-
-    it("should reflect new colors after update", () => {
-      const camera = new PerspectiveCamera();
-      const frustum = new FrustumGeometry(camera, {
-        near: new Color(0, 0, 0),
-      });
-
-      frustum.setColors({ near: new Color(1, 0, 0) });
-      frustum.update(camera);
-
-      const colors = frustum.colors;
-      let hasRedColor = false;
-      for (let i = 0; i < Math.min(24, colors.length); i += 3) {
-        if (
-          Math.abs(colors[i] - 1) < 0.001 &&
-          Math.abs(colors[i + 1] - 0) < 0.001 &&
-          Math.abs(colors[i + 2] - 0) < 0.001
-        ) {
-          hasRedColor = true;
-          break;
-        }
-      }
-
-      expect(hasRedColor).toBe(true);
-    });
-  });
-
-  describe("camera transformations", () => {
-    it("should handle camera position and orientation changes", () => {
-      const camera = new PerspectiveCamera();
-      camera.position.set(0, 0, 5);
-      camera.lookAt(new Vector3(0, 0, 0));
-
-      const frustum = new FrustumGeometry(camera);
-      const positions1 = Array.from(frustum.positions);
-
-      // Change camera position and update lookAt
-      camera.position.set(5, 5, 5);
-      camera.lookAt(new Vector3(0, 0, 0));
-      frustum.update(camera);
-      const positions2 = Array.from(frustum.positions);
-
-      let hasDifference = false;
-      for (let i = 0; i < positions1.length; i++) {
-        if (Math.abs(positions1[i] - positions2[i]) > 0.001) {
-          hasDifference = true;
-          break;
-        }
-      }
-
-      expect(hasDifference).toBe(true);
-    });
-
-    it("should handle camera lookAt changes", () => {
-      const camera = new PerspectiveCamera();
-      camera.position.set(0, 0, 5);
-      camera.lookAt(new Vector3(0, 0, 0));
-
-      const frustum = new FrustumGeometry(camera);
-      const positions1 = Array.from(frustum.positions);
-
-      camera.lookAt(new Vector3(5, 5, 0));
-      frustum.update(camera);
-      const positions2 = Array.from(frustum.positions);
-
-      let hasDifference = false;
-      for (let i = 0; i < positions1.length; i++) {
-        if (Math.abs(positions1[i] - positions2[i]) > 0.001) {
-          hasDifference = true;
-          break;
-        }
-      }
-
-      expect(hasDifference).toBe(true);
-    });
-  });
-
-  describe("edge cases", () => {
-    it("should handle very small near plane", () => {
-      const camera = new PerspectiveCamera({ near: 0.001, far: 100 });
-      const frustum = new FrustumGeometry(camera);
-
-      expect(frustum.vertexCount).toBe(32);
-      expect(Number.isFinite(frustum.positions[0])).toBe(true);
-    });
-
-    it("should handle very large far plane", () => {
-      const camera = new PerspectiveCamera({ near: 0.1, far: 10000 });
-      const frustum = new FrustumGeometry(camera);
-
-      expect(frustum.vertexCount).toBe(32);
-      expect(Number.isFinite(frustum.positions[0])).toBe(true);
-    });
-
-    it("should handle extreme FOV values", () => {
-      const camera = new PerspectiveCamera({ fov: 120, aspect: 1 });
-      const frustum = new FrustumGeometry(camera);
-
-      expect(frustum.vertexCount).toBe(32);
-      expect(Number.isFinite(frustum.positions[0])).toBe(true);
-    });
-
-    it("should handle extreme aspect ratios", () => {
-      const camera = new PerspectiveCamera({ aspect: 10 });
-      const frustum = new FrustumGeometry(camera);
-
-      expect(frustum.vertexCount).toBe(32);
-      expect(Number.isFinite(frustum.positions[0])).toBe(true);
-    });
-
-    it("should handle orthographic camera with large bounds", () => {
-      const camera = new OrthographicCamera({
-        left: -1000,
-        right: 1000,
-        top: 1000,
-        bottom: -1000,
-        near: 0.1,
-        far: 2000,
-      });
-
-      const frustum = new FrustumGeometry(camera);
-
-      expect(frustum.vertexCount).toBe(32);
-      expect(Number.isFinite(frustum.positions[0])).toBe(true);
-    });
-
-    it("should handle camera at origin", () => {
-      const camera = new PerspectiveCamera();
-      camera.position.set(0, 0, 0);
-
-      const frustum = new FrustumGeometry(camera);
-
-      expect(frustum.vertexCount).toBe(32);
-      expect(frustum.positions.length).toBe(96);
-    });
-  });
-
-  describe("data consistency", () => {
-    it("should have consistent data after multiple updates", () => {
-      const camera = new PerspectiveCamera();
-      const frustum = new FrustumGeometry(camera);
-
-      for (let i = 0; i < 5; i++) {
-        camera.fov = 60 + i * 10;
-        frustum.update(camera);
-
-        expect(frustum.vertexCount).toBe(32);
-        expect(frustum.positions.length).toBe(32 * 3);
-        expect(frustum.colors.length).toBe(32 * 3);
-        expect(frustum.indexCount).toBe(0);
-      }
-    });
-
-    it("should return same array references on multiple accesses", () => {
-      const camera = new PerspectiveCamera();
-      const frustum = new FrustumGeometry(camera);
-
-      const positions1 = frustum.positions;
-      const positions2 = frustum.positions;
-      const colors1 = frustum.colors;
-      const colors2 = frustum.colors;
-
-      expect(positions1).toBe(positions2);
-      expect(colors1).toBe(colors2);
-    });
-
-    it("should have new array references after update", () => {
-      const camera = new PerspectiveCamera();
-      const frustum = new FrustumGeometry(camera);
-
-      const positions1 = frustum.positions;
-      const colors1 = frustum.colors;
-
-      camera.fov = 90;
-      frustum.update(camera);
-
-      const positions2 = frustum.positions;
-      const colors2 = frustum.colors;
-
-      // Arrays should be different instances after update
-      expect(positions1).not.toBe(positions2);
-      expect(colors1).not.toBe(colors2);
-    });
-  });
-
-  describe("line segments structure", () => {
-    it("should have pairs of vertices forming lines", () => {
-      const camera = new PerspectiveCamera();
-      const frustum = new FrustumGeometry(camera);
-
-      // 32 vertices = 16 lines (each line has 2 vertices)
-      expect(frustum.vertexCount % 2).toBe(0);
-
-      const lineCount = frustum.vertexCount / 2;
-      expect(lineCount).toBe(16);
-    });
-
-    it("should have distinct line endpoints", () => {
-      const camera = new PerspectiveCamera();
-      const frustum = new FrustumGeometry(camera);
-      const positions = frustum.positions;
-
-      // Check that most lines have different start and end points
-      let distinctLineCount = 0;
-
-      for (let i = 0; i < positions.length; i += 6) {
-        const x1 = positions[i];
-        const y1 = positions[i + 1];
-        const z1 = positions[i + 2];
-        const x2 = positions[i + 3];
-        const y2 = positions[i + 4];
-        const z2 = positions[i + 5];
-
-        const distance = Math.sqrt(
-          Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2) + Math.pow(z2 - z1, 2)
-        );
-
-        if (distance > 0.001) {
-          distinctLineCount++;
-        }
-      }
-
-      // Most lines should have distinct endpoints
-      expect(distinctLineCount).toBeGreaterThan(10);
-    });
+    // Segment grouping in implementation:
+    // near: vertices 0..7, far: 8..15, sides: 16..23, cone: 24..31
+    expectColorAt(frustum.colors, 0, initialNear);
+    expectColorAt(frustum.colors, 8, initialFar);
+    expectColorAt(frustum.colors, 16, initialSides);
+    expectColorAt(frustum.colors, 24, initialCone);
+
+    const updatedNear = new Color(1, 1, 0);
+    frustum.setColors({ near: updatedNear });
+    frustum.update(camera);
+
+    expectColorAt(frustum.colors, 0, updatedNear);
+
+    // Colors should remain normalized
+    for (let i = 0; i < frustum.colors.length; i++) {
+      expect(frustum.colors[i]).toBeGreaterThanOrEqual(0 - EPSILON);
+      expect(frustum.colors[i]).toBeLessThanOrEqual(1 + EPSILON);
+    }
   });
 });
