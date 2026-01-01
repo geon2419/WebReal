@@ -9,6 +9,10 @@ export {
   type ComputeShaderOptions,
   ComputePass,
   type ComputePassOptions,
+  ComputeBatch,
+  type ComputeBatchOptions,
+  type ComputeDispatchOptions,
+  type ComputeWorkgroupCount,
   ComputeProfiler,
   type ComputeProfilerOptions,
 } from "./compute";

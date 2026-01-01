@@ -57,6 +57,20 @@ export default function HomePage() {
             </div>
             <Link to="/visual-compute-shader">Open</Link>
           </div>
+
+          <div
+            style={{
+              border: "1px solid rgba(255,255,255,0.12)",
+              borderRadius: 12,
+              padding: 16,
+              background: "rgba(255,255,255,0.04)",
+            }}
+          >
+            <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 10 }}>
+              Compute (perDispatch)
+            </div>
+            <Link to="/compute">Open</Link>
+          </div>
         </div>
       </div>
     </div>
