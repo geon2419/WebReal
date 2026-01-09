@@ -2,6 +2,7 @@ import { describe, it, expect } from "bun:test";
 import { ComputeBatch } from "./ComputeBatch";
 import { ComputeShader } from "./ComputeShader";
 import { ComputeShaderError } from "./ComputeShaderError";
+import type { ComputeProfiler } from "./ComputeProfiler";
 
 const SIMPLE_SHADER = `
   @group(0) @binding(0) var<storage, read_write> data: array<f32>;
@@ -27,6 +28,7 @@ function createMockPassEncoder(): GPUComputePassEncoder & {
   _dispatches: DispatchRecord[];
   _boundGroups: BindGroupRecord[];
   _pipelines: GPUComputePipeline[];
+  _descriptor?: GPUComputePassDescriptor;
 } {
   const dispatches: DispatchRecord[] = [];
   const boundGroups: BindGroupRecord[] = [];
@@ -36,6 +38,7 @@ function createMockPassEncoder(): GPUComputePassEncoder & {
     _dispatches: dispatches,
     _boundGroups: boundGroups,
     _pipelines: pipelines,
+    _descriptor: undefined,
     setPipeline: (pipeline: GPUComputePipeline) => {
       pipelines.push(pipeline);
     },
@@ -55,6 +58,7 @@ function createMockPassEncoder(): GPUComputePassEncoder & {
     _dispatches: DispatchRecord[];
     _boundGroups: BindGroupRecord[];
     _pipelines: GPUComputePipeline[];
+    _descriptor?: GPUComputePassDescriptor;
   };
 }
 
@@ -74,10 +78,11 @@ function createMockDevice(): GPUDevice & {
       getBindGroupLayout: () => ({}),
     }),
     createBindGroup: (descriptor: GPUBindGroupDescriptor) =>
-      ({ ...descriptor }) as unknown as GPUBindGroup,
+      ({ ...descriptor } as unknown as GPUBindGroup),
     createCommandEncoder: () => ({
-      beginComputePass: () => {
+      beginComputePass: (descriptor?: GPUComputePassDescriptor) => {
         const passEncoder = createMockPassEncoder();
+        passEncoder._descriptor = descriptor;
         passEncoders.push(passEncoder);
         return passEncoder;
       },
@@ -97,6 +102,40 @@ function createMockDevice(): GPUDevice & {
 
 function createMockShader(device: GPUDevice): ComputeShader {
   return new ComputeShader(device, { code: SIMPLE_SHADER });
+}
+
+type MockProfiler = {
+  getTimestampWrites: () => GPUComputePassTimestampWrites;
+  resolve: (encoder: GPUCommandEncoder) => void;
+  _getTimestampWritesCalls: number;
+  _resolveCalls: number;
+  _lastEncoder?: GPUCommandEncoder;
+  _timestampWrites: GPUComputePassTimestampWrites;
+};
+
+function createMockProfiler(): MockProfiler {
+  const timestampWrites: GPUComputePassTimestampWrites = {
+    querySet: {} as GPUQuerySet,
+    beginningOfPassWriteIndex: 0,
+    endOfPassWriteIndex: 1,
+  };
+
+  const profiler: MockProfiler = {
+    getTimestampWrites: function () {
+      profiler._getTimestampWritesCalls += 1;
+      return profiler._timestampWrites;
+    },
+    resolve: function (encoder: GPUCommandEncoder) {
+      profiler._resolveCalls += 1;
+      profiler._lastEncoder = encoder;
+    },
+    _getTimestampWritesCalls: 0,
+    _resolveCalls: 0,
+    _lastEncoder: undefined,
+    _timestampWrites: timestampWrites,
+  };
+
+  return profiler;
 }
 
 describe("ComputeBatch", () => {
@@ -121,6 +160,26 @@ describe("ComputeBatch", () => {
 
     expect(() => {
       batch.add({ shader, workgroups: null as unknown as any });
+    }).toThrow(ComputeShaderError);
+
+    expect(() => {
+      batch.add({ shader, workgroups: [] as unknown as any });
+    }).toThrow(ComputeShaderError);
+
+    expect(() => {
+      batch.add({ shader, workgroups: [undefined] as unknown as any });
+    }).toThrow(ComputeShaderError);
+
+    expect(() => {
+      batch.add({ shader, workgroups: {} as unknown as any });
+    }).toThrow(ComputeShaderError);
+
+    expect(() => {
+      batch.add({ shader, workgroups: { y: 1 } as unknown as any });
+    }).toThrow(ComputeShaderError);
+
+    expect(() => {
+      batch.add({ shader, workgroups: { x: NaN } as unknown as any });
     }).toThrow(ComputeShaderError);
   });
 
@@ -222,5 +281,185 @@ describe("ComputeBatch", () => {
     const result = batch.submitAsync();
     expect(result).toBeInstanceOf(Promise);
     await result;
+  });
+
+  it("should use profiler with passMode single", () => {
+    const device = createMockDevice();
+    const shader = createMockShader(device);
+    const profiler = createMockProfiler();
+    const batch = new ComputeBatch(device, {
+      passMode: "single",
+      profiler: profiler as unknown as ComputeProfiler,
+    });
+
+    const entries = [{ binding: 0, resource: { buffer: {} as GPUBuffer } }];
+
+    batch
+      .add({
+        shader,
+        workgroups: [1],
+        bindings: { 0: entries },
+      })
+      .add({
+        shader,
+        workgroups: [2],
+        bindings: { 0: entries },
+      });
+
+    batch.submit();
+
+    const passEncoders = (device as any)._passEncoders;
+    expect(passEncoders.length).toBe(1);
+    expect(passEncoders[0]._descriptor?.timestampWrites).toBe(
+      profiler._timestampWrites
+    );
+    expect(profiler._getTimestampWritesCalls).toBe(1);
+    expect(profiler._resolveCalls).toBe(1);
+  });
+
+  it("should allow profiler with perDispatch when only one entry", () => {
+    const device = createMockDevice();
+    const shader = createMockShader(device);
+    const profiler = createMockProfiler();
+    const batch = new ComputeBatch(device, {
+      passMode: "perDispatch",
+      profiler: profiler as unknown as ComputeProfiler,
+    });
+
+    batch.add({
+      shader,
+      workgroups: [1],
+      bindings: { 0: [{ binding: 0, resource: { buffer: {} as GPUBuffer } }] },
+    });
+
+    batch.submit();
+
+    const passEncoders = (device as any)._passEncoders;
+    expect(passEncoders.length).toBe(1);
+    expect(passEncoders[0]._descriptor?.timestampWrites).toBe(
+      profiler._timestampWrites
+    );
+    expect(profiler._getTimestampWritesCalls).toBe(1);
+    expect(profiler._resolveCalls).toBe(1);
+  });
+
+  it("should throw when profiler uses perDispatch with multiple entries", () => {
+    const device = createMockDevice();
+    const shader = createMockShader(device);
+    const profiler = createMockProfiler();
+    const batch = new ComputeBatch(device, {
+      passMode: "perDispatch",
+      profiler: profiler as unknown as ComputeProfiler,
+    });
+
+    const entries = [{ binding: 0, resource: { buffer: {} as GPUBuffer } }];
+
+    batch
+      .add({
+        shader,
+        workgroups: [1],
+        bindings: { 0: entries },
+      })
+      .add({
+        shader,
+        workgroups: [2],
+        bindings: { 0: entries },
+      });
+
+    expect(() => {
+      batch.submit();
+    }).toThrow("Profiler requires passMode 'single' or a single dispatch");
+  });
+
+  it("should clear entries and allow reuse", () => {
+    const device = createMockDevice();
+    const shader = createMockShader(device);
+    const batch = new ComputeBatch(device);
+
+    batch.add({
+      shader,
+      workgroups: [1],
+      bindings: { 0: [{ binding: 0, resource: { buffer: {} as GPUBuffer } }] },
+    });
+
+    batch.clear();
+
+    expect(() => {
+      batch.submit();
+    }).toThrow("No dispatch entries to submit");
+
+    batch.add({
+      shader,
+      workgroups: [2],
+      bindings: { 0: [{ binding: 0, resource: { buffer: {} as GPUBuffer } }] },
+    });
+
+    expect(() => {
+      batch.submit();
+    }).not.toThrow();
+  });
+
+  it("should throw for invalid bind group indices", () => {
+    const device = createMockDevice();
+    const shader = createMockShader(device);
+
+    const entries = [{ binding: 0, resource: { buffer: {} as GPUBuffer } }];
+
+    const batchNonNumeric = new ComputeBatch(device);
+    batchNonNumeric.add({
+      shader,
+      workgroups: [1],
+      bindings: { abc: entries } as unknown as Record<
+        number,
+        GPUBindGroupEntry[]
+      >,
+    });
+
+    expect(() => {
+      batchNonNumeric.submit();
+    }).toThrow('Invalid bind group index "abc" in bindings');
+
+    const batchNegative = new ComputeBatch(device);
+    batchNegative.add({
+      shader,
+      workgroups: [1],
+      bindings: { "-1": entries } as unknown as Record<
+        number,
+        GPUBindGroupEntry[]
+      >,
+    });
+
+    expect(() => {
+      batchNegative.submit();
+    }).toThrow('Invalid bind group index "-1" in bindings');
+
+    const batchFloat = new ComputeBatch(device);
+    batchFloat.add({
+      shader,
+      workgroups: [1],
+      bindings: { "1.5": entries } as unknown as Record<
+        number,
+        GPUBindGroupEntry[]
+      >,
+    });
+
+    expect(() => {
+      batchFloat.submit();
+    }).toThrow('Invalid bind group index "1.5" in bindings');
+  });
+
+  it("should require at least one bind group", () => {
+    const device = createMockDevice();
+    const shader = createMockShader(device);
+    const batch = new ComputeBatch(device);
+
+    batch.add({
+      shader,
+      workgroups: [1],
+    });
+
+    expect(() => {
+      batch.submit();
+    }).toThrow("At least one bind group must be set for dispatch");
   });
 });

@@ -91,8 +91,14 @@ export class ComputeBatch {
     if (!entry.shader) {
       throw new ComputeShaderError("ComputeShader is required");
     }
-    if (!entry.workgroups) {
+    const workgroups = entry.workgroups;
+    if (workgroups == null) {
       throw new ComputeShaderError("Workgroups are required");
+    }
+    if (!this._isValidWorkgroups(workgroups)) {
+      throw new ComputeShaderError(
+        "Workgroups must be a non-empty array or an object with an x property; all provided counts must be non-negative integers."
+      );
     }
 
     this._entries.push(entry);
@@ -200,6 +206,52 @@ export class ComputeBatch {
 
     const { x, y, z } = this._normalizeWorkgroups(entry.workgroups);
     passEncoder.dispatchWorkgroups(x, y, z);
+  }
+
+  private _isValidWorkgroups(workgroups: ComputeWorkgroupCount): boolean {
+    const isValidCount = (value: unknown): value is number =>
+      typeof value === "number" &&
+      Number.isFinite(value) &&
+      Number.isInteger(value) &&
+      value >= 0;
+
+    if (Array.isArray(workgroups)) {
+      if (!isValidCount(workgroups[0])) {
+        return false;
+      }
+      if (workgroups[1] != null && !isValidCount(workgroups[1])) {
+        return false;
+      }
+      if (workgroups[2] != null && !isValidCount(workgroups[2])) {
+        return false;
+      }
+      return true;
+    }
+
+    if (typeof workgroups !== "object" || workgroups === null) {
+      return false;
+    }
+
+    const maybeWorkgroups = workgroups as {
+      x?: unknown;
+      y?: unknown;
+      z?: unknown;
+    };
+
+    if (!Object.prototype.hasOwnProperty.call(maybeWorkgroups, "x")) {
+      return false;
+    }
+    if (!isValidCount(maybeWorkgroups.x)) {
+      return false;
+    }
+    if (maybeWorkgroups.y != null && !isValidCount(maybeWorkgroups.y)) {
+      return false;
+    }
+    if (maybeWorkgroups.z != null && !isValidCount(maybeWorkgroups.z)) {
+      return false;
+    }
+
+    return true;
   }
 
   /**
