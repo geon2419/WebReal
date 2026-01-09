@@ -14,9 +14,11 @@
     "example"
   ],
   "scripts": {
+    "dev:example": "bun --filter './example' dev",
+    "build:example": "bun --filter './example' build",
     "build:core": "bun --filter './packages/core' build",
     "build:math": "bun --filter './packages/math' build",
-    "build:all": "bun run build:math && bun run build:core"
+    "build:all": "bun run build:math && bun run build:core && bun run build:example"
   },
   "devDependencies": {
     "@types/bun": "^1.3.4",
