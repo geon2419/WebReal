@@ -35,6 +35,7 @@ export default function ComputePage() {
 
   useEffect(() => {
     let cancelled = false;
+    let buffer: ComputeBuffer | null = null;
 
     const run = async () => {
       try {
@@ -56,7 +57,7 @@ export default function ComputePage() {
         const device = await adapter.requestDevice();
 
         const inputData = new Float32Array(INPUT_VALUES);
-        const buffer = new ComputeBuffer(device, { size: inputData.byteLength });
+        buffer = new ComputeBuffer(device, { size: inputData.byteLength });
         buffer.write(inputData);
 
         const multiplyShader = new ComputeShader(device, { code: MULTIPLY_SHADER });
@@ -83,7 +84,6 @@ export default function ComputePage() {
         await batch.submitAsync();
 
         const result = new Float32Array(await buffer.readAsync());
-        buffer.destroy();
 
         if (cancelled) return;
 
@@ -95,6 +95,11 @@ export default function ComputePage() {
         const message = runError instanceof Error ? runError.message : String(runError);
         setStatus("Error");
         setError(message);
+      } finally {
+        if (buffer) {
+          buffer.destroy();
+          buffer = null;
+        }
       }
     };
 
