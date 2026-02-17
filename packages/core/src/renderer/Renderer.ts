@@ -22,7 +22,7 @@ import { SkyboxPass } from "./SkyboxPass";
  * ```
  */
 export class Renderer {
-  private engine: Engine;
+  private readonly engine: Engine;
   private clearColor: Color = new Color(0.1, 0.1, 0.1, 1.0);
   private sampleCount: number = 4;
 
@@ -40,51 +40,39 @@ export class Renderer {
   constructor(engine: Engine) {
     this.engine = engine;
 
-    this._fallback = new FallbackResources(this.device);
+    this._fallback = new FallbackResources(this.engine.device);
 
     this._renderTargets = new RenderTargets({
-      device: this.device,
-      context: this.context,
-      format: this.format,
+      device: this.engine.device,
+      context: this.engine.context,
+      format: this.engine.format,
       canvas: this.engine.canvas,
       sampleCount: this.sampleCount,
     });
 
     this._pipelines = new PipelineCache({
-      device: this.device,
-      format: this.format,
+      device: this.engine.device,
+      format: this.engine.format,
       sampleCount: this.sampleCount,
     });
 
     this._meshResources = new MeshResourceCache({
-      device: this.device,
+      device: this.engine.device,
       fallback: this._fallback,
     });
 
     this._meshPass = new MeshPass({
-      device: this.device,
+      device: this.engine.device,
       pipelines: this._pipelines,
       meshResources: this._meshResources,
     });
   }
 
-  private get device(): GPUDevice {
-    return this.engine.device;
-  }
-
-  private get context(): GPUCanvasContext {
-    return this.engine.context;
-  }
-
-  private get format(): GPUTextureFormat {
-    return this.engine.format;
-  }
-
   private getSkyboxPass(): SkyboxPass {
     if (!this._skyboxPass) {
       this._skyboxPass = new SkyboxPass({
-        device: this.device,
-        format: this.format,
+        device: this.engine.device,
+        format: this.engine.format,
         sampleCount: this.sampleCount,
         fallback: this._fallback,
       });
@@ -97,7 +85,7 @@ export class Renderer {
    * @param color - Clear color as a Color or RGB/RGBA tuple (0..1)
    * @returns This renderer for chaining
    */
-  setClearColor(
+  public setClearColor(
     color: Color | [number, number, number] | [number, number, number, number]
   ): this {
     this.clearColor = Color.from(color);
@@ -109,7 +97,7 @@ export class Renderer {
    * @param scene - Scene containing meshes, lights, and an optional skybox material
    * @param camera - Camera defining the view and projection
    */
-  render(scene: Scene, camera: Camera): void {
+  public render(scene: Scene, camera: Camera): void {
     scene.updateMatrixWorld();
     camera.updateWorldMatrix(false, false);
 
@@ -123,7 +111,7 @@ export class Renderer {
       }
     });
 
-    const commandEncoder = this.device.createCommandEncoder();
+    const commandEncoder = this.engine.device.createCommandEncoder();
     const { passEncoder } = this._renderTargets.beginRenderPass({
       commandEncoder,
       clearColor: this.clearColor,
@@ -143,13 +131,13 @@ export class Renderer {
     });
 
     passEncoder.end();
-    this.device.queue.submit([commandEncoder.finish()]);
+    this.engine.device.queue.submit([commandEncoder.finish()]);
   }
 
   /**
    * Disposes all GPU resources owned by the renderer.
    */
-  dispose(): void {
+  public dispose(): void {
     this._renderTargets.dispose();
     this._meshResources.disposeAll();
     this._pipelines.clear();
@@ -161,7 +149,7 @@ export class Renderer {
    * Disposes GPU resources associated with a specific mesh.
    * @param mesh - Mesh to remove from internal caches
    */
-  disposeMesh(mesh: Mesh): void {
+  public disposeMesh(mesh: Mesh): void {
     this._meshResources.disposeMesh(mesh);
   }
 }
