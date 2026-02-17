@@ -30,7 +30,7 @@ export class FallbackResources {
    * Returns a 1×1×6 dummy cube texture for IBL/environment bindings.
    * @returns A GPUTexture that can be bound as a cube texture fallback
    */
-  getDummyCubeTexture(): GPUTexture {
+  public getDummyCubeTexture(): GPUTexture {
     if (!this._dummyCubeTexture) {
       this._dummyCubeTexture = this._device.createTexture({
         label: "Dummy IBL Cube Texture",
@@ -48,7 +48,7 @@ export class FallbackResources {
    * Returns a 1×1 dummy BRDF LUT texture for PBR pipelines.
    * @returns A GPUTexture that can be bound as a BRDF LUT fallback
    */
-  getDummyBrdfLUT(): GPUTexture {
+  public getDummyBrdfLUT(): GPUTexture {
     if (!this._dummyBrdfLUT) {
       this._dummyBrdfLUT = this._device.createTexture({
         label: "Dummy BRDF LUT",
@@ -66,7 +66,7 @@ export class FallbackResources {
    * Returns a reusable linear-filter sampler from the internal sampler cache.
    * @returns A GPUSampler configured with linear min/mag filtering
    */
-  getLinearSampler(): GPUSampler {
+  public getLinearSampler(): GPUSampler {
     return this._samplerCache.get(this._device, {
       magFilter: "linear",
       minFilter: "linear",
@@ -76,7 +76,7 @@ export class FallbackResources {
   /**
    * Destroys any created fallback textures and releases references.
    */
-  dispose(): void {
+  public dispose(): void {
     this._dummyCubeTexture?.destroy();
     this._dummyCubeTexture = undefined;
 
