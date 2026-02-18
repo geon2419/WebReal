@@ -78,7 +78,7 @@ function createMockDevice(): GPUDevice & {
       getBindGroupLayout: () => ({}),
     }),
     createBindGroup: (descriptor: GPUBindGroupDescriptor) =>
-      ({ ...descriptor } as unknown as GPUBindGroup),
+      ({ ...descriptor }) as unknown as GPUBindGroup,
     createCommandEncoder: () => ({
       beginComputePass: (descriptor?: GPUComputePassDescriptor) => {
         const passEncoder = createMockPassEncoder();
@@ -311,7 +311,7 @@ describe("ComputeBatch", () => {
     const passEncoders = (device as any)._passEncoders;
     expect(passEncoders.length).toBe(1);
     expect(passEncoders[0]._descriptor?.timestampWrites).toBe(
-      profiler._timestampWrites
+      profiler._timestampWrites,
     );
     expect(profiler._getTimestampWritesCalls).toBe(1);
     expect(profiler._resolveCalls).toBe(1);
@@ -337,7 +337,7 @@ describe("ComputeBatch", () => {
     const passEncoders = (device as any)._passEncoders;
     expect(passEncoders.length).toBe(1);
     expect(passEncoders[0]._descriptor?.timestampWrites).toBe(
-      profiler._timestampWrites
+      profiler._timestampWrites,
     );
     expect(profiler._getTimestampWritesCalls).toBe(1);
     expect(profiler._resolveCalls).toBe(1);

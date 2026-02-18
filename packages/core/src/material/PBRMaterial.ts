@@ -378,7 +378,7 @@ export class PBRMaterial implements Material {
   getTextures(device?: GPUDevice): Texture[] {
     if (!device) {
       throw new Error(
-        "PBRMaterial.getTextures() requires a GPUDevice parameter"
+        "PBRMaterial.getTextures() requires a GPUDevice parameter",
       );
     }
 
@@ -438,7 +438,7 @@ export class PBRMaterial implements Material {
   writeUniformData(
     buffer: DataView,
     offset: number = 64,
-    context?: RenderContext
+    context?: RenderContext,
   ): void {
     this._writeModelMatrix(buffer, offset, context);
     this._writeNormalMatrix(buffer, offset, context);
@@ -460,7 +460,7 @@ export class PBRMaterial implements Material {
   private _writeModelMatrix(
     buffer: DataView,
     offset: number,
-    context?: RenderContext
+    context?: RenderContext,
   ): void {
     if (!context?.mesh) return;
 
@@ -478,7 +478,7 @@ export class PBRMaterial implements Material {
   private _writeNormalMatrix(
     buffer: DataView,
     offset: number,
-    context?: RenderContext
+    context?: RenderContext,
   ): void {
     if (!context?.mesh) return;
 
@@ -539,7 +539,7 @@ export class PBRMaterial implements Material {
   private _writeEnvParams(
     buffer: DataView,
     offset: number,
-    lightCount: number
+    lightCount: number,
   ): void {
     // Determine environment map mode:
     // 0 = no environment map
@@ -571,7 +571,7 @@ export class PBRMaterial implements Material {
   private _writeCameraPosition(
     buffer: DataView,
     offset: number,
-    context?: RenderContext
+    context?: RenderContext,
   ): void {
     if (!context?.camera) return;
 
@@ -591,7 +591,7 @@ export class PBRMaterial implements Material {
   private _writeAmbientLight(
     buffer: DataView,
     offset: number,
-    context?: RenderContext
+    context?: RenderContext,
   ): void {
     let ambientLight: AmbientLight | undefined;
 
@@ -628,7 +628,7 @@ export class PBRMaterial implements Material {
   private _writeLights(
     buffer: DataView,
     offset: number,
-    context?: RenderContext
+    context?: RenderContext,
   ): number {
     const maxLights = 4;
     const lightBaseOffset = offset + 224;
@@ -671,7 +671,7 @@ export class PBRMaterial implements Material {
   private _writeDirectionalLight(
     buffer: DataView,
     offset: number,
-    light: DirectionalLight
+    light: DirectionalLight,
   ): void {
     // Direction
     buffer.setFloat32(offset, light.direction.x, true);
@@ -701,7 +701,7 @@ export class PBRMaterial implements Material {
   private _writePointLight(
     buffer: DataView,
     offset: number,
-    light: PointLight
+    light: PointLight,
   ): void {
     // Position
     light.updateWorldMatrix(true, false);

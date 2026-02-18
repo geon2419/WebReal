@@ -123,7 +123,7 @@ export class Color {
    * @returns A new Color instance
    */
   static fromArray(
-    arr: [number, number, number] | [number, number, number, number]
+    arr: [number, number, number] | [number, number, number, number],
   ): Color {
     return new Color(arr[0], arr[1], arr[2], arr[3] ?? 1);
   }
@@ -134,7 +134,7 @@ export class Color {
    * @returns A new Color instance
    */
   static from(
-    value: [number, number, number] | [number, number, number, number] | Color
+    value: [number, number, number] | [number, number, number, number] | Color,
   ): Color {
     // NOTE(ghlee): Duck typing check for Color-like objects (handles cross-bundle instanceof issues)
     if (

@@ -113,7 +113,7 @@ export class FrustumGeometry implements Geometry {
 
     // Transform NDC corners to world space
     const frustumWorldCorners = frustumNdcCorners.map((ndc) =>
-      this.unproject(ndc[0], ndc[1], ndc[2], invProjView)
+      this.unproject(ndc[0], ndc[1], ndc[2], invProjView),
     );
 
     // Camera position in world space
@@ -188,7 +188,7 @@ export class FrustumGeometry implements Geometry {
     x: number,
     y: number,
     z: number,
-    invProjView: Matrix4
+    invProjView: Matrix4,
   ): [number, number, number] {
     const matrixData = invProjView.data;
 

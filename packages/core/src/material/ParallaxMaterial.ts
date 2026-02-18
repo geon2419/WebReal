@@ -84,28 +84,28 @@ export class ParallaxMaterial implements Material {
     // Validate depth scale range
     if (this._depthScale < 0.01 || this._depthScale > 0.1) {
       console.warn(
-        `ParallaxMaterial: depthScale ${this._depthScale} is outside recommended range (0.01-0.1)`
+        `ParallaxMaterial: depthScale ${this._depthScale} is outside recommended range (0.01-0.1)`,
       );
     }
 
     // Validate normal scale range
     if (this._normalScale < 0.5 || this._normalScale > 2.0) {
       console.warn(
-        `ParallaxMaterial: normalScale ${this._normalScale} is outside recommended range (0.5-2.0)`
+        `ParallaxMaterial: normalScale ${this._normalScale} is outside recommended range (0.5-2.0)`,
       );
     }
 
     // Validate shininess range
     if (this._shininess < 1 || this._shininess > 256) {
       console.warn(
-        `ParallaxMaterial: shininess ${this._shininess} is outside recommended range (1-256)`
+        `ParallaxMaterial: shininess ${this._shininess} is outside recommended range (1-256)`,
       );
     }
 
     // Validate self-shadow strength range
     if (this._selfShadowStrength < 0 || this._selfShadowStrength > 1) {
       console.warn(
-        `ParallaxMaterial: selfShadowStrength ${this._selfShadowStrength} is outside recommended range (0-1)`
+        `ParallaxMaterial: selfShadowStrength ${this._selfShadowStrength} is outside recommended range (0-1)`,
       );
     }
   }
@@ -124,7 +124,7 @@ export class ParallaxMaterial implements Material {
   set depthScale(value: number) {
     if (value < 0.01 || value > 0.1) {
       console.warn(
-        `ParallaxMaterial: depthScale ${value} is outside recommended range (0.01-0.1)`
+        `ParallaxMaterial: depthScale ${value} is outside recommended range (0.01-0.1)`,
       );
     }
     this._depthScale = value;
@@ -144,7 +144,7 @@ export class ParallaxMaterial implements Material {
   set normalScale(value: number) {
     if (value < 0.5 || value > 2.0) {
       console.warn(
-        `ParallaxMaterial: normalScale ${value} is outside recommended range (0.5-2.0)`
+        `ParallaxMaterial: normalScale ${value} is outside recommended range (0.5-2.0)`,
       );
     }
     this._normalScale = value;
@@ -164,7 +164,7 @@ export class ParallaxMaterial implements Material {
   set shininess(value: number) {
     if (value < 1 || value > 256) {
       console.warn(
-        `ParallaxMaterial: shininess ${value} is outside recommended range (1-256)`
+        `ParallaxMaterial: shininess ${value} is outside recommended range (1-256)`,
       );
     }
     this._shininess = value;
@@ -198,7 +198,7 @@ export class ParallaxMaterial implements Material {
   set selfShadowStrength(value: number) {
     if (value < 0 || value > 1) {
       console.warn(
-        `ParallaxMaterial: selfShadowStrength ${value} is outside recommended range (0-1)`
+        `ParallaxMaterial: selfShadowStrength ${value} is outside recommended range (0-1)`,
       );
     }
     this._selfShadowStrength = value;
@@ -298,7 +298,7 @@ export class ParallaxMaterial implements Material {
         { texture },
         data,
         { bytesPerRow: 4 },
-        [1, 1, 1]
+        [1, 1, 1],
       );
 
       // Create a sampler using default options from Texture
@@ -310,7 +310,7 @@ export class ParallaxMaterial implements Material {
         1,
         1,
         "rgba8unorm",
-        1
+        1,
       );
     }
     return this._dummyNormalTexture;
@@ -328,7 +328,7 @@ export class ParallaxMaterial implements Material {
 
     if (!normalTexture) {
       throw new Error(
-        "ParallaxMaterial.getTextures() requires a GPUDevice parameter when no normal texture is provided"
+        "ParallaxMaterial.getTextures() requires a GPUDevice parameter when no normal texture is provided",
       );
     }
 
@@ -345,7 +345,7 @@ export class ParallaxMaterial implements Material {
   writeUniformData(
     buffer: DataView,
     offset: number = 64,
-    context?: RenderContext
+    context?: RenderContext,
   ): void {
     this._writeModelMatrix(buffer, offset, context);
     this._writeCameraPosition(buffer, offset, context);
@@ -364,7 +364,7 @@ export class ParallaxMaterial implements Material {
   private _writeModelMatrix(
     buffer: DataView,
     offset: number,
-    context?: RenderContext
+    context?: RenderContext,
   ): void {
     if (!context?.mesh) return;
 
@@ -382,7 +382,7 @@ export class ParallaxMaterial implements Material {
   private _writeCameraPosition(
     buffer: DataView,
     offset: number,
-    context?: RenderContext
+    context?: RenderContext,
   ): void {
     if (!context?.camera) return;
 
@@ -415,7 +415,7 @@ export class ParallaxMaterial implements Material {
   private _writeAmbientLight(
     buffer: DataView,
     offset: number,
-    context?: RenderContext
+    context?: RenderContext,
   ): void {
     let ambientLight: AmbientLight | undefined;
 
@@ -451,14 +451,14 @@ export class ParallaxMaterial implements Material {
   private _writeLightCount(
     buffer: DataView,
     offset: number,
-    lightCount: number
+    lightCount: number,
   ): void {
     buffer.setFloat32(offset + 112, lightCount, true);
     // y: self-shadow strength (cheap inner shadow)
     buffer.setFloat32(
       offset + 116,
       this.selfShadow ? this.selfShadowStrength : 0,
-      true
+      true,
     );
     buffer.setFloat32(offset + 120, 0, true); // reserved
     // reserved: pack parallax feature flags into lightParams.w (as float, decoded as u32 in WGSL)
@@ -482,7 +482,7 @@ export class ParallaxMaterial implements Material {
   private _writeLights(
     buffer: DataView,
     offset: number,
-    context?: RenderContext
+    context?: RenderContext,
   ): number {
     const maxLights = 4;
     const lightBaseOffset = offset + 128; // lights start after ambientLight(16) + lightParams(16)
@@ -525,7 +525,7 @@ export class ParallaxMaterial implements Material {
   private _writeDirectionalLight(
     buffer: DataView,
     lightOffset: number,
-    light: DirectionalLight
+    light: DirectionalLight,
   ): void {
     // Position slot used for direction vector (negated for incoming light direction)
     buffer.setFloat32(lightOffset, light.direction.x, true);
@@ -555,7 +555,7 @@ export class ParallaxMaterial implements Material {
   private _writePointLight(
     buffer: DataView,
     lightOffset: number,
-    light: PointLight
+    light: PointLight,
   ): void {
     light.updateWorldMatrix(true, false);
 

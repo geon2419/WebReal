@@ -24,18 +24,25 @@ bun run build:all
 cd example
 bun install
 bun run dev
-
-# Test
-bun test
 ```
 
-## Build Commands
+## Commands
 
 | Command | Description |
 |---------|-------------|
 | `bun run build:math` | Build math utilities package |
 | `bun run build:core` | Build core rendering engine |
 | `bun run build:all` | Build both packages (recommended) |
+| `bun test` | Run tests for all packages |
+| `bun run lint` | Run ESLint checks |
+| `bun run format` | Run Prettier write for code files |
+| `bun run format:check` | Run Prettier check for code files |
+
+## Formatting Policy
+
+- Prettier is local-only for now and is not enforced in CI.
+- Apply formatting gradually, primarily on files you modify.
+- Prettier scope in this setup is code files: `ts`, `tsx`, `js`, `mjs`, `cjs`.
 
 ## Project Structure
 

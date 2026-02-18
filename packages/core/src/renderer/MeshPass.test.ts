@@ -77,7 +77,7 @@ describe("MeshPass", () => {
       // Assert
       expect(mockPassEncoder.setIndexBuffer).toHaveBeenCalledWith(
         mockResources.indexBuffer,
-        mockResources.indexFormat
+        mockResources.indexFormat,
       );
       expect(mockPassEncoder.drawIndexed).toHaveBeenCalledWith(36, 1);
       expect(mockPassEncoder.draw).not.toHaveBeenCalled();
@@ -164,7 +164,7 @@ describe("MeshPass", () => {
       // Assert
       expect(mockPassEncoder.setBindGroup).toHaveBeenCalledWith(
         1,
-        mockIBLBindGroup
+        mockIBLBindGroup,
       );
     });
 
@@ -247,7 +247,7 @@ describe("MeshPass", () => {
 
       expect(mockPassEncoder.setBindGroup).toHaveBeenCalledWith(
         2,
-        mockInstanceBindGroup
+        mockInstanceBindGroup,
       );
     });
 
@@ -267,7 +267,7 @@ describe("MeshPass", () => {
         (dataView: DataView, offset: number) => {
           // Simulate writing some data
           dataView.setFloat32(offset, 1.0, true);
-        }
+        },
       );
 
       const mockMaterial: Partial<Material> = {
@@ -300,13 +300,13 @@ describe("MeshPass", () => {
           scene: mockScene,
           mesh: mockMesh,
           lights: mockLights,
-        })
+        }),
       );
 
       // Verify custom data buffer was written (size = 128 - 64 = 64 bytes)
       const queueWriteCalls = (mockDevice.queue.writeBuffer as any).mock.calls;
       const customDataWrite = queueWriteCalls.find(
-        (call: any) => call[1] === 64
+        (call: any) => call[1] === 64,
       );
       expect(customDataWrite).toBeDefined();
       expect(customDataWrite[4]).toBe(64); // customDataSize
@@ -362,7 +362,7 @@ function createMockDevice(): GPUDevice {
 
 function createMockPipelineCache(): any {
   return {
-    getOrCreate: mock(() => ({} as GPURenderPipeline)),
+    getOrCreate: mock(() => ({}) as GPURenderPipeline),
   };
 }
 

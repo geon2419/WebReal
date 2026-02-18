@@ -66,7 +66,7 @@ export class MeshPass {
       this._device.queue.writeBuffer(
         resources.uniformBuffer,
         0,
-        mvpMatrix.data as Float32Array<ArrayBuffer>
+        mvpMatrix.data as Float32Array<ArrayBuffer>,
       );
 
       if (material.writeUniformData) {
@@ -88,7 +88,7 @@ export class MeshPass {
         const uniformDataOffset = material.getUniformDataOffset?.() ?? 64;
         if (uniformDataOffset < 64) {
           throw new Error(
-            `Material.getUniformDataOffset() must be >= 64 (got ${uniformDataOffset})`
+            `Material.getUniformDataOffset() must be >= 64 (got ${uniformDataOffset})`,
           );
         }
 
@@ -102,7 +102,7 @@ export class MeshPass {
             uniformDataOffset,
             uniformData,
             uniformDataOffset,
-            customDataSize
+            customDataSize,
           );
         }
       }
@@ -130,7 +130,7 @@ export class MeshPass {
       if (resources.indexCount > 0) {
         options.passEncoder.setIndexBuffer(
           resources.indexBuffer,
-          resources.indexFormat
+          resources.indexFormat,
         );
         options.passEncoder.drawIndexed(resources.indexCount, instanceCount);
       } else {

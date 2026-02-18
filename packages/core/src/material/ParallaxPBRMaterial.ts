@@ -147,12 +147,12 @@ export class ParallaxPBRMaterial implements Material {
   private _validateRanges(): void {
     if (this._depthScale < 0.01 || this._depthScale > 0.15) {
       console.warn(
-        `ParallaxPBRMaterial: depthScale ${this._depthScale} is outside recommended range (0.01-0.15)`
+        `ParallaxPBRMaterial: depthScale ${this._depthScale} is outside recommended range (0.01-0.15)`,
       );
     }
     if (this._normalScale < 0.0 || this._normalScale > 3.0) {
       console.warn(
-        `ParallaxPBRMaterial: normalScale ${this._normalScale} is outside recommended range (0.0-3.0)`
+        `ParallaxPBRMaterial: normalScale ${this._normalScale} is outside recommended range (0.0-3.0)`,
       );
     }
   }
@@ -228,7 +228,7 @@ export class ParallaxPBRMaterial implements Material {
   set depthScale(value: number) {
     if (value < 0.01 || value > 0.15) {
       console.warn(
-        `ParallaxPBRMaterial: depthScale ${value} is outside recommended range (0.01-0.15)`
+        `ParallaxPBRMaterial: depthScale ${value} is outside recommended range (0.01-0.15)`,
       );
     }
     this._depthScale = value;
@@ -245,7 +245,7 @@ export class ParallaxPBRMaterial implements Material {
   set normalScale(value: number) {
     if (value < 0.0 || value > 3.0) {
       console.warn(
-        `ParallaxPBRMaterial: normalScale ${value} is outside recommended range (0.0-3.0)`
+        `ParallaxPBRMaterial: normalScale ${value} is outside recommended range (0.0-3.0)`,
       );
     }
     this._normalScale = value;
@@ -274,7 +274,7 @@ export class ParallaxPBRMaterial implements Material {
   set selfShadowStrength(value: number) {
     if (value < 0 || value > 1) {
       console.warn(
-        `ParallaxPBRMaterial: selfShadowStrength ${value} is outside recommended range (0-1)`
+        `ParallaxPBRMaterial: selfShadowStrength ${value} is outside recommended range (0-1)`,
       );
     }
     this._selfShadowStrength = value;
@@ -404,7 +404,7 @@ export class ParallaxPBRMaterial implements Material {
         { texture },
         data,
         { bytesPerRow: 4 },
-        [1, 1, 1]
+        [1, 1, 1],
       );
 
       const sampler = device.createSampler(DEFAULT_SAMPLER_OPTIONS);
@@ -414,7 +414,7 @@ export class ParallaxPBRMaterial implements Material {
         1,
         1,
         "rgba8unorm",
-        1
+        1,
       );
     }
     return this._dummyNormalTexture;
@@ -452,7 +452,7 @@ export class ParallaxPBRMaterial implements Material {
   writeUniformData(
     buffer: DataView,
     offset: number = 64,
-    context?: RenderContext
+    context?: RenderContext,
   ): void {
     this._writeModelMatrix(buffer, offset, context);
     this._writeNormalMatrix(buffer, offset, context);
@@ -473,7 +473,7 @@ export class ParallaxPBRMaterial implements Material {
   private _writeModelMatrix(
     buffer: DataView,
     offset: number,
-    context?: RenderContext
+    context?: RenderContext,
   ): void {
     if (!context?.mesh) return;
 
@@ -491,7 +491,7 @@ export class ParallaxPBRMaterial implements Material {
   private _writeNormalMatrix(
     buffer: DataView,
     offset: number,
-    context?: RenderContext
+    context?: RenderContext,
   ): void {
     if (!context?.mesh) return;
 
@@ -510,7 +510,7 @@ export class ParallaxPBRMaterial implements Material {
   private _writeCameraPosition(
     buffer: DataView,
     offset: number,
-    context?: RenderContext
+    context?: RenderContext,
   ): void {
     if (!context?.camera) return;
 
@@ -543,7 +543,7 @@ export class ParallaxPBRMaterial implements Material {
     buffer.setFloat32(
       offset + 164,
       this._selfShadow ? this._selfShadowStrength : 0,
-      true
+      true,
     );
 
     // Pack flags into a single float
@@ -564,7 +564,7 @@ export class ParallaxPBRMaterial implements Material {
   private _writeEnvParams(
     buffer: DataView,
     offset: number,
-    lightCount: number
+    lightCount: number,
   ): void {
     let envMode = 0.0;
     let maxMipLevel = 0.0;
@@ -592,7 +592,7 @@ export class ParallaxPBRMaterial implements Material {
   private _writeAmbientLight(
     buffer: DataView,
     offset: number,
-    context?: RenderContext
+    context?: RenderContext,
   ): void {
     let ambientLight: AmbientLight | undefined;
 
@@ -628,7 +628,7 @@ export class ParallaxPBRMaterial implements Material {
   private _writeLights(
     buffer: DataView,
     offset: number,
-    context?: RenderContext
+    context?: RenderContext,
   ): number {
     const maxLights = 4;
     const lightBaseOffset = offset + 208;
@@ -671,7 +671,7 @@ export class ParallaxPBRMaterial implements Material {
   private _writeDirectionalLight(
     buffer: DataView,
     offset: number,
-    light: DirectionalLight
+    light: DirectionalLight,
   ): void {
     buffer.setFloat32(offset, light.direction.x, true);
     buffer.setFloat32(offset + 4, light.direction.y, true);
@@ -698,7 +698,7 @@ export class ParallaxPBRMaterial implements Material {
   private _writePointLight(
     buffer: DataView,
     offset: number,
-    light: PointLight
+    light: PointLight,
   ): void {
     light.updateWorldMatrix(true, false);
 

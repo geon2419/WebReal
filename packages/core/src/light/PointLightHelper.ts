@@ -118,7 +118,7 @@ export class PointLightHelper extends Mesh {
     this.position.set(
       this.light.position.x,
       this.light.position.y,
-      this.light.position.z
+      this.light.position.z,
     );
   }
 }

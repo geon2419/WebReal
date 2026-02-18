@@ -127,7 +127,7 @@ export class CylinderGeometry implements Geometry {
       positions,
       normals,
       uvs,
-      indices
+      indices,
     );
     this._tangents = tangents;
     this._bitangents = bitangents;
@@ -262,7 +262,7 @@ export class CylinderGeometry implements Geometry {
     normals: number[],
     uvs: number[],
     indices: number[],
-    startIndex: number
+    startIndex: number,
   ): void {
     const radius = isTop ? this.radiusTop : this.radiusBottom;
     const yPos = isTop ? this.height / 2 : -this.height / 2;

@@ -79,13 +79,13 @@ describe("ComputePipelineCache", () => {
         mockDevice,
         shaderCode,
         "auto",
-        "Test"
+        "Test",
       );
       const pipeline2 = ComputePipelineCache.getOrCreate(
         mockDevice,
         shaderCode,
         "auto",
-        "Test"
+        "Test",
       );
 
       expect(pipeline1).toBe(pipeline2);
@@ -111,23 +111,23 @@ describe("ComputePipelineCache", () => {
         shaderCode,
         "auto",
         "Test",
-        "main"
+        "main",
       );
       const pipelineOther = ComputePipelineCache.getOrCreate(
         mockDevice,
         shaderCode,
         "auto",
         "Test",
-        "other"
+        "other",
       );
 
       expect(pipelineMain).not.toBe(pipelineOther);
       expect(createPipelineCalls).toBe(2);
       expect(ComputePipelineCache.has(mockDevice, shaderCode, "main")).toBe(
-        true
+        true,
       );
       expect(ComputePipelineCache.has(mockDevice, shaderCode, "other")).toBe(
-        true
+        true,
       );
     });
 
@@ -150,13 +150,13 @@ describe("ComputePipelineCache", () => {
         mockDevice,
         shaderCode,
         explicitLayout,
-        "Test"
+        "Test",
       );
       const pipeline2 = ComputePipelineCache.getOrCreate(
         mockDevice,
         shaderCode,
         explicitLayout,
-        "Test"
+        "Test",
       );
 
       expect(pipeline1).not.toBe(pipeline2);

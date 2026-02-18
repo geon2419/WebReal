@@ -38,7 +38,7 @@ function createMockGPUBuffer(): GPUBuffer {
 function createMockDevice(
   options?: Partial<{
     createBuffer: (descriptor: GPUBufferDescriptor) => GPUBuffer;
-  }>
+  }>,
 ): GPUDevice {
   const createdBuffers: GPUBufferDescriptor[] = [];
 

@@ -99,7 +99,7 @@ export interface Material {
   writeUniformData?(
     buffer: DataView,
     offset: number,
-    context?: RenderContext
+    context?: RenderContext,
   ): void;
 
   /**

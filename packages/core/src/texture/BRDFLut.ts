@@ -2,7 +2,10 @@ import { Texture, DEFAULT_SAMPLER_OPTIONS } from "./Texture";
 import brdfLutShader from "../shaders/brdf-lut.wgsl?raw";
 
 export class BRDFLutError extends Error {
-  constructor(message: string, public readonly cause?: unknown) {
+  constructor(
+    message: string,
+    public readonly cause?: unknown,
+  ) {
     super(message);
     this.name = "BRDFLutError";
   }
@@ -214,7 +217,7 @@ export class BRDFLut {
 
       throw new BRDFLutError(
         "Failed to generate BRDF LUT. This may indicate a WebGPU device issue.",
-        error
+        error,
       );
     }
   }

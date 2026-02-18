@@ -51,7 +51,7 @@ export class Ray {
     vertex0: Vector3,
     vertex1: Vector3,
     vertex2: Vector3,
-    epsilon: number = Ray.DEFAULT_EPSILON
+    epsilon: number = Ray.DEFAULT_EPSILON,
   ): RayTriangleIntersection | null {
     // Calculate triangle edges
     const edge1 = vertex1.sub(vertex0);
@@ -141,7 +141,7 @@ export class Ray {
   private _buildIntersectionResult(
     distance: number,
     edge1: Vector3,
-    edge2: Vector3
+    edge2: Vector3,
   ): RayTriangleIntersection {
     const point = this.at(distance);
     const faceNormal = edge1.cross(edge2).normalize();
@@ -192,7 +192,7 @@ export class Ray {
       min.x,
       max.x,
       tmin,
-      tmax
+      tmax,
     );
 
     if (xResult === null) {
@@ -207,7 +207,7 @@ export class Ray {
       min.y,
       max.y,
       tmin,
-      tmax
+      tmax,
     );
 
     if (yResult === null) {
@@ -221,7 +221,7 @@ export class Ray {
       min.z,
       max.z,
       tmin,
-      tmax
+      tmax,
     );
 
     if (zResult === null) {
@@ -250,7 +250,7 @@ export class Ray {
     min: number,
     max: number,
     tmin: number,
-    tmax: number
+    tmax: number,
   ): [number, number] | null {
     // Handle ray parallel to slab
     if (Math.abs(direction) < Ray.DEFAULT_EPSILON) {

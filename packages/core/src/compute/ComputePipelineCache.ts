@@ -38,7 +38,7 @@ export class ComputePipelineCache {
     shaderCode: string,
     layout: GPUPipelineLayout | "auto" = "auto",
     label?: string,
-    entryPoint: string = "main"
+    entryPoint: string = "main",
   ): GPUComputePipeline {
     // Short-term safety: do not cache pipelines created with explicit layouts.
     if (layout !== "auto") {
@@ -100,7 +100,7 @@ export class ComputePipelineCache {
   static has(
     device: GPUDevice,
     shaderCode: string,
-    entryPoint: string = "main"
+    entryPoint: string = "main",
   ): boolean {
     const deviceCache = this._cache.get(device);
     if (!deviceCache) return false;

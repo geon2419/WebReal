@@ -37,7 +37,7 @@ export class PointLight extends Light {
     color: Color = new Color(1, 1, 1),
     intensity: number = 1,
     range: number = 10,
-    attenuationType: AttenuationType = "quadratic"
+    attenuationType: AttenuationType = "quadratic",
   ) {
     super(color, intensity);
     this.range = range;
@@ -54,8 +54,8 @@ export class PointLight extends Light {
       this.attenuationType === "linear"
         ? 0
         : this.attenuationType === "quadratic"
-        ? 1
-        : 2;
+          ? 1
+          : 2;
 
     switch (this.attenuationType) {
       case "linear":

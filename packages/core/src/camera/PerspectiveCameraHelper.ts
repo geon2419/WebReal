@@ -40,7 +40,7 @@ export class PerspectiveCameraHelper extends Mesh {
    */
   constructor(
     camera: PerspectiveCamera,
-    options: PerspectiveCameraHelperOptions = {}
+    options: PerspectiveCameraHelperOptions = {},
   ) {
     const frustumColors: FrustumColors = {
       near: options.nearColor ?? new Color(1, 1, 0),

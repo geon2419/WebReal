@@ -4,7 +4,7 @@ import MonaLisaPage from "./routes/mona-lisa/MonaLisaPage";
 import PerspectiveCameraPage from "./routes/perspective-camera/PerspectiveCameraPage";
 import VisualComputeShaderPage from "./routes/visual-compute-shader/VisualComputeShaderPage";
 import ComputePage from "./routes/compute/ComputePage";
-import { usePathname } from "./routing";
+import { usePathname } from "./navigation";
 
 export default function App() {
   const pathname = usePathname();

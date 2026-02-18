@@ -92,7 +92,7 @@ export class CubeTexture {
     gpuSampler: GPUSampler,
     size: number,
     format: GPUTextureFormat = "rgba16float",
-    mipLevelCount: number = 1
+    mipLevelCount: number = 1,
   ) {
     this._gpuTexture = gpuTexture;
     this._gpuSampler = gpuSampler;
@@ -165,9 +165,7 @@ export class CubeTexture {
   getFaceView(face: CubeFace, mipLevel: number = 0): GPUTextureView {
     if (mipLevel < 0 || mipLevel >= this._mipLevelCount) {
       throw new Error(
-        `Invalid mip level: ${mipLevel}. Must be between 0 and ${
-          this._mipLevelCount - 1
-        }`
+        `Invalid mip level: ${mipLevel}. Must be between 0 and ${this._mipLevelCount - 1}`,
       );
     }
 
@@ -181,7 +179,7 @@ export class CubeTexture {
           arrayLayerCount: 1,
           baseMipLevel: mipLevel,
           mipLevelCount: 1,
-        })
+        }),
       );
     }
     return this._faceViewCache.get(key)!;
@@ -196,9 +194,7 @@ export class CubeTexture {
   getMipSize(mipLevel: number): number {
     if (mipLevel < 0 || mipLevel >= this._mipLevelCount) {
       throw new Error(
-        `Invalid mip level: ${mipLevel}. Must be between 0 and ${
-          this._mipLevelCount - 1
-        }`
+        `Invalid mip level: ${mipLevel}. Must be between 0 and ${this._mipLevelCount - 1}`,
       );
     }
     return Math.max(1, this._size >> mipLevel);
@@ -216,14 +212,14 @@ export class CubeTexture {
   static createEmpty(
     device: GPUDevice,
     size: number,
-    options: CubeTextureOptions = {}
+    options: CubeTextureOptions = {},
   ): CubeTexture {
     if (!Number.isInteger(size) || size <= 0) {
       throw new Error(`Invalid size: ${size}. Must be a positive integer.`);
     }
     if ((size & (size - 1)) !== 0) {
       console.warn(
-        `Size ${size} is not a power of 2. This may cause issues with mipmaps.`
+        `Size ${size} is not a power of 2. This may cause issues with mipmaps.`,
       );
     }
 

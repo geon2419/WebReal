@@ -52,7 +52,7 @@ export function toFloat16(value: number): number {
   const exponent = (bits >>> 23) & 0xff;
   const mantissa = bits & 0x7fffff;
 
-  let halfSign = sign << 15;
+  const halfSign = sign << 15;
   let halfExponent: number;
   let halfMantissa: number;
 
@@ -85,7 +85,7 @@ export function toFloat16(value: number): number {
 
       // Round to nearest even
       const roundBit = ((0x800000 | mantissa) >> (shift + 12)) & 1;
-      if (roundBit && (halfMantissa & 1)) {
+      if (roundBit && halfMantissa & 1) {
         halfMantissa++;
       }
     } else {
@@ -96,7 +96,7 @@ export function toFloat16(value: number): number {
       // Round to nearest even
       const roundBit = (mantissa >> 12) & 1;
       const stickyBits = mantissa & 0xfff;
-      if (roundBit && (stickyBits || (halfMantissa & 1))) {
+      if (roundBit && (stickyBits || halfMantissa & 1)) {
         halfMantissa++;
         if (halfMantissa > 0x3ff) {
           halfMantissa = 0;
@@ -128,7 +128,7 @@ export function toFloat16(value: number): number {
 export function fromFloat16(half: number): number {
   if (half < 0 || half > 0xffff || !Number.isInteger(half)) {
     throw new Error(
-      `Invalid float16 value: ${half}. Must be an integer in range [0, 65535]`
+      `Invalid float16 value: ${half}. Must be an integer in range [0, 65535]`,
     );
   }
 

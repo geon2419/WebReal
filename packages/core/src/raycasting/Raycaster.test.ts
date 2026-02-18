@@ -63,7 +63,7 @@ describe("Raycaster", () => {
       const dirLength = Math.sqrt(
         raycaster.ray.direction.x ** 2 +
           raycaster.ray.direction.y ** 2 +
-          raycaster.ray.direction.z ** 2
+          raycaster.ray.direction.z ** 2,
       );
       expect(dirLength).toBeCloseTo(1, 5);
       expect(raycaster.ray.direction.z).toBeLessThan(0);
@@ -90,7 +90,7 @@ describe("Raycaster", () => {
       const dirLength = Math.sqrt(
         raycaster.ray.direction.x ** 2 +
           raycaster.ray.direction.y ** 2 +
-          raycaster.ray.direction.z ** 2
+          raycaster.ray.direction.z ** 2,
       );
       expect(dirLength).toBeCloseTo(1, 5);
 
@@ -108,7 +108,7 @@ describe("Raycaster", () => {
 
       const raycaster = new Raycaster(
         new Vector3(0, 0, 5),
-        new Vector3(0, 0, -1)
+        new Vector3(0, 0, -1),
       );
 
       const intersections = raycaster.intersectObject(mesh);
@@ -124,7 +124,7 @@ describe("Raycaster", () => {
       const normalLength = Math.sqrt(
         intersections[0].normal.x ** 2 +
           intersections[0].normal.y ** 2 +
-          intersections[0].normal.z ** 2
+          intersections[0].normal.z ** 2,
       );
       expect(normalLength).toBeCloseTo(1, 5);
     });
@@ -137,7 +137,7 @@ describe("Raycaster", () => {
 
       const raycaster = new Raycaster(
         new Vector3(10, 10, 5),
-        new Vector3(0, 0, -1)
+        new Vector3(0, 0, -1),
       );
 
       const intersections = raycaster.intersectObject(mesh);
@@ -154,7 +154,7 @@ describe("Raycaster", () => {
 
       const raycaster = new Raycaster(
         new Vector3(0, 0, 5),
-        new Vector3(0, 0, -1)
+        new Vector3(0, 0, -1),
       );
 
       const intersections = raycaster.intersectObject(mesh);
@@ -173,7 +173,7 @@ describe("Raycaster", () => {
         new Vector3(0, 0, 5),
         new Vector3(0, 0, -1),
         0,
-        2
+        2,
       );
 
       const intersections = raycaster.intersectObject(mesh);
@@ -193,7 +193,7 @@ describe("Raycaster", () => {
 
       const raycaster = new Raycaster(
         new Vector3(3, 0, 5),
-        new Vector3(0, 0, -1)
+        new Vector3(0, 0, -1),
       );
 
       const intersections = raycaster.intersectObject(parent, true);
@@ -210,7 +210,7 @@ describe("Raycaster", () => {
 
       const raycaster = new Raycaster(
         new Vector3(0, 0, 5),
-        new Vector3(0, 0, -1)
+        new Vector3(0, 0, -1),
       );
 
       const intersections = raycaster.intersectObject(mesh);
@@ -237,7 +237,7 @@ describe("Raycaster", () => {
 
       const raycaster = new Raycaster(
         new Vector3(0, 0, 10),
-        new Vector3(0, 0, -1)
+        new Vector3(0, 0, -1),
       );
 
       const intersections = raycaster.intersectObjects([mesh1, mesh2]);
@@ -249,7 +249,7 @@ describe("Raycaster", () => {
 
       for (let i = 0; i < intersections.length - 1; i++) {
         expect(intersections[i].distance).toBeLessThanOrEqual(
-          intersections[i + 1].distance
+          intersections[i + 1].distance,
         );
       }
     });

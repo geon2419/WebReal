@@ -25,7 +25,7 @@ export class ControlPanel {
    */
   static createGraphControls(
     params: GraphControlsParams,
-    callbacks: GraphControlsCallbacks
+    callbacks: GraphControlsCallbacks,
   ): GUI {
     const gui = new GUI({ title: "Elliptic Graph Controls" });
 

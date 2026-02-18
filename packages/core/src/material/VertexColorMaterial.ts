@@ -60,7 +60,7 @@ export class VertexColorMaterial implements Material {
    */
   private expandFaceColors(
     faceColors: Color[],
-    verticesPerFace: number
+    verticesPerFace: number,
   ): Float32Array {
     const colors: number[] = [];
     for (const color of faceColors) {

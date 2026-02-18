@@ -90,7 +90,7 @@ describe("BoundingBox", () => {
     it("should return true for a point inside the box", () => {
       const box = new BoundingBox(
         new Vector3(-1, -1, -1),
-        new Vector3(1, 1, 1)
+        new Vector3(1, 1, 1),
       );
       expect(box.containsPoint(new Vector3(0, 0, 0))).toBe(true);
       expect(box.containsPoint(new Vector3(0.5, 0.5, 0.5))).toBe(true);
@@ -99,7 +99,7 @@ describe("BoundingBox", () => {
     it("should return true for a point on the boundary", () => {
       const box = new BoundingBox(
         new Vector3(-1, -1, -1),
-        new Vector3(1, 1, 1)
+        new Vector3(1, 1, 1),
       );
       expect(box.containsPoint(new Vector3(-1, -1, -1))).toBe(true);
       expect(box.containsPoint(new Vector3(1, 1, 1))).toBe(true);
@@ -109,7 +109,7 @@ describe("BoundingBox", () => {
     it("should return false for a point outside the box", () => {
       const box = new BoundingBox(
         new Vector3(-1, -1, -1),
-        new Vector3(1, 1, 1)
+        new Vector3(1, 1, 1),
       );
       expect(box.containsPoint(new Vector3(2, 0, 0))).toBe(false);
       expect(box.containsPoint(new Vector3(0, -2, 0))).toBe(false);
@@ -121,7 +121,7 @@ describe("BoundingBox", () => {
     it("should return true for overlapping boxes", () => {
       const box1 = new BoundingBox(
         new Vector3(-1, -1, -1),
-        new Vector3(1, 1, 1)
+        new Vector3(1, 1, 1),
       );
       const box2 = new BoundingBox(new Vector3(0, 0, 0), new Vector3(2, 2, 2));
       expect(box1.intersectsBox(box2)).toBe(true);
@@ -131,7 +131,7 @@ describe("BoundingBox", () => {
     it("should return true for boxes that touch at edges", () => {
       const box1 = new BoundingBox(
         new Vector3(-1, -1, -1),
-        new Vector3(0, 0, 0)
+        new Vector3(0, 0, 0),
       );
       const box2 = new BoundingBox(new Vector3(0, 0, 0), new Vector3(1, 1, 1));
       expect(box1.intersectsBox(box2)).toBe(true);
@@ -140,7 +140,7 @@ describe("BoundingBox", () => {
     it("should return false for non-overlapping boxes", () => {
       const box1 = new BoundingBox(
         new Vector3(-2, -2, -2),
-        new Vector3(-1, -1, -1)
+        new Vector3(-1, -1, -1),
       );
       const box2 = new BoundingBox(new Vector3(1, 1, 1), new Vector3(2, 2, 2));
       expect(box1.intersectsBox(box2)).toBe(false);
@@ -149,11 +149,11 @@ describe("BoundingBox", () => {
     it("should return true when one box contains another", () => {
       const box1 = new BoundingBox(
         new Vector3(-2, -2, -2),
-        new Vector3(2, 2, 2)
+        new Vector3(2, 2, 2),
       );
       const box2 = new BoundingBox(
         new Vector3(-1, -1, -1),
-        new Vector3(1, 1, 1)
+        new Vector3(1, 1, 1),
       );
       expect(box1.intersectsBox(box2)).toBe(true);
       expect(box2.intersectsBox(box1)).toBe(true);
@@ -164,7 +164,7 @@ describe("BoundingBox", () => {
     it("should return the center point of the box", () => {
       const box = new BoundingBox(
         new Vector3(-2, -4, -6),
-        new Vector3(2, 4, 6)
+        new Vector3(2, 4, 6),
       );
       const center = box.getCenter();
       expect(center.x).toBe(0);
@@ -185,7 +185,7 @@ describe("BoundingBox", () => {
     it("should return the dimensions of the box", () => {
       const box = new BoundingBox(
         new Vector3(-1, -2, -3),
-        new Vector3(1, 2, 3)
+        new Vector3(1, 2, 3),
       );
       const size = box.getSize();
       expect(size.x).toBe(2);
@@ -214,7 +214,7 @@ describe("BoundingBox", () => {
     it("should not change the box if point is already inside", () => {
       const box = new BoundingBox(
         new Vector3(-1, -1, -1),
-        new Vector3(1, 1, 1)
+        new Vector3(1, 1, 1),
       );
       box.expandByPoint(new Vector3(0, 0, 0));
       expect(box.min.x).toBe(-1);
@@ -253,7 +253,7 @@ describe("BoundingBox", () => {
     it("should return a box that contains both boxes", () => {
       const box1 = new BoundingBox(
         new Vector3(-1, -1, -1),
-        new Vector3(1, 1, 1)
+        new Vector3(1, 1, 1),
       );
       const box2 = new BoundingBox(new Vector3(0, 0, 0), new Vector3(2, 2, 2));
       const result = box1.union(box2);
@@ -268,7 +268,7 @@ describe("BoundingBox", () => {
     it("should not modify the original boxes", () => {
       const box1 = new BoundingBox(
         new Vector3(-1, -1, -1),
-        new Vector3(1, 1, 1)
+        new Vector3(1, 1, 1),
       );
       const box2 = new BoundingBox(new Vector3(0, 0, 0), new Vector3(2, 2, 2));
       box1.union(box2);
@@ -279,7 +279,7 @@ describe("BoundingBox", () => {
     it("should handle non-overlapping boxes", () => {
       const box1 = new BoundingBox(
         new Vector3(-2, -2, -2),
-        new Vector3(-1, -1, -1)
+        new Vector3(-1, -1, -1),
       );
       const box2 = new BoundingBox(new Vector3(1, 1, 1), new Vector3(2, 2, 2));
       const result = box1.union(box2);
@@ -292,7 +292,7 @@ describe("BoundingBox", () => {
     it("should create a copy of the box", () => {
       const box = new BoundingBox(
         new Vector3(-1, -2, -3),
-        new Vector3(1, 2, 3)
+        new Vector3(1, 2, 3),
       );
       const clone = box.clone();
       expect(clone.min.x).toBe(box.min.x);
@@ -306,7 +306,7 @@ describe("BoundingBox", () => {
     it("should create independent min/max vectors", () => {
       const box = new BoundingBox(
         new Vector3(-1, -1, -1),
-        new Vector3(1, 1, 1)
+        new Vector3(1, 1, 1),
       );
       const clone = box.clone();
       expect(clone.min).not.toBe(box.min);
@@ -316,7 +316,7 @@ describe("BoundingBox", () => {
     it("should not affect original when modified", () => {
       const box = new BoundingBox(
         new Vector3(-1, -1, -1),
-        new Vector3(1, 1, 1)
+        new Vector3(1, 1, 1),
       );
       const clone = box.clone();
       clone.expandByPoint(new Vector3(5, 5, 5));
@@ -334,7 +334,7 @@ describe("BoundingBox", () => {
     it("should return false for a valid box", () => {
       const box = new BoundingBox(
         new Vector3(-1, -1, -1),
-        new Vector3(1, 1, 1)
+        new Vector3(1, 1, 1),
       );
       expect(box.isEmpty()).toBe(false);
     });
@@ -347,19 +347,19 @@ describe("BoundingBox", () => {
     it("should return true if min > max in any dimension", () => {
       const box1 = new BoundingBox(
         new Vector3(1, -1, -1),
-        new Vector3(-1, 1, 1)
+        new Vector3(-1, 1, 1),
       );
       expect(box1.isEmpty()).toBe(true);
 
       const box2 = new BoundingBox(
         new Vector3(-1, 1, -1),
-        new Vector3(1, -1, 1)
+        new Vector3(1, -1, 1),
       );
       expect(box2.isEmpty()).toBe(true);
 
       const box3 = new BoundingBox(
         new Vector3(-1, -1, 1),
-        new Vector3(1, 1, -1)
+        new Vector3(1, 1, -1),
       );
       expect(box3.isEmpty()).toBe(true);
     });

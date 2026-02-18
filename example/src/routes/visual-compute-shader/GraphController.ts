@@ -131,7 +131,7 @@ export class GraphController {
 
       this._controlPanel = ControlPanel.createGraphControls(
         this._controlPanelParams,
-        graphControlsCallbacks
+        graphControlsCallbacks,
       );
 
       this._engine.run((deltaTime) => {
@@ -169,7 +169,7 @@ export class GraphController {
       this._controlPanelParams.spaceScale,
       {
         signal: this._loadAbort.signal,
-      }
+      },
     );
 
     this._nodes = nodes;
@@ -261,7 +261,7 @@ export class GraphController {
         damping: this._controlPanelParams.damping,
         deltaTime: Math.min(deltaTime, 0.033),
         bounds: GraphDomainUtils.getSimulationBounds(
-          this._controlPanelParams.spaceScale
+          this._controlPanelParams.spaceScale,
         ),
       };
 
@@ -287,9 +287,7 @@ export class GraphController {
 
     if (now - this._lastTime >= 1000) {
       const fps = (this._frameCount / (now - this._lastTime)) * 1000;
-      this._statsElement.textContent = `FPS: ${fps.toFixed(1)} | Nodes: ${
-        this._nodes.length
-      }`;
+      this._statsElement.textContent = `FPS: ${fps.toFixed(1)} | Nodes: ${this._nodes.length}`;
       this._frameCount = 0;
       this._lastTime = now;
     }

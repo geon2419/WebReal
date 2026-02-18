@@ -100,7 +100,7 @@ export class Vector3 {
     return new Vector3(
       this.y * v.z - this.z * v.y,
       this.z * v.x - this.x * v.z,
-      this.x * v.y - this.y * v.x
+      this.x * v.y - this.y * v.x,
     );
   }
 
@@ -171,7 +171,7 @@ export class Vector3 {
     return new Vector3(
       Math.min(a.x, b.x),
       Math.min(a.y, b.y),
-      Math.min(a.z, b.z)
+      Math.min(a.z, b.z),
     );
   }
 
@@ -185,7 +185,7 @@ export class Vector3 {
     return new Vector3(
       Math.max(a.x, b.x),
       Math.max(a.y, b.y),
-      Math.max(a.z, b.z)
+      Math.max(a.z, b.z),
     );
   }
 

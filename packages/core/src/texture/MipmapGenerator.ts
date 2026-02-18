@@ -217,7 +217,7 @@ export class MipmapGenerator {
     if (!isRenderableFormat(format)) {
       throw new Error(
         `MipmapGenerator: Cannot generate mipmaps for non-renderable format "${format}". ` +
-          `Supported formats: ${[...RENDERABLE_FORMATS].join(", ")}`
+          `Supported formats: ${[...RENDERABLE_FORMATS].join(", ")}`,
       );
     }
 
@@ -225,7 +225,7 @@ export class MipmapGenerator {
     if (texture.dimension !== "2d") {
       throw new Error(
         `MipmapGenerator: Only 2D textures are supported. ` +
-          `Received texture with dimension "${texture.dimension}".`
+          `Received texture with dimension "${texture.dimension}".`,
       );
     }
 

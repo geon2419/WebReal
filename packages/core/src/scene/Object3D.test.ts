@@ -108,17 +108,17 @@ describe("Object3D", () => {
       root.updateWorldMatrix();
 
       const expectedChild = Matrix4.translation(new Vector3(10, 0, 0)).multiply(
-        Matrix4.translation(new Vector3(0, 5, 0))
+        Matrix4.translation(new Vector3(0, 5, 0)),
       );
       const expectedGrandchild = expectedChild.multiply(
-        Matrix4.translation(new Vector3(0, 0, 3))
+        Matrix4.translation(new Vector3(0, 0, 3)),
       );
 
       for (let i = 0; i < 16; i++) {
         expect(child.worldMatrix.data[i]).toBeCloseTo(expectedChild.data[i], 5);
         expect(grandchild.worldMatrix.data[i]).toBeCloseTo(
           expectedGrandchild.data[i],
-          5
+          5,
         );
       }
     });

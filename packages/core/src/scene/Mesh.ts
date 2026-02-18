@@ -203,7 +203,7 @@ export class Mesh extends Object3D {
 
     if (!uvs) {
       throw new Error(
-        `${this.material.type} material requires geometry with UV coordinates`
+        `${this.material.type} material requires geometry with UV coordinates`,
       );
     }
 
@@ -244,7 +244,7 @@ export class Mesh extends Object3D {
     const colors = (this.material as any).colors as Float32Array;
     if (!colors) {
       throw new Error(
-        `${this.material.type} material requires colors property`
+        `${this.material.type} material requires colors property`,
       );
     }
 
@@ -277,7 +277,7 @@ export class Mesh extends Object3D {
 
     if (!uvs) {
       throw new Error(
-        `${this.material.type} material requires geometry with UV coordinates`
+        `${this.material.type} material requires geometry with UV coordinates`,
       );
     }
 
@@ -291,14 +291,14 @@ export class Mesh extends Object3D {
           positions,
           normals,
           uvs,
-          this.geometry.indices
+          this.geometry.indices,
         );
         tangents = calculated.tangents;
         bitangents = calculated.bitangents;
       } else {
         throw new Error(
           `${this.material.type} material requires geometry with tangents and bitangents. ` +
-            "Ensure your geometry class calculates and provides these attributes."
+            "Ensure your geometry class calculates and provides these attributes.",
         );
       }
     }

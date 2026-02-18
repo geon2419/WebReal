@@ -160,13 +160,13 @@ describe("PointLight", () => {
           new Color(1, 1, 1),
           1,
           10,
-          "quadratic"
+          "quadratic",
         );
         const physicalLight = new PointLight(
           new Color(1, 1, 1),
           1,
           10,
-          "physical"
+          "physical",
         );
 
         expect(linearLight.getAttenuationFactors()[3]).toBe(0);

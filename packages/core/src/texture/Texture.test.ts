@@ -30,7 +30,7 @@ const createMockDevice = (features: Set<string> = new Set()): GPUDevice => {
       destroy: mock(() => {}),
     })) as unknown as (descriptor: GPUTextureDescriptor) => GPUTexture,
     createSampler: mock(
-      (descriptor: GPUSamplerDescriptor) => descriptor
+      (descriptor: GPUSamplerDescriptor) => descriptor,
     ) as unknown as (descriptor: GPUSamplerDescriptor) => GPUSampler,
   } as unknown as GPUDevice;
 };
@@ -40,7 +40,7 @@ const createMockTexture = (
   width: number = 256,
   height: number = 256,
   format: GPUTextureFormat = "rgba8unorm",
-  mipLevelCount: number = 1
+  mipLevelCount: number = 1,
 ): GPUTexture => {
   return {
     width,
@@ -82,7 +82,7 @@ describe("Texture", () => {
         256,
         256,
         "rgba16float",
-        1
+        1,
       );
 
       expect(texture.format).toBe("rgba16float");
@@ -98,7 +98,7 @@ describe("Texture", () => {
         256,
         256,
         "rgba8unorm",
-        9
+        9,
       );
 
       expect(texture.mipLevelCount).toBe(9);
@@ -115,7 +115,7 @@ describe("Texture", () => {
         256,
         256,
         "rgba8unorm",
-        1
+        1,
       );
 
       expect(texture.hasMipmaps).toBe(false);
@@ -128,7 +128,7 @@ describe("Texture", () => {
         createMockTexture(1024, 512),
         createMockSampler(),
         1024,
-        512
+        512,
       );
 
       expect(texture.width).toBe(1024);
@@ -139,7 +139,7 @@ describe("Texture", () => {
         createMockTexture(1024, 512),
         createMockSampler(),
         1024,
-        512
+        512,
       );
 
       expect(texture.height).toBe(512);
@@ -151,7 +151,7 @@ describe("Texture", () => {
         createMockSampler(),
         256,
         256,
-        "bgra8unorm"
+        "bgra8unorm",
       );
 
       expect(texture.format).toBe("bgra8unorm");
@@ -164,7 +164,7 @@ describe("Texture", () => {
         256,
         256,
         "rgba8unorm",
-        9
+        9,
       );
 
       expect(texture.mipLevelCount).toBe(9);
@@ -193,7 +193,7 @@ describe("Texture", () => {
         256,
         256,
         "rgba8unorm",
-        9
+        9,
       );
 
       expect(texture.hasMipmaps).toBe(true);
@@ -206,7 +206,7 @@ describe("Texture", () => {
         256,
         256,
         "rgba8unorm",
-        1
+        1,
       );
 
       expect(texture.hasMipmaps).toBe(false);
@@ -220,7 +220,7 @@ describe("Texture", () => {
         createMockTexture(),
         createMockSampler(),
         256,
-        256
+        256,
       );
 
       texture.updateSampler(device, SamplerPresets.PIXEL_ART);
@@ -238,7 +238,7 @@ describe("Texture", () => {
         createMockTexture(),
         createMockSampler(),
         256,
-        256
+        256,
       );
 
       texture.updateSampler(device, { magFilter: "nearest" });
@@ -255,7 +255,7 @@ describe("Texture", () => {
         createMockTexture(),
         createMockSampler(),
         256,
-        256
+        256,
       );
 
       const consoleWarnSpy = mock(() => {});
@@ -280,7 +280,7 @@ describe("Texture", () => {
         createMockTexture(),
         createMockSampler(),
         256,
-        256
+        256,
       );
 
       texture.updateSampler(device, {
@@ -300,7 +300,7 @@ describe("Texture", () => {
         createMockTexture(),
         createMockSampler(),
         256,
-        256
+        256,
       );
 
       const consoleWarnSpy = mock(() => {});
@@ -414,7 +414,7 @@ describe("Texture", () => {
         256,
         256,
         "rgba8unorm",
-        0
+        0,
       );
 
       expect(texture.mipLevelCount).toBe(0);
@@ -426,7 +426,7 @@ describe("Texture", () => {
         createMockTexture(1, 1, "rgba8unorm", 1),
         createMockSampler(),
         1,
-        1
+        1,
       );
 
       expect(texture.width).toBe(1);
@@ -441,7 +441,7 @@ describe("Texture", () => {
         4096,
         4096,
         "rgba8unorm",
-        13
+        13,
       );
 
       expect(texture.width).toBe(4096);
@@ -455,7 +455,7 @@ describe("Texture", () => {
         createMockTexture(1920, 1080, "rgba8unorm", 1),
         createMockSampler(),
         1920,
-        1080
+        1080,
       );
 
       expect(texture.width).toBe(1920);
@@ -479,7 +479,7 @@ describe("Texture", () => {
           256,
           256,
           format,
-          1
+          1,
         );
 
         expect(texture.format).toBe(format);
@@ -494,7 +494,7 @@ describe("Texture", () => {
         createMockTexture(),
         createMockSampler(),
         256,
-        256
+        256,
       );
 
       texture.updateSampler(device, { lodMinClamp: 2 });
@@ -509,7 +509,7 @@ describe("Texture", () => {
         createMockTexture(),
         createMockSampler(),
         256,
-        256
+        256,
       );
 
       texture.updateSampler(device, {
@@ -528,7 +528,7 @@ describe("Texture", () => {
         createMockTexture(),
         createMockSampler(),
         256,
-        256
+        256,
       );
 
       texture.updateSampler(device, {
@@ -547,7 +547,7 @@ describe("Texture", () => {
         createMockTexture(),
         createMockSampler(),
         256,
-        256
+        256,
       );
 
       const originalWarn = console.warn;
@@ -574,7 +574,7 @@ describe("Texture", () => {
         createMockTexture(),
         createMockSampler(),
         256,
-        256
+        256,
       );
 
       const originalDefaults = { ...DEFAULT_SAMPLER_OPTIONS };
@@ -590,7 +590,7 @@ describe("Texture", () => {
         createMockTexture(),
         createMockSampler(),
         256,
-        256
+        256,
       );
 
       const originalPixelArt = { ...SamplerPresets.PIXEL_ART };

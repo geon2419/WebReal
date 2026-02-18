@@ -75,7 +75,7 @@ export class InstancedMesh extends Mesh {
     geometry: Geometry,
     material: Material,
     count: number,
-    options: InstancedMeshOptions = {}
+    options: InstancedMeshOptions = {},
   ) {
     super(geometry, material);
 
@@ -212,13 +212,13 @@ export class InstancedMesh extends Mesh {
   setMatrixAt(index: number, matrix: Matrix4): void {
     if (this._mode !== "matrix") {
       throw new Error(
-        "setMatrixAt() is only available in matrix mode. Use setPositionAt() for position mode."
+        "setMatrixAt() is only available in matrix mode. Use setPositionAt() for position mode.",
       );
     }
 
     if (index < 0 || index >= this._instanceCount) {
       throw new Error(
-        `Instance index ${index} out of bounds (0-${this._instanceCount - 1})`
+        `Instance index ${index} out of bounds (0-${this._instanceCount - 1})`,
       );
     }
 
@@ -243,13 +243,13 @@ export class InstancedMesh extends Mesh {
   getMatrixAt(index: number): Matrix4 {
     if (this._mode !== "matrix") {
       throw new Error(
-        "getMatrixAt() is only available in matrix mode. Use getPositionAt() for position mode."
+        "getMatrixAt() is only available in matrix mode. Use getPositionAt() for position mode.",
       );
     }
 
     if (index < 0 || index >= this._instanceCount) {
       throw new Error(
-        `Instance index ${index} out of bounds (0-${this._instanceCount - 1})`
+        `Instance index ${index} out of bounds (0-${this._instanceCount - 1})`,
       );
     }
 
@@ -277,13 +277,13 @@ export class InstancedMesh extends Mesh {
   setPositionAt(index: number, x: number, y: number, z: number): void {
     if (this._mode !== "position") {
       throw new Error(
-        "setPositionAt() is only available in position mode. Use setMatrixAt() for matrix mode."
+        "setPositionAt() is only available in position mode. Use setMatrixAt() for matrix mode.",
       );
     }
 
     if (index < 0 || index >= this._instanceCount) {
       throw new Error(
-        `Instance index ${index} out of bounds (0-${this._instanceCount - 1})`
+        `Instance index ${index} out of bounds (0-${this._instanceCount - 1})`,
       );
     }
 
@@ -306,13 +306,13 @@ export class InstancedMesh extends Mesh {
   getPositionAt(index: number): { x: number; y: number; z: number } {
     if (this._mode !== "position") {
       throw new Error(
-        "getPositionAt() is only available in position mode. Use getMatrixAt() for matrix mode."
+        "getPositionAt() is only available in position mode. Use getMatrixAt() for matrix mode.",
       );
     }
 
     if (index < 0 || index >= this._instanceCount) {
       throw new Error(
-        `Instance index ${index} out of bounds (0-${this._instanceCount - 1})`
+        `Instance index ${index} out of bounds (0-${this._instanceCount - 1})`,
       );
     }
 
@@ -339,11 +339,11 @@ export class InstancedMesh extends Mesh {
     r: number,
     g: number,
     b: number,
-    a: number = 1
+    a: number = 1,
   ): void {
     if (index < 0 || index >= this._instanceCount) {
       throw new Error(
-        `Instance index ${index} out of bounds (0-${this._instanceCount - 1})`
+        `Instance index ${index} out of bounds (0-${this._instanceCount - 1})`,
       );
     }
 
@@ -372,7 +372,7 @@ export class InstancedMesh extends Mesh {
   getColorAt(index: number): { r: number; g: number; b: number; a: number } {
     if (index < 0 || index >= this._instanceCount) {
       throw new Error(
-        `Instance index ${index} out of bounds (0-${this._instanceCount - 1})`
+        `Instance index ${index} out of bounds (0-${this._instanceCount - 1})`,
       );
     }
 
@@ -420,7 +420,7 @@ export class InstancedMesh extends Mesh {
       device.queue.writeBuffer(
         this._storageBuffer,
         0,
-        this._instanceData as Float32Array<ArrayBuffer>
+        this._instanceData as Float32Array<ArrayBuffer>,
       );
       this._needsStorageUpdate = false;
     }
@@ -441,7 +441,7 @@ export class InstancedMesh extends Mesh {
     device.queue.writeBuffer(
       this._storageBuffer,
       0,
-      this._instanceData as Float32Array<ArrayBuffer>
+      this._instanceData as Float32Array<ArrayBuffer>,
     );
     this._needsStorageUpdate = false;
   }

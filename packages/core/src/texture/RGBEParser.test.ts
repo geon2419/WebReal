@@ -209,7 +209,7 @@ describe("RGBEParser", () => {
   describe("error handling", () => {
     it("should throw on invalid magic number", () => {
       const bytes = new TextEncoder().encode(
-        "INVALID\n-Y 1 +X 1\n\x80\x80\x80\x88"
+        "INVALID\n-Y 1 +X 1\n\x80\x80\x80\x88",
       );
       expect(() => parse(bytes.buffer)).toThrow(RGBEParserError);
       expect(() => parse(bytes.buffer)).toThrow(/magic number/);
@@ -217,7 +217,7 @@ describe("RGBEParser", () => {
 
     it("should throw on invalid resolution string", () => {
       const bytes = new TextEncoder().encode(
-        "#?RADIANCE\nFORMAT=32-bit_rle_rgbe\n\nINVALID\n"
+        "#?RADIANCE\nFORMAT=32-bit_rle_rgbe\n\nINVALID\n",
       );
       expect(() => parse(bytes.buffer)).toThrow(RGBEParserError);
       expect(() => parse(bytes.buffer)).toThrow(/resolution/i);
@@ -225,7 +225,7 @@ describe("RGBEParser", () => {
 
     it("should throw on unsupported format", () => {
       const bytes = new TextEncoder().encode(
-        "#?RADIANCE\nFORMAT=unsupported_format\n\n-Y 1 +X 1\n\x80\x80\x80\x88"
+        "#?RADIANCE\nFORMAT=unsupported_format\n\n-Y 1 +X 1\n\x80\x80\x80\x88",
       );
       expect(() => parse(bytes.buffer)).toThrow(RGBEParserError);
       expect(() => parse(bytes.buffer)).toThrow(/Unsupported/);
@@ -233,14 +233,14 @@ describe("RGBEParser", () => {
 
     it("should throw on truncated pixel data", () => {
       const bytes = new TextEncoder().encode(
-        "#?RADIANCE\nFORMAT=32-bit_rle_rgbe\n\n-Y 2 +X 2\n\x80\x80" // Only 2 bytes instead of 16
+        "#?RADIANCE\nFORMAT=32-bit_rle_rgbe\n\n-Y 2 +X 2\n\x80\x80", // Only 2 bytes instead of 16
       );
       expect(() => parse(bytes.buffer)).toThrow(RGBEParserError);
     });
 
     it("should throw on excessive dimensions", () => {
       const bytes = new TextEncoder().encode(
-        "#?RADIANCE\nFORMAT=32-bit_rle_rgbe\n\n-Y 99999 +X 99999\n"
+        "#?RADIANCE\nFORMAT=32-bit_rle_rgbe\n\n-Y 99999 +X 99999\n",
       );
       expect(() => parse(bytes.buffer)).toThrow(RGBEParserError);
       expect(() => parse(bytes.buffer)).toThrow(/too large/);

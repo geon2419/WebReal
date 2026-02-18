@@ -147,7 +147,7 @@ export class Texture {
     width: number,
     height: number,
     format: GPUTextureFormat = "rgba8unorm",
-    mipLevelCount: number = 1
+    mipLevelCount: number = 1,
   ) {
     this._gpuTexture = gpuTexture;
     this._gpuSampler = gpuSampler;
@@ -220,7 +220,7 @@ export class Texture {
    */
   updateSampler(
     device: GPUDevice,
-    options: Partial<GPUSamplerDescriptor>
+    options: Partial<GPUSamplerDescriptor>,
   ): void {
     const mergedOptions: GPUSamplerDescriptor = {
       ...DEFAULT_SAMPLER_OPTIONS,
@@ -239,7 +239,7 @@ export class Texture {
    * @returns Validated sampler options with corrections applied
    */
   private static validateSamplerOptions(
-    options: GPUSamplerDescriptor
+    options: GPUSamplerDescriptor,
   ): GPUSamplerDescriptor {
     const result = { ...options };
 
@@ -254,7 +254,7 @@ export class Texture {
         console.warn(
           `[Texture] maxAnisotropy > 1 requires all filters to be "linear". ` +
             `Resetting maxAnisotropy to 1. Current filters: ` +
-            `mag=${result.magFilter}, min=${result.minFilter}, mipmap=${result.mipmapFilter}`
+            `mag=${result.magFilter}, min=${result.minFilter}, mipmap=${result.mipmapFilter}`,
         );
         result.maxAnisotropy = 1;
       }
@@ -268,7 +268,7 @@ export class Texture {
     ) {
       console.warn(
         `[Texture] lodMaxClamp (${result.lodMaxClamp}) must be >= lodMinClamp (${result.lodMinClamp}). ` +
-          `Setting lodMaxClamp to lodMinClamp.`
+          `Setting lodMaxClamp to lodMinClamp.`,
       );
       result.lodMaxClamp = result.lodMinClamp;
     }
@@ -284,7 +284,7 @@ export class Texture {
    */
   private static resolveFormat(
     device: GPUDevice,
-    options: TextureOptions
+    options: TextureOptions,
   ): GPUTextureFormat {
     let format: GPUTextureFormat = options.format ?? "rgba8unorm";
 
@@ -301,7 +301,7 @@ export class Texture {
     const requiredFeature = FEATURE_REQUIRED_FORMATS[format];
     if (requiredFeature && !device.features.has(requiredFeature)) {
       console.warn(
-        `[Texture] Format '${format}' requires '${requiredFeature}' feature which is not supported. Falling back to 'rgba8unorm'.`
+        `[Texture] Format '${format}' requires '${requiredFeature}' feature which is not supported. Falling back to 'rgba8unorm'.`,
       );
       return "rgba8unorm";
     }
@@ -320,7 +320,7 @@ export class Texture {
   static async fromURL(
     device: GPUDevice,
     url: string,
-    options: TextureOptions = {}
+    options: TextureOptions = {},
   ): Promise<Texture> {
     // Delegate to HDRLoader for .hdr files
     if (HDRLoader.isHDRFile(url)) {
@@ -334,7 +334,7 @@ export class Texture {
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error(
-          `Failed to fetch texture from ${url}: ${response.status} ${response.statusText}`
+          `Failed to fetch texture from ${url}: ${response.status} ${response.statusText}`,
         );
       }
 
@@ -343,7 +343,7 @@ export class Texture {
       // Validate content type
       if (!blob.type.startsWith("image/")) {
         throw new Error(
-          `Invalid image format from ${url}: expected image/* but got ${blob.type}`
+          `Invalid image format from ${url}: expected image/* but got ${blob.type}`,
         );
       }
 
@@ -357,10 +357,8 @@ export class Texture {
         imageBitmap.close();
         throw new Error(
           `Format '${format}' is not compatible with fromURL(). ` +
-            `Supported formats: ${[...COPY_EXTERNAL_IMAGE_FORMATS].join(
-              ", "
-            )}. ` +
-            `For other formats, use createEmpty() and upload data manually.`
+            `Supported formats: ${[...COPY_EXTERNAL_IMAGE_FORMATS].join(", ")}. ` +
+            `For other formats, use createEmpty() and upload data manually.`,
         );
       }
 
@@ -373,12 +371,12 @@ export class Texture {
         if (isRenderableFormat(format)) {
           mipLevelCount = calculateMipLevelCount(
             imageBitmap.width,
-            imageBitmap.height
+            imageBitmap.height,
           );
         } else {
           console.warn(
             `[Texture] Format '${format}' does not support mipmap generation (not renderable). ` +
-              `Mipmaps will be skipped. Use a renderable format like 'rgba8unorm' for mipmap support.`
+              `Mipmaps will be skipped. Use a renderable format like 'rgba8unorm' for mipmap support.`,
           );
         }
       }
@@ -399,7 +397,7 @@ export class Texture {
       device.queue.copyExternalImageToTexture(
         { source: imageBitmap },
         { texture: texture },
-        [imageBitmap.width, imageBitmap.height]
+        [imageBitmap.width, imageBitmap.height],
       );
 
       // Generate mipmaps if requested and supported
@@ -427,7 +425,7 @@ export class Texture {
         imageBitmap.width,
         imageBitmap.height,
         format,
-        mipLevelCount
+        mipLevelCount,
       );
     } catch (error) {
       if (error instanceof Error) {

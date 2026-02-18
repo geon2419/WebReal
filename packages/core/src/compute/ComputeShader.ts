@@ -87,7 +87,7 @@ export class ComputeShader {
               ? `${this._label} BindGroupLayout ${index}`
               : undefined,
             ...descriptor,
-          })
+          }),
       );
 
       this._pipelineLayout = device.createPipelineLayout({
@@ -149,7 +149,7 @@ export class ComputeShader {
         this._code,
         layout,
         this._label,
-        this._entryPoint
+        this._entryPoint,
       );
     } else {
       // Create pipeline directly for explicit layouts or when caching disabled
@@ -182,12 +182,12 @@ export class ComputeShader {
   createBindGroup(
     groupIndex: number,
     entries: GPUBindGroupEntry[],
-    label?: string
+    label?: string,
   ): GPUBindGroup {
     const layout = this.getBindGroupLayout(groupIndex);
     if (!layout) {
       throw new ComputeShaderError(
-        `No bind group layout available for group ${groupIndex}`
+        `No bind group layout available for group ${groupIndex}`,
       );
     }
 

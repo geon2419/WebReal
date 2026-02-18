@@ -10,7 +10,7 @@ describe("PipelineCache", () => {
     mockPipeline = {} as GPURenderPipeline;
 
     mockDevice = {
-      createShaderModule: mock(() => ({} as GPUShaderModule)),
+      createShaderModule: mock(() => ({}) as GPUShaderModule),
       createRenderPipeline: mock(() => mockPipeline),
     } as unknown as GPUDevice;
   });

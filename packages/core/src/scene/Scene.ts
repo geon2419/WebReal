@@ -122,11 +122,11 @@ export class Scene extends Object3D {
    */
   setEnvironmentFromPMREM(
     pmrem: PMREMResult,
-    options?: Partial<SceneEnvironmentOptions>
+    options?: Partial<SceneEnvironmentOptions>,
   ): void {
     if (!pmrem?.prefilteredMap || !pmrem?.irradianceMap) {
       throw new Error(
-        "Scene.setEnvironmentFromPMREM() requires pmrem.prefilteredMap and pmrem.irradianceMap"
+        "Scene.setEnvironmentFromPMREM() requires pmrem.prefilteredMap and pmrem.irradianceMap",
       );
     }
 
@@ -166,7 +166,7 @@ export class Scene extends Object3D {
    */
   setEnvironmentFromEquirectangular(
     texture: Texture,
-    options?: Partial<SceneEnvironmentOptions>
+    options?: Partial<SceneEnvironmentOptions>,
   ): void {
     // Clean up existing skybox material to prevent memory leaks
     this._cleanupSkyboxMaterial();
@@ -266,7 +266,7 @@ export class Scene extends Object3D {
    * @returns The first matching light, or undefined if not found
    */
   findFirstLight<T extends Light = Light>(
-    type?: new (...args: any[]) => T
+    type?: new (...args: any[]) => T,
   ): T | undefined {
     let light: T | undefined;
     this.traverse((obj) => {

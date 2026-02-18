@@ -115,11 +115,11 @@ export class PMREMGenerator {
    */
   async fromEquirectangular(
     envTexture: Texture,
-    options: PMREMOptions = {}
+    options: PMREMOptions = {},
   ): Promise<PMREMResult> {
     if (!envTexture || !envTexture.gpuTexture) {
       throw new Error(
-        "PMREMGenerator: Invalid environment texture: texture or gpuTexture is null"
+        "PMREMGenerator: Invalid environment texture: texture or gpuTexture is null",
       );
     }
 
@@ -141,13 +141,13 @@ export class PMREMGenerator {
     // Validate power-of-two constraint for mipmapping
     if ((prefilteredSize & (prefilteredSize - 1)) !== 0) {
       console.warn(
-        `PMREMGenerator: prefilteredSize ${prefilteredSize} is not a power of 2. This may cause issues with mipmaps.`
+        `PMREMGenerator: prefilteredSize ${prefilteredSize} is not a power of 2. This may cause issues with mipmaps.`,
       );
     }
 
     if ((irradianceSize & (irradianceSize - 1)) !== 0) {
       console.warn(
-        `PMREMGenerator: irradianceSize ${irradianceSize} is not a power of 2. This may cause issues with mipmaps.`
+        `PMREMGenerator: irradianceSize ${irradianceSize} is not a power of 2. This may cause issues with mipmaps.`,
       );
     }
 
@@ -158,7 +158,7 @@ export class PMREMGenerator {
       throw new Error(
         `PMREMGenerator: Failed to initialize pipelines - ${
           error instanceof Error ? error.message : String(error)
-        }`
+        }`,
       );
     }
 
@@ -175,14 +175,14 @@ export class PMREMGenerator {
       const irradianceMap = this._generateIrradiance(
         envCubemap,
         irradianceSize,
-        format
+        format,
       );
 
       // Generate prefiltered map (specular IBL with roughness mips)
       const prefilteredMap = this._generatePrefiltered(
         envCubemap,
         prefilteredSize,
-        format
+        format,
       );
 
       // Get BRDF LUT (shared)
@@ -197,7 +197,7 @@ export class PMREMGenerator {
       throw new Error(
         `PMREMGenerator: Failed to generate PMREM textures - ${
           error instanceof Error ? error.message : String(error)
-        }`
+        }`,
       );
     } finally {
       if (envCubemap) {
@@ -311,7 +311,7 @@ export class PMREMGenerator {
   private _equirectToCubemap(
     envTexture: Texture,
     size: number,
-    format: GPUTextureFormat
+    format: GPUTextureFormat,
   ): CubeTexture {
     const cubemap = CubeTexture.createEmpty(this._device, size, {
       format,
@@ -379,7 +379,7 @@ export class PMREMGenerator {
   private _generateIrradiance(
     envCubemap: CubeTexture,
     size: number,
-    format: GPUTextureFormat
+    format: GPUTextureFormat,
   ): CubeTexture {
     const irradianceMap = CubeTexture.createEmpty(this._device, size, {
       format,
@@ -443,7 +443,7 @@ export class PMREMGenerator {
   private _generatePrefiltered(
     envCubemap: CubeTexture,
     size: number,
-    format: GPUTextureFormat
+    format: GPUTextureFormat,
   ): CubeTexture {
     const mipLevelCount = calculateCubeMipLevelCount(size);
     const prefilteredMap = CubeTexture.createEmpty(this._device, size, {

@@ -63,7 +63,7 @@ export class ComputeProfiler {
 
     if (!this._isSupported) {
       console.warn(
-        "[ComputeProfiler] 'timestamp-query' feature not supported. Profiling will be disabled."
+        "[ComputeProfiler] 'timestamp-query' feature not supported. Profiling will be disabled.",
       );
       return;
     }
@@ -161,7 +161,7 @@ export class ComputeProfiler {
       0,
       ComputeProfiler.TIMESTAMP_COUNT,
       this._resolveBuffer,
-      0
+      0,
     );
 
     encoder.copyBufferToBuffer(
@@ -169,7 +169,7 @@ export class ComputeProfiler {
       0,
       this._resultBuffer,
       0,
-      ComputeProfiler.BUFFER_SIZE
+      ComputeProfiler.BUFFER_SIZE,
     );
   }
 
@@ -187,7 +187,7 @@ export class ComputeProfiler {
 
     if (!this._hasTimestampWrites) {
       throw new ComputeShaderError(
-        "Profiler must have getTimestampWrites() called and used in a compute pass before resolveAsync"
+        "Profiler must have getTimestampWrites() called and used in a compute pass before resolveAsync",
       );
     }
 

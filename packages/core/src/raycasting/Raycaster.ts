@@ -28,13 +28,13 @@ class CameraRayHelper {
         coords,
         camera,
         projectionMatrixInverse,
-        viewMatrixInverse
+        viewMatrixInverse,
       );
     } else {
       return this._createOrthographicRay(
         coords,
         projectionMatrixInverse,
-        viewMatrixInverse
+        viewMatrixInverse,
       );
     }
   }
@@ -51,14 +51,14 @@ class CameraRayHelper {
     coords: Vector2,
     camera: Camera,
     projectionMatrixInverse: any,
-    viewMatrixInverse: any
+    viewMatrixInverse: any,
   ): Ray {
     // Ray origin is camera position
     const cameraWorldMatrix = camera.worldMatrix;
     const cameraPosition = new Vector3(
       cameraWorldMatrix.data[12],
       cameraWorldMatrix.data[13],
-      cameraWorldMatrix.data[14]
+      cameraWorldMatrix.data[14],
     );
 
     // Transform NDC to world space
@@ -83,7 +83,7 @@ class CameraRayHelper {
   private static _createOrthographicRay(
     coords: Vector2,
     projectionMatrixInverse: any,
-    viewMatrixInverse: any
+    viewMatrixInverse: any,
   ): Ray {
     // Transform both near and far points to world space
     const rayOriginNDC = new Vector3(coords.x, coords.y, -1);
@@ -136,7 +136,7 @@ class IntersectionCalculator {
     ray: Ray,
     mesh: Mesh,
     near: number,
-    far: number
+    far: number,
   ): Intersection[] {
     if (!mesh.visible) {
       return [];
@@ -168,7 +168,7 @@ class IntersectionCalculator {
         uvs,
         i,
         near,
-        far
+        far,
       );
 
       if (intersection) {
@@ -216,7 +216,7 @@ class IntersectionCalculator {
     uvs: Float32Array | undefined,
     startIndex: number,
     near: number,
-    far: number
+    far: number,
   ): Intersection | null {
     const faceIndex = Math.floor(startIndex / 3);
 
@@ -227,17 +227,17 @@ class IntersectionCalculator {
     const v0 = new Vector3(
       positions[i0 * 3],
       positions[i0 * 3 + 1],
-      positions[i0 * 3 + 2]
+      positions[i0 * 3 + 2],
     );
     const v1 = new Vector3(
       positions[i1 * 3],
       positions[i1 * 3 + 1],
-      positions[i1 * 3 + 2]
+      positions[i1 * 3 + 2],
     );
     const v2 = new Vector3(
       positions[i2 * 3],
       positions[i2 * 3 + 1],
-      positions[i2 * 3 + 2]
+      positions[i2 * 3 + 2],
     );
 
     const rayIntersection = localRay.intersectTriangle(v0, v1, v2);
@@ -379,7 +379,7 @@ export class Raycaster {
    */
   private _intersectObject(
     object: Object3D,
-    intersections: Intersection[]
+    intersections: Intersection[],
   ): void {
     // Only test Mesh objects
     if (!(object as Mesh).geometry) {
@@ -391,7 +391,7 @@ export class Raycaster {
       this.ray,
       mesh,
       this.near,
-      this.far
+      this.far,
     );
 
     intersections.push(...meshIntersections);

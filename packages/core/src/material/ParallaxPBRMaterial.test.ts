@@ -441,7 +441,7 @@ describe("ParallaxPBRMaterial", () => {
       const dirLight = new DirectionalLight(
         new Vector3(0, -1, 0),
         new Color(1, 0.8, 0.6),
-        2.0
+        2.0,
       );
 
       const context: RenderContext = {
