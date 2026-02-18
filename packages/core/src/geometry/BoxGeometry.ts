@@ -101,7 +101,7 @@ export class BoxGeometry implements Geometry {
     const depthHalf = depth / 2;
     const gridX1 = gridX + 1;
     const gridY1 = gridY + 1;
-    let vertexCounter = positions.length / 3;
+    const vertexCounter = positions.length / 3;
 
     // Generate vertices
     for (let iy = 0; iy < gridY1; iy++) {

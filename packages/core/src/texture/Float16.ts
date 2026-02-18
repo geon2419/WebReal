@@ -52,7 +52,7 @@ export function toFloat16(value: number): number {
   const exponent = (bits >>> 23) & 0xff;
   const mantissa = bits & 0x7fffff;
 
-  let halfSign = sign << 15;
+  const halfSign = sign << 15;
   let halfExponent: number;
   let halfMantissa: number;
 

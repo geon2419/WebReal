@@ -27,6 +27,9 @@ bun run dev
 
 # Test
 bun test
+
+# Lint
+bun run lint
 ```
 
 ## Build Commands
