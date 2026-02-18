@@ -38,12 +38,6 @@ bun run dev
 | `bun run format` | Run Prettier write for code files |
 | `bun run format:check` | Run Prettier check for code files |
 
-## Formatting Policy
-
-- Prettier is local-only for now and is not enforced in CI.
-- Apply formatting gradually, primarily on files you modify.
-- Prettier scope in this setup is code files: `ts`, `tsx`, `js`, `mjs`, `cjs`.
-
 ## Project Structure
 
 ```
