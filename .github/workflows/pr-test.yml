@@ -29,5 +29,8 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
+      - name: Build math package
+        run: bun run build:math
+
       - name: Run tests
         run: bun test
