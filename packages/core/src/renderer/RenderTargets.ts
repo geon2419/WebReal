@@ -18,8 +18,9 @@ export class RenderTargets {
   private _canvas: HTMLCanvasElement;
   private _sampleCount: number;
 
-  private _depthTexture!: GPUTexture;
-  private _msaaTexture!: GPUTexture;
+  private _depthTexture: GPUTexture | null = null;
+  private _msaaTexture: GPUTexture | null = null;
+  private _fatalError: Error | null = null;
   private _resizeObserver: ResizeObserver;
 
   /**
@@ -30,6 +31,7 @@ export class RenderTargets {
    * @param options.format - The swapchain color format
    * @param options.canvas - The target canvas whose size drives texture sizes
    * @param options.sampleCount - The MSAA sample count for the color/depth targets
+   * @throws {Error} If depth/MSAA attachment creation fails
    */
   constructor(options: {
     device: GPUDevice;
@@ -47,21 +49,27 @@ export class RenderTargets {
     // Ensure canvas pixel size matches its CSS size (handles HiDPI/retina).
     this._syncCanvasPixelSize();
 
-    this._createDepthTexture();
-    this._createMSAATexture();
+    this._recreateDepthAndMsaaAttachmentsOrThrow();
 
     this._resizeObserver = new ResizeObserver((entries) => {
-      const entry = entries[0];
-      if (entry) {
-        this._syncCanvasPixelSize(
-          entry.contentRect.width,
-          entry.contentRect.height
-        );
-      } else {
-        this._syncCanvasPixelSize();
+      try {
+        const entry = entries[0];
+        if (entry) {
+          this._syncCanvasPixelSize(
+            entry.contentRect.width,
+            entry.contentRect.height
+          );
+        } else {
+          this._syncCanvasPixelSize();
+        }
+
+        this._recreateDepthAndMsaaAttachmentsOrThrow();
+      } catch (error) {
+        this._fatalError =
+          error instanceof Error
+            ? error
+            : new Error("RenderTargets: failed to recreate render attachments");
       }
-      this._createDepthTexture();
-      this._createMSAATexture();
     });
 
     this._resizeObserver.observe(this._canvas);
@@ -73,11 +81,22 @@ export class RenderTargets {
    * @param options.commandEncoder - Command encoder used to begin the pass
    * @param options.clearColor - Clear color used for the color attachment
    * @returns The created render pass encoder
+   * @throws {Error} If attachment creation previously failed or attachments are missing
    */
-  beginRenderPass(options: {
+  public beginRenderPass(options: {
     commandEncoder: GPUCommandEncoder;
     clearColor: Color;
   }): { passEncoder: GPURenderPassEncoder } {
+    if (this._fatalError) {
+      throw this._fatalError;
+    }
+
+    if (!this._msaaTexture || !this._depthTexture) {
+      throw new Error(
+        "RenderTargets: render attachments are not initialized before beginRenderPass"
+      );
+    }
+
     const currentTexture = this._context.getCurrentTexture();
     const textureView = currentTexture.createView();
 
@@ -113,41 +132,98 @@ export class RenderTargets {
   /**
    * Destroys owned textures and disconnects the resize observer.
    */
-  dispose(): void {
+  public dispose(): void {
     this._resizeObserver.disconnect();
 
     this._depthTexture?.destroy();
     this._msaaTexture?.destroy();
+    this._depthTexture = null;
+    this._msaaTexture = null;
+    this._fatalError = null;
   }
 
-  private _createDepthTexture(): void {
-    this._depthTexture?.destroy();
+  private _recreateDepthAndMsaaAttachmentsOrThrow(): void {
+    const width = this._canvas.width;
+    const height = this._canvas.height;
 
-    if (this._canvas.width <= 0 || this._canvas.height <= 0) {
-      return;
+    const nextDepth = this._createDepthTextureOrThrow(width, height);
+    let nextMsaa: GPUTexture;
+    try {
+      nextMsaa = this._createMSAATextureOrThrow(width, height);
+    } catch (error) {
+      nextDepth.destroy();
+      throw error;
     }
 
-    this._depthTexture = this._device.createTexture({
-      size: [this._canvas.width, this._canvas.height],
-      format: "depth24plus",
-      usage: GPUTextureUsage.RENDER_ATTACHMENT,
-      sampleCount: this._sampleCount,
-    });
+    this._commitDepthAndMsaaAttachments(nextDepth, nextMsaa);
+    this._fatalError = null;
   }
 
-  private _createMSAATexture(): void {
+  private _commitDepthAndMsaaAttachments(
+    nextDepth: GPUTexture,
+    nextMsaa: GPUTexture
+  ): void {
+    this._depthTexture?.destroy();
     this._msaaTexture?.destroy();
 
-    if (this._canvas.width <= 0 || this._canvas.height <= 0) {
-      return;
+    this._depthTexture = nextDepth;
+    this._msaaTexture = nextMsaa;
+  }
+
+  private _createDepthTextureOrThrow(width: number, height: number): GPUTexture {
+    try {
+      return this._device.createTexture({
+        size: [width, height],
+        format: "depth24plus",
+        usage: GPUTextureUsage.RENDER_ATTACHMENT,
+        sampleCount: this._sampleCount,
+      });
+    } catch (error) {
+      throw this._createTextureError(
+        "depth texture",
+        width,
+        height,
+        "depth24plus",
+        error
+      );
+    }
+  }
+
+  private _createMSAATextureOrThrow(width: number, height: number): GPUTexture {
+    try {
+      return this._device.createTexture({
+        size: [width, height],
+        format: this._format,
+        usage: GPUTextureUsage.RENDER_ATTACHMENT,
+        sampleCount: this._sampleCount,
+      });
+    } catch (error) {
+      throw this._createTextureError(
+        "MSAA texture",
+        width,
+        height,
+        this._format,
+        error
+      );
+    }
+  }
+
+  private _createTextureError(
+    target: "depth texture" | "MSAA texture",
+    width: number,
+    height: number,
+    format: GPUTextureFormat,
+    cause: unknown
+  ): Error {
+    const message =
+      `RenderTargets: failed to create ${target} ` +
+      `(width: ${width}, height: ${height}, format: ${format}, sampleCount: ${this._sampleCount})`;
+
+    if (cause instanceof Error) {
+      return new Error(`${message}. ${cause.message}`);
     }
 
-    this._msaaTexture = this._device.createTexture({
-      size: [this._canvas.width, this._canvas.height],
-      format: this._format,
-      usage: GPUTextureUsage.RENDER_ATTACHMENT,
-      sampleCount: this._sampleCount,
-    });
+    return new Error(message);
   }
 
   private _syncCanvasPixelSize(cssWidth?: number, cssHeight?: number): void {
@@ -156,6 +232,8 @@ export class RenderTargets {
     const widthCss = cssWidth ?? rect.width;
     const heightCss = cssHeight ?? rect.height;
 
+    // Device pixel ratio handling:
+    // ensure canvas pixel size matches CSS size for crisp rendering on HiDPI/retina displays.
     const dpr =
       typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1;
     const width = Math.max(1, Math.floor(widthCss * dpr));

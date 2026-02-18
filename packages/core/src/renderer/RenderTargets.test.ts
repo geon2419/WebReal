@@ -9,6 +9,7 @@ describe("RenderTargets", () => {
   let mockTexture: GPUTexture;
   let mockCommandEncoder: GPUCommandEncoder;
   let mockPassEncoder: GPURenderPassEncoder;
+  let resizeObserverCallback: ResizeObserverCallback | null;
   let originalResizeObserver: any;
   let originalGPUTextureUsage: any;
 
@@ -24,9 +25,14 @@ describe("RenderTargets", () => {
     }) as unknown as HTMLCanvasElement;
 
   beforeEach(() => {
+    resizeObserverCallback = null;
+
     // Mock ResizeObserver for test environment
     originalResizeObserver = globalThis.ResizeObserver;
     globalThis.ResizeObserver = class {
+      constructor(callback: ResizeObserverCallback) {
+        resizeObserverCallback = callback;
+      }
       observe = mock(() => {});
       disconnect = mock(() => {});
       unobserve = mock(() => {});
@@ -142,6 +148,59 @@ describe("RenderTargets", () => {
         expect(call[0].size).toEqual([1920, 1080]);
       });
     });
+
+    it("should throw when depth texture creation fails", () => {
+      const depthFailureDevice = {
+        createTexture: mock(() => {
+          throw new Error("Depth creation failed");
+        }),
+      } as unknown as GPUDevice;
+
+      expect(
+        () =>
+          new RenderTargets({
+            device: depthFailureDevice,
+            context: mockContext,
+            format: "bgra8unorm",
+            canvas: mockCanvas,
+            sampleCount: 4,
+          })
+      ).toThrow(
+        /failed to create depth texture \(width: 800, height: 600, format: depth24plus, sampleCount: 4\)/
+      );
+    });
+
+    it("should throw when MSAA texture creation fails", () => {
+      const depthTexture = {
+        destroy: mock(() => {}),
+        createView: mock(() => ({} as GPUTextureView)),
+      } as unknown as GPUTexture;
+
+      const msaaFailureDevice = {
+        createTexture: mock((descriptor: GPUTextureDescriptor) => {
+          if (descriptor.format === "depth24plus") {
+            return depthTexture;
+          }
+
+          throw new Error("MSAA creation failed");
+        }),
+      } as unknown as GPUDevice;
+
+      expect(
+        () =>
+          new RenderTargets({
+            device: msaaFailureDevice,
+            context: mockContext,
+            format: "bgra8unorm",
+            canvas: mockCanvas,
+            sampleCount: 4,
+          })
+      ).toThrow(
+        /failed to create MSAA texture \(width: 800, height: 600, format: bgra8unorm, sampleCount: 4\)/
+      );
+
+      expect(depthTexture.destroy).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe("beginRenderPass", () => {
@@ -227,6 +286,104 @@ describe("RenderTargets", () => {
       });
 
       expect(mockContext.getCurrentTexture).toHaveBeenCalledTimes(1);
+    });
+
+    it("should rethrow fatal attachment recreation errors captured during resize", () => {
+      const targets = new RenderTargets({
+        device: mockDevice,
+        context: mockContext,
+        format: "bgra8unorm",
+        canvas: mockCanvas,
+        sampleCount: 4,
+      });
+
+      expect(resizeObserverCallback).toBeDefined();
+
+      (mockDevice.createTexture as any).mockImplementation(
+        (descriptor: GPUTextureDescriptor) => {
+          if (descriptor.format === "depth24plus") {
+            throw new Error("Resize depth failure");
+          }
+
+          return mockTexture;
+        }
+      );
+
+      resizeObserverCallback?.(
+        [
+          {
+            contentRect: { width: 800, height: 600 },
+          } as ResizeObserverEntry,
+        ],
+        {} as ResizeObserver
+      );
+
+      expect(() =>
+        targets.beginRenderPass({
+          commandEncoder: mockCommandEncoder,
+          clearColor: new Color(0, 0, 0, 1),
+        })
+      ).toThrow(
+        /failed to create depth texture \(width: 800, height: 600, format: depth24plus, sampleCount: 4\)/
+      );
+    });
+
+    it("should clear fatal error after a successful resize recreation", () => {
+      const targets = new RenderTargets({
+        device: mockDevice,
+        context: mockContext,
+        format: "bgra8unorm",
+        canvas: mockCanvas,
+        sampleCount: 4,
+      });
+
+      expect(resizeObserverCallback).toBeDefined();
+
+      let shouldFail = true;
+      (mockDevice.createTexture as any).mockImplementation(
+        (descriptor: GPUTextureDescriptor) => {
+          if (shouldFail && descriptor.format === "depth24plus") {
+            throw new Error("Resize depth failure");
+          }
+
+          return mockTexture;
+        }
+      );
+
+      resizeObserverCallback?.(
+        [
+          {
+            contentRect: { width: 800, height: 600 },
+          } as ResizeObserverEntry,
+        ],
+        {} as ResizeObserver
+      );
+
+      expect(() =>
+        targets.beginRenderPass({
+          commandEncoder: mockCommandEncoder,
+          clearColor: new Color(0, 0, 0, 1),
+        })
+      ).toThrow(
+        /failed to create depth texture \(width: 800, height: 600, format: depth24plus, sampleCount: 4\)/
+      );
+
+      shouldFail = false;
+      resizeObserverCallback?.(
+        [
+          {
+            contentRect: { width: 800, height: 600 },
+          } as ResizeObserverEntry,
+        ],
+        {} as ResizeObserver
+      );
+
+      expect(() =>
+        targets.beginRenderPass({
+          commandEncoder: mockCommandEncoder,
+          clearColor: new Color(0, 0, 0, 1),
+        })
+      ).not.toThrow();
     });
   });
 
