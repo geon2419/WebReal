@@ -18,7 +18,10 @@
     "build:example": "bun --filter './example' build",
     "build:core": "bun --filter './packages/core' build",
     "build:math": "bun --filter './packages/math' build",
-    "build:all": "bun run build:math && bun run build:core && bun run build:example"
+    "build:all": "bun run build:math && bun run build:core && bun run build:example",
+    "test": "bun test",
+    "test:watch": "bun test --watch",
+    "test:coverage": "bun test --coverage"
   },
   "devDependencies": {
     "@types/bun": "^1.3.4",
