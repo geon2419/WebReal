@@ -73,7 +73,7 @@ describe("ComputeShaderError", () => {
       } catch (error) {
         expect(error).toBeInstanceOf(ComputeShaderError);
         expect((error as ComputeShaderError).message).toBe(
-          "Specific error message"
+          "Specific error message",
         );
       }
     });

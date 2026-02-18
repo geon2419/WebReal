@@ -69,7 +69,7 @@ export class ComputePass {
   setBindGroup(groupIndex: number, bindGroup: GPUBindGroup): this {
     if (groupIndex < 0) {
       throw new ComputeShaderError(
-        `Invalid bind group index: ${groupIndex}. Must be >= 0`
+        `Invalid bind group index: ${groupIndex}. Must be >= 0`,
       );
     }
     this._bindGroups.set(groupIndex, bindGroup);
@@ -108,11 +108,11 @@ export class ComputePass {
   dispatch(
     workgroupCountX: number,
     workgroupCountY = 1,
-    workgroupCountZ = 1
+    workgroupCountZ = 1,
   ): void {
     if (this._bindGroups.size === 0) {
       throw new ComputeShaderError(
-        "At least one bind group must be set before dispatch"
+        "At least one bind group must be set before dispatch",
       );
     }
 
@@ -137,7 +137,7 @@ export class ComputePass {
     passEncoder.dispatchWorkgroups(
       workgroupCountX,
       workgroupCountY,
-      workgroupCountZ
+      workgroupCountZ,
     );
 
     passEncoder.end();
@@ -160,7 +160,7 @@ export class ComputePass {
   async dispatchAsync(
     workgroupCountX: number,
     workgroupCountY = 1,
-    workgroupCountZ = 1
+    workgroupCountZ = 1,
   ): Promise<void> {
     this.dispatch(workgroupCountX, workgroupCountY, workgroupCountZ);
     await this._device.queue.onSubmittedWorkDone();

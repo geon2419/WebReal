@@ -44,7 +44,9 @@ describe("DirectionalLight", () => {
       const direction = new Vector3(3, 4, 0);
       const light = new DirectionalLight(direction);
       const length = Math.sqrt(
-        light.direction.x ** 2 + light.direction.y ** 2 + light.direction.z ** 2
+        light.direction.x ** 2 +
+          light.direction.y ** 2 +
+          light.direction.z ** 2,
       );
       expect(length).toBeCloseTo(1, 6);
     });
@@ -61,14 +63,14 @@ describe("DirectionalLight", () => {
     it("should throw error for zero-length direction vector", () => {
       const direction = new Vector3(0, 0, 0);
       expect(() => new DirectionalLight(direction)).toThrow(
-        "DirectionalLight: direction vector must be non-zero."
+        "DirectionalLight: direction vector must be non-zero.",
       );
     });
 
     it("should throw error for near-zero direction vector", () => {
       const direction = new Vector3(1e-9, 1e-10, 0);
       expect(() => new DirectionalLight(direction)).toThrow(
-        "DirectionalLight: direction vector must be non-zero."
+        "DirectionalLight: direction vector must be non-zero.",
       );
     });
   });
@@ -107,7 +109,9 @@ describe("DirectionalLight", () => {
       const direction = new Vector3(1e-7, 1e-7, 1e-7);
       const light = new DirectionalLight(direction);
       const length = Math.sqrt(
-        light.direction.x ** 2 + light.direction.y ** 2 + light.direction.z ** 2
+        light.direction.x ** 2 +
+          light.direction.y ** 2 +
+          light.direction.z ** 2,
       );
       expect(length).toBeCloseTo(1, 6);
     });
@@ -116,7 +120,9 @@ describe("DirectionalLight", () => {
       const direction = new Vector3(1000, 2000, 3000);
       const light = new DirectionalLight(direction);
       const length = Math.sqrt(
-        light.direction.x ** 2 + light.direction.y ** 2 + light.direction.z ** 2
+        light.direction.x ** 2 +
+          light.direction.y ** 2 +
+          light.direction.z ** 2,
       );
       expect(length).toBeCloseTo(1, 6);
     });

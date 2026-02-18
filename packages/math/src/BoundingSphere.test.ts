@@ -94,7 +94,7 @@ describe("BoundingSphere", () => {
         const point = new Vector3(
           positions[i],
           positions[i + 1],
-          positions[i + 2]
+          positions[i + 2],
         );
         expect(sphere.containsPoint(point)).toBe(true);
       }
@@ -105,7 +105,7 @@ describe("BoundingSphere", () => {
     it("should create a sphere from a unit cube", () => {
       const box = new BoundingBox(
         new Vector3(-1, -1, -1),
-        new Vector3(1, 1, 1)
+        new Vector3(1, 1, 1),
       );
       const sphere = BoundingSphere.fromBoundingBox(box);
       expect(sphere.center.x).toBeCloseTo(0);
@@ -130,7 +130,7 @@ describe("BoundingSphere", () => {
     it("should contain all corners of the bounding box", () => {
       const box = new BoundingBox(
         new Vector3(-2, -3, -4),
-        new Vector3(5, 6, 7)
+        new Vector3(5, 6, 7),
       );
       const sphere = BoundingSphere.fromBoundingBox(box);
 

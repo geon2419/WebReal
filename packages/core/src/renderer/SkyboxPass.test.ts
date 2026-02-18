@@ -35,7 +35,7 @@ describe("SkyboxPass", () => {
     mockBindGroup = {} as GPUBindGroup;
 
     mockTexture = {
-      createView: mock(() => ({} as GPUTextureView)),
+      createView: mock(() => ({}) as GPUTextureView),
       destroy: mock(() => {}),
     } as unknown as GPUTexture;
 
@@ -44,7 +44,7 @@ describe("SkyboxPass", () => {
         (index: number) =>
           ({
             label: `Bind Group Layout ${index}`,
-          } as GPUBindGroupLayout)
+          }) as GPUBindGroupLayout,
       ),
     } as unknown as GPURenderPipeline;
 
@@ -54,23 +54,23 @@ describe("SkyboxPass", () => {
     } as unknown as GPUQueue;
 
     mockDevice = {
-      createShaderModule: mock(() => ({} as GPUShaderModule)),
+      createShaderModule: mock(() => ({}) as GPUShaderModule),
       createRenderPipeline: mock(() => mockPipeline),
       createBuffer: mock(() => mockBuffer),
       createBindGroup: mock(() => mockBindGroup),
       createTexture: mock(() => mockTexture),
-      createSampler: mock(() => ({} as GPUSampler)),
+      createSampler: mock(() => ({}) as GPUSampler),
       queue: mockQueue,
     } as unknown as GPUDevice;
 
     mockFallback = {
       getDummyCubeTexture: mock(() => ({
-        createView: () => ({} as GPUTextureView),
+        createView: () => ({}) as GPUTextureView,
       })),
       getDummyBrdfLUT: mock(() => ({
-        createView: () => ({} as GPUTextureView),
+        createView: () => ({}) as GPUTextureView,
       })),
-      getLinearSampler: mock(() => ({} as GPUSampler)),
+      getLinearSampler: mock(() => ({}) as GPUSampler),
     } as unknown as FallbackResources;
 
     mockPassEncoder = {
@@ -201,7 +201,7 @@ describe("SkyboxPass", () => {
       expect(mockPassEncoder.setPipeline).toHaveBeenCalledWith(mockPipeline);
       expect(mockPassEncoder.setBindGroup).toHaveBeenCalledWith(
         0,
-        mockBindGroup
+        mockBindGroup,
       );
       // Skybox uses fullscreen triangle (3 vertices)
       expect(mockPassEncoder.draw).toHaveBeenCalledWith(3);

@@ -156,10 +156,22 @@ export class MonaLisaController {
 
       this._onStatusChange?.("Loading textures...");
       const device = this._engine.device;
-      const albedoUrl = new URL("./assets/monalisa.jpg", import.meta.url).toString();
-      const depthUrl = new URL("./assets/monalisa-depth-map.png", import.meta.url).toString();
-      const normalUrl = new URL("./assets/monalisa-normal-map.png", import.meta.url).toString();
-      const pbrUrl = new URL("./assets/monalisa-pbr.png", import.meta.url).toString();
+      const albedoUrl = new URL(
+        "./assets/monalisa.jpg",
+        import.meta.url,
+      ).toString();
+      const depthUrl = new URL(
+        "./assets/monalisa-depth-map.png",
+        import.meta.url,
+      ).toString();
+      const normalUrl = new URL(
+        "./assets/monalisa-normal-map.png",
+        import.meta.url,
+      ).toString();
+      const pbrUrl = new URL(
+        "./assets/monalisa-pbr.png",
+        import.meta.url,
+      ).toString();
 
       const [albedoTexture, depthTexture, normalTexture, pbrTexture] =
         await Promise.all([
@@ -218,7 +230,7 @@ export class MonaLisaController {
 
       this._ambientLight = new AmbientLight(
         new Color(1.0, 1.0, 1.0),
-        this._params.ambientIntensity
+        this._params.ambientIntensity,
       );
       this._scene.add(this._ambientLight);
 
@@ -226,11 +238,11 @@ export class MonaLisaController {
         new Color(
           this._params.mouseLightColorR,
           this._params.mouseLightColorG,
-          this._params.mouseLightColorB
+          this._params.mouseLightColorB,
         ),
         this._params.mouseLightIntensity,
         20,
-        "quadratic"
+        "quadratic",
       );
       this._mouseLight.position.set(0, 0, this._params.mouseLightPosZ);
       this._scene.add(this._mouseLight);
@@ -239,16 +251,16 @@ export class MonaLisaController {
         new Color(
           this._params.fillLightColorR,
           this._params.fillLightColorG,
-          this._params.fillLightColorB
+          this._params.fillLightColorB,
         ),
         this._params.fillLightIntensity,
         20,
-        "quadratic"
+        "quadratic",
       );
       this._fillLight.position.set(
         this._params.fillLightPosX,
         this._params.fillLightPosY,
-        this._params.fillLightPosZ
+        this._params.fillLightPosZ,
       );
       this._scene.add(this._fillLight);
 
@@ -313,7 +325,7 @@ export class MonaLisaController {
             mouseLight.position.set(
               this._mouseX * this._params.mouseRange,
               this._mouseY * this._params.mouseRange,
-              this._params.mouseLightPosZ
+              this._params.mouseLightPosZ,
             );
           } else {
             mouseLight.position.set(0, 0, this._params.mouseLightPosZ);
@@ -325,7 +337,7 @@ export class MonaLisaController {
           fillLight.position.set(
             this._params.fillLightPosX,
             this._params.fillLightPosY,
-            this._params.fillLightPosZ
+            this._params.fillLightPosZ,
           );
           fillLight.intensity = this._params.fillLightEnabled
             ? this._params.fillLightIntensity
@@ -434,7 +446,7 @@ export class MonaLisaController {
       this._mouseLight.color = new Color(
         this._params.mouseLightColorR,
         this._params.mouseLightColorG,
-        this._params.mouseLightColorB
+        this._params.mouseLightColorB,
       );
     };
 
@@ -443,7 +455,7 @@ export class MonaLisaController {
       this._fillLight.color = new Color(
         this._params.fillLightColorR,
         this._params.fillLightColorG,
-        this._params.fillLightColorB
+        this._params.fillLightColorB,
       );
     };
 
@@ -452,7 +464,7 @@ export class MonaLisaController {
       this._fillLight.position.set(
         this._params.fillLightPosX,
         this._params.fillLightPosY,
-        this._params.fillLightPosZ
+        this._params.fillLightPosZ,
       );
     };
 

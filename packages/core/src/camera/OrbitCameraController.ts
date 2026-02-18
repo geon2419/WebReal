@@ -92,7 +92,7 @@ export class OrbitCameraController {
   constructor(
     camera: Camera,
     canvas: HTMLCanvasElement,
-    options: OrbitCameraControllerOptions = {}
+    options: OrbitCameraControllerOptions = {},
   ) {
     this.camera = camera;
     this.canvas = canvas;
@@ -106,7 +106,7 @@ export class OrbitCameraController {
       console.warn(
         `OrbitCameraController: negative radius ${
           this._radius
-        } converted to ${Math.abs(this._radius)}`
+        } converted to ${Math.abs(this._radius)}`,
       );
       this._radius = Math.abs(this._radius);
     }
@@ -270,7 +270,7 @@ export class OrbitCameraController {
       this._target.set(
         this._target.x + panOffset.x,
         this._target.y + panOffset.y,
-        this._target.z + panOffset.z
+        this._target.z + panOffset.z,
       );
     }
 
@@ -296,7 +296,7 @@ export class OrbitCameraController {
       const newZoom = this.camera.zoom * (1 - delta * this.zoomSpeed * 0.1);
       this.camera.zoom = Math.max(
         this.minZoom,
-        Math.min(this.maxZoom, newZoom)
+        Math.min(this.maxZoom, newZoom),
       );
     } else {
       // For perspective cameras, adjust the radius (distance)

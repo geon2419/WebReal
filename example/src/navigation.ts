@@ -20,7 +20,8 @@ function stripBase(pathname: string): string {
   const base = getBasePath();
   if (base === "/") return normalizePath(pathname);
   if (pathname === base) return "/";
-  if (pathname.startsWith(`${base}/`)) return normalizePath(pathname.slice(base.length));
+  if (pathname.startsWith(`${base}/`))
+    return normalizePath(pathname.slice(base.length));
   return normalizePath(pathname);
 }
 
@@ -40,7 +41,9 @@ export function navigate(to: string, options?: { replace?: boolean }): void {
 }
 
 export function usePathname(): string {
-  const [pathname, setPathname] = useState(() => stripBase(window.location.pathname));
+  const [pathname, setPathname] = useState(() =>
+    stripBase(window.location.pathname),
+  );
 
   useEffect(() => {
     const update = () => setPathname(stripBase(window.location.pathname));

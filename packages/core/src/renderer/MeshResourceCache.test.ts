@@ -38,7 +38,7 @@ describe("MeshResourceCache", () => {
         (index: number) =>
           ({
             label: `Bind Group Layout ${index}`,
-          } as GPUBindGroupLayout)
+          }) as GPUBindGroupLayout,
       ),
     } as unknown as GPURenderPipeline;
 
@@ -50,12 +50,12 @@ describe("MeshResourceCache", () => {
 
     mockFallback = {
       getDummyCubeTexture: mock(() => ({
-        createView: () => ({} as GPUTextureView),
+        createView: () => ({}) as GPUTextureView,
       })),
       getDummyBrdfLUT: mock(() => ({
-        createView: () => ({} as GPUTextureView),
+        createView: () => ({}) as GPUTextureView,
       })),
-      getLinearSampler: mock(() => ({} as GPUSampler)),
+      getLinearSampler: mock(() => ({}) as GPUSampler),
     } as unknown as FallbackResources;
   });
 
@@ -361,13 +361,15 @@ describe("MeshResourceCache", () => {
       const mesh = new Mesh(geometry, mockMaterial);
 
       cache.getOrCreate(mesh, mockPipeline);
-      const firstVertexData = (mockQueue.writeBuffer as any).mock.calls[0][2] as Float32Array;
+      const firstVertexData = (mockQueue.writeBuffer as any).mock
+        .calls[0][2] as Float32Array;
 
       geometry.positions[0] = geometry.positions[0] + 123.0;
       mesh.needsUpdate = true;
 
       cache.getOrCreate(mesh, mockPipeline);
-      const secondVertexData = (mockQueue.writeBuffer as any).mock.calls[2][2] as Float32Array;
+      const secondVertexData = (mockQueue.writeBuffer as any).mock
+        .calls[2][2] as Float32Array;
 
       expect(secondVertexData[0]).not.toBe(firstVertexData[0]);
     });
@@ -409,7 +411,7 @@ describe("MeshResourceCache", () => {
 
       // Should NOT create new buffers
       expect(mockDevice.createBuffer).toHaveBeenCalledTimes(
-        initialCreateBufferCalls
+        initialCreateBufferCalls,
       );
       // Should create new bindGroup
       expect(mockDevice.createBindGroup).toHaveBeenCalledTimes(2);

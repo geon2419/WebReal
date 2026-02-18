@@ -42,7 +42,7 @@ const createMockDevice = (features: Set<string> = new Set()): GPUDevice => {
       };
     }) as unknown as (descriptor: GPUTextureDescriptor) => GPUTexture,
     createSampler: mock(
-      (descriptor: GPUSamplerDescriptor) => descriptor
+      (descriptor: GPUSamplerDescriptor) => descriptor,
     ) as unknown as (descriptor: GPUSamplerDescriptor) => GPUSampler,
   } as unknown as GPUDevice;
 };
@@ -50,7 +50,7 @@ const createMockDevice = (features: Set<string> = new Set()): GPUDevice => {
 // Helper to create a minimal valid RGBE file buffer
 const createMockRGBEBuffer = (
   width: number = 2,
-  height: number = 2
+  height: number = 2,
 ): ArrayBuffer => {
   // Simple RGBE header
   const header = `#?RADIANCE\nFORMAT=32-bit_rle_rgbe\n\n-Y ${height} +X ${width}\n`;
@@ -97,11 +97,11 @@ describe("HDRLoader", () => {
       const device = createMockDevice();
 
       await expect(
-        HDRLoader.fromBuffer(null as unknown as GPUDevice, new ArrayBuffer(0))
+        HDRLoader.fromBuffer(null as unknown as GPUDevice, new ArrayBuffer(0)),
       ).rejects.toThrow(HDRLoaderError);
 
       await expect(
-        HDRLoader.fromBuffer(device, new ArrayBuffer(0))
+        HDRLoader.fromBuffer(device, new ArrayBuffer(0)),
       ).rejects.toThrow("ArrayBuffer cannot be empty");
     });
 
@@ -124,7 +124,7 @@ describe("HDRLoader", () => {
         Promise.resolve({
           ok: true,
           arrayBuffer: () => Promise.resolve(createMockRGBEBuffer(2, 2)),
-        })
+        }),
       ) as unknown as typeof fetch;
     });
 
@@ -134,7 +134,9 @@ describe("HDRLoader", () => {
       const texture = await HDRLoader.fromURL(
         device,
         "http://example.com/test.hdr",
-        { generateMipmaps: false }
+        {
+          generateMipmaps: false,
+        },
       );
 
       expect(texture).toBeInstanceOf(Texture);
@@ -149,11 +151,11 @@ describe("HDRLoader", () => {
           ok: false,
           status: 404,
           statusText: "Not Found",
-        })
+        }),
       ) as unknown as typeof fetch;
 
       await expect(
-        HDRLoader.fromURL(device, "http://example.com/missing.hdr")
+        HDRLoader.fromURL(device, "http://example.com/missing.hdr"),
       ).rejects.toThrow("404 Not Found");
     });
   });

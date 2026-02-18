@@ -94,7 +94,9 @@ export class PerspectiveCameraController {
     try {
       this._onStatusChange?.("Initializing WebGPU...");
 
-      this._engineObserver = await Engine.create({ canvas: this._canvasObserver });
+      this._engineObserver = await Engine.create({
+        canvas: this._canvasObserver,
+      });
       this._engineMain = await Engine.create({ canvas: this._canvasMain });
 
       if (this._disposed) {
@@ -145,7 +147,7 @@ export class PerspectiveCameraController {
           radius: 4,
           theta: 0,
           phi: Math.PI / 2,
-        }
+        },
       );
 
       this._frustumHelper = new PerspectiveCameraHelper(this._mainCamera, {
@@ -165,7 +167,7 @@ export class PerspectiveCameraController {
       const radius = Math.sqrt(
         this._params.observerX ** 2 +
           this._params.observerY ** 2 +
-          this._params.observerZ ** 2
+          this._params.observerZ ** 2,
       );
 
       this._observerOrbit = new OrbitCameraController(
@@ -175,7 +177,7 @@ export class PerspectiveCameraController {
           radius,
           theta: Math.atan2(this._params.observerX, this._params.observerZ),
           phi: Math.acos(this._params.observerY / radius),
-        }
+        },
       );
 
       this._setupResizeHandling();
@@ -211,30 +213,31 @@ export class PerspectiveCameraController {
         }
 
         if (this._params.autoRotate) {
-          this._params.rotationX += deltaTime * this._params.rotationSpeed * 0.5;
+          this._params.rotationX +=
+            deltaTime * this._params.rotationSpeed * 0.5;
           this._params.rotationY += deltaTime * this._params.rotationSpeed;
         }
 
         observerCubeMesh.rotation.set(
           this._params.rotationX,
           this._params.rotationY,
-          this._params.rotationZ
+          this._params.rotationZ,
         );
         observerCubeMesh.scale.set(
           this._params.scale,
           this._params.scale,
-          this._params.scale
+          this._params.scale,
         );
 
         mainCubeMesh.rotation.set(
           this._params.rotationX,
           this._params.rotationY,
-          this._params.rotationZ
+          this._params.rotationZ,
         );
         mainCubeMesh.scale.set(
           this._params.scale,
           this._params.scale,
-          this._params.scale
+          this._params.scale,
         );
 
         observerCamera.fov = this._params.observerFov;
@@ -346,8 +349,8 @@ export class PerspectiveCameraController {
       Math.sqrt(
         this._params.observerX ** 2 +
           this._params.observerY ** 2 +
-          this._params.observerZ ** 2
-      )
+          this._params.observerZ ** 2,
+      ),
     );
 
     orbit.radius = radius;

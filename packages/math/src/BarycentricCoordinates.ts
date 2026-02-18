@@ -27,7 +27,7 @@ export class BarycentricCoordinates {
     point: Vector3,
     v0: Vector3,
     v1: Vector3,
-    v2: Vector3
+    v2: Vector3,
   ): { u: number; v: number; w: number } | null {
     const edge1 = v1.sub(v0);
     const edge2 = v2.sub(v0);
@@ -64,7 +64,7 @@ export class BarycentricCoordinates {
     barycentric: { u: number; v: number; w: number },
     uv0: Vector2,
     uv1: Vector2,
-    uv2: Vector2
+    uv2: Vector2,
   ): Vector2 {
     const { u, v, w } = barycentric;
     const uvX = uv0.x * u + uv1.x * v + uv2.x * w;
@@ -85,13 +85,13 @@ export class BarycentricCoordinates {
     barycentric: { u: number; v: number; w: number },
     attr0: Vector3,
     attr1: Vector3,
-    attr2: Vector3
+    attr2: Vector3,
   ): Vector3 {
     const { u, v, w } = barycentric;
     return new Vector3(
       attr0.x * u + attr1.x * v + attr2.x * w,
       attr0.y * u + attr1.y * v + attr2.y * w,
-      attr0.z * u + attr1.z * v + attr2.z * w
+      attr0.z * u + attr1.z * v + attr2.z * w,
     );
   }
 
@@ -108,7 +108,7 @@ export class BarycentricCoordinates {
     barycentric: { u: number; v: number; w: number },
     val0: number,
     val1: number,
-    val2: number
+    val2: number,
   ): number {
     const { u, v, w } = barycentric;
     return val0 * u + val1 * v + val2 * w;

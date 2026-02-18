@@ -86,7 +86,7 @@ export class Renderer {
    * @returns This renderer for chaining
    */
   public setClearColor(
-    color: Color | [number, number, number] | [number, number, number, number]
+    color: Color | [number, number, number] | [number, number, number, number],
   ): this {
     this.clearColor = Color.from(color);
     return this;

@@ -87,17 +87,15 @@ export class Engine {
     // Filter requested features to only those supported by the adapter
     const requestedFeatures = options.requiredFeatures ?? [];
     const supportedFeatures = requestedFeatures.filter((feature) =>
-      adapter.features.has(feature)
+      adapter.features.has(feature),
     );
 
     if (supportedFeatures.length < requestedFeatures.length) {
       const unsupported = requestedFeatures.filter(
-        (f) => !supportedFeatures.includes(f)
+        (f) => !supportedFeatures.includes(f),
       );
       console.warn(
-        `[Engine] Some requested features are not supported: ${unsupported.join(
-          ", "
-        )}`
+        `[Engine] Some requested features are not supported: ${unsupported.join(", ")}`,
       );
     }
 

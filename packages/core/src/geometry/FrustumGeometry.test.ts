@@ -9,7 +9,7 @@ describe("FrustumGeometry", () => {
 
   function hasAnyDifference(
     a: ArrayLike<number>,
-    b: ArrayLike<number>
+    b: ArrayLike<number>,
   ): boolean {
     if (a.length !== b.length) return true;
     for (let i = 0; i < a.length; i++) {
@@ -21,7 +21,7 @@ describe("FrustumGeometry", () => {
   function expectColorAt(
     colors: Float32Array,
     vertexIndex: number,
-    expected: Color
+    expected: Color,
   ): void {
     const base = vertexIndex * 3;
     expect(colors[base]).toBeCloseTo(expected.r, 5);

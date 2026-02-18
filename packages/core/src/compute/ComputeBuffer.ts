@@ -87,7 +87,7 @@ export class ComputeBuffer {
     data: ArrayBufferLike | ArrayBufferView,
     bufferOffset = 0,
     dataOffset?: number,
-    size?: number
+    size?: number,
   ): void {
     const sourceData = ArrayBuffer.isView(data) ? data.buffer : data;
     const actualDataOffset = dataOffset ?? 0;
@@ -95,7 +95,7 @@ export class ComputeBuffer {
 
     if (bufferOffset + actualSize > this._size) {
       throw new ComputeShaderError(
-        `Data size (${actualSize}) exceeds buffer capacity at offset ${bufferOffset}`
+        `Data size (${actualSize}) exceeds buffer capacity at offset ${bufferOffset}`,
       );
     }
 
@@ -104,7 +104,7 @@ export class ComputeBuffer {
       bufferOffset,
       sourceData,
       actualDataOffset,
-      actualSize
+      actualSize,
     );
   }
 
@@ -122,7 +122,7 @@ export class ComputeBuffer {
 
     if (offset + readSize > this._size) {
       throw new ComputeShaderError(
-        `Read range (${offset} + ${readSize}) exceeds buffer size (${this._size})`
+        `Read range (${offset} + ${readSize}) exceeds buffer size (${this._size})`,
       );
     }
 
@@ -143,7 +143,7 @@ export class ComputeBuffer {
         offset,
         stagingBuffer,
         0,
-        readSize
+        readSize,
       );
       this._device.queue.submit([encoder.finish()]);
 

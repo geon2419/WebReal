@@ -38,7 +38,10 @@ export interface RGBEResult {
  * Error thrown when RGBE parsing fails.
  */
 export class RGBEParserError extends Error {
-  constructor(message: string, public readonly cause?: unknown) {
+  constructor(
+    message: string,
+    public readonly cause?: unknown,
+  ) {
     super(message);
     this.name = "RGBEParserError";
   }
@@ -118,7 +121,7 @@ function parseHeader(bytes: Uint8Array, startPos: number): HeaderResult {
   const magic = firstLine.line.trim();
   if (magic !== "#?RADIANCE" && magic !== "#?RGBE") {
     throw new RGBEParserError(
-      `Invalid HDR file: expected "#?RADIANCE" or "#?RGBE" magic number, got "${magic}"`
+      `Invalid HDR file: expected "#?RADIANCE" or "#?RGBE" magic number, got "${magic}"`,
     );
   }
 
@@ -177,7 +180,7 @@ interface ResolutionResult {
  */
 function parseResolution(
   bytes: Uint8Array,
-  startPos: number
+  startPos: number,
 ): ResolutionResult {
   const lineResult = readLine(bytes, startPos);
   const line = lineResult.line.trim();
@@ -186,7 +189,7 @@ function parseResolution(
   const match = line.match(/^([+-][XY])\s+(\d+)\s+([+-][XY])\s+(\d+)$/);
   if (!match) {
     throw new RGBEParserError(
-      `Invalid resolution string: "${line}". Expected format like "-Y 1024 +X 2048"`
+      `Invalid resolution string: "${line}". Expected format like "-Y 1024 +X 2048"`,
     );
   }
 
@@ -204,14 +207,14 @@ function parseResolution(
 
   if (width <= 0 || height <= 0) {
     throw new RGBEParserError(
-      `Invalid image dimensions: ${width}x${height} (both width and height must be positive)`
+      `Invalid image dimensions: ${width}x${height} (both width and height must be positive)`,
     );
   }
 
   // Sanity check for reasonable image size
   if (width > MAX_IMAGE_DIMENSION || height > MAX_IMAGE_DIMENSION) {
     throw new RGBEParserError(
-      `Image dimensions too large: ${width}x${height}. Maximum supported: ${MAX_IMAGE_DIMENSION}x${MAX_IMAGE_DIMENSION}`
+      `Image dimensions too large: ${width}x${height}. Maximum supported: ${MAX_IMAGE_DIMENSION}x${MAX_IMAGE_DIMENSION}`,
     );
   }
 
@@ -233,7 +236,7 @@ function parsePixelData(
   width: number,
   height: number,
   output: Float32Array,
-  scanlineBuffer: Uint8Array
+  scanlineBuffer: Uint8Array,
 ): void {
   let pos = startPos;
 
@@ -251,7 +254,7 @@ function parsePixelData(
         width,
         output,
         rowOffset,
-        scanlineBuffer
+        scanlineBuffer,
       );
     } else {
       // Old-style format (uncompressed or old RLE)
@@ -293,7 +296,7 @@ function decodeScanlineRLE(
   width: number,
   output: Float32Array,
   rowOffset: number,
-  scanline: Uint8Array
+  scanline: Uint8Array,
 ): number {
   let pos = startPos + RGBA_CHANNELS; // Skip RLE header
 
@@ -304,7 +307,7 @@ function decodeScanlineRLE(
     while (pixelIndex < width) {
       if (pos >= bytes.length) {
         throw new RGBEParserError(
-          `Unexpected end of RLE data at position ${pos} while decoding channel ${channel}`
+          `Unexpected end of RLE data at position ${pos} while decoding channel ${channel}`,
         );
       }
 
@@ -317,13 +320,13 @@ function decodeScanlineRLE(
           throw new RGBEParserError(
             `RLE run length ${count} exceeds remaining scanline width ${
               width - pixelIndex
-            } at channel ${channel}`
+            } at channel ${channel}`,
           );
         }
 
         if (pos >= bytes.length) {
           throw new RGBEParserError(
-            `Unexpected end of data while reading RLE run value at position ${pos}`
+            `Unexpected end of data while reading RLE run value at position ${pos}`,
           );
         }
 
@@ -339,14 +342,14 @@ function decodeScanlineRLE(
           throw new RGBEParserError(
             `RLE literal count ${count} exceeds remaining scanline width ${
               width - pixelIndex
-            } at channel ${channel}`
+            } at channel ${channel}`,
           );
         }
 
         for (let i = 0; i < count; i++) {
           if (pos >= bytes.length) {
             throw new RGBEParserError(
-              `Unexpected end of data while reading RLE literal values at position ${pos}`
+              `Unexpected end of data while reading RLE literal values at position ${pos}`,
             );
           }
           scanline[pixelIndex * RGBA_CHANNELS + channel] = bytes[pos++];
@@ -366,7 +369,7 @@ function decodeScanlineRLE(
       scanline[srcIdx + 2],
       scanline[srcIdx + 3],
       output,
-      dstIdx
+      dstIdx,
     );
   }
 
@@ -387,7 +390,7 @@ function decodeScanlineFlat(
   startPos: number,
   width: number,
   output: Float32Array,
-  rowOffset: number
+  rowOffset: number,
 ): number {
   const bytesNeeded = width * RGBA_CHANNELS;
 
@@ -396,7 +399,7 @@ function decodeScanlineFlat(
     throw new RGBEParserError(
       `Unexpected end of pixel data: need ${bytesNeeded} bytes but only ${
         bytes.length - startPos
-      } bytes remaining at position ${startPos}`
+      } bytes remaining at position ${startPos}`,
     );
   }
 
@@ -410,7 +413,7 @@ function decodeScanlineFlat(
       bytes[pos + 2],
       bytes[pos + 3],
       output,
-      dstIdx
+      dstIdx,
     );
     pos += RGBA_CHANNELS;
   }
@@ -434,7 +437,7 @@ function rgbeToFloat(
   b: number,
   e: number,
   output: Float32Array,
-  index: number
+  index: number,
 ): void {
   if (e === 0) {
     // Zero exponent means black
@@ -461,7 +464,7 @@ function rgbeToFloat(
  */
 function readLine(
   bytes: Uint8Array,
-  startPos: number
+  startPos: number,
 ): { line: string; endPosition: number } {
   let endPos = startPos;
 

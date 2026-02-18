@@ -57,7 +57,7 @@ export class RenderTargets {
         if (entry) {
           this._syncCanvasPixelSize(
             entry.contentRect.width,
-            entry.contentRect.height
+            entry.contentRect.height,
           );
         } else {
           this._syncCanvasPixelSize();
@@ -86,14 +86,16 @@ export class RenderTargets {
   public beginRenderPass(options: {
     commandEncoder: GPUCommandEncoder;
     clearColor: Color;
-  }): { passEncoder: GPURenderPassEncoder } {
+  }): {
+    passEncoder: GPURenderPassEncoder;
+  } {
     if (this._fatalError) {
       throw this._fatalError;
     }
 
     if (!this._msaaTexture || !this._depthTexture) {
       throw new Error(
-        "RenderTargets: render attachments are not initialized before beginRenderPass"
+        "RenderTargets: render attachments are not initialized before beginRenderPass",
       );
     }
 
@@ -161,7 +163,7 @@ export class RenderTargets {
 
   private _commitDepthAndMsaaAttachments(
     nextDepth: GPUTexture,
-    nextMsaa: GPUTexture
+    nextMsaa: GPUTexture,
   ): void {
     this._depthTexture?.destroy();
     this._msaaTexture?.destroy();
@@ -170,7 +172,10 @@ export class RenderTargets {
     this._msaaTexture = nextMsaa;
   }
 
-  private _createDepthTextureOrThrow(width: number, height: number): GPUTexture {
+  private _createDepthTextureOrThrow(
+    width: number,
+    height: number,
+  ): GPUTexture {
     try {
       return this._device.createTexture({
         size: [width, height],
@@ -184,7 +189,7 @@ export class RenderTargets {
         width,
         height,
         "depth24plus",
-        error
+        error,
       );
     }
   }
@@ -203,7 +208,7 @@ export class RenderTargets {
         width,
         height,
         this._format,
-        error
+        error,
       );
     }
   }
@@ -213,7 +218,7 @@ export class RenderTargets {
     width: number,
     height: number,
     format: GPUTextureFormat,
-    cause: unknown
+    cause: unknown,
   ): Error {
     const message =
       `RenderTargets: failed to create ${target} ` +

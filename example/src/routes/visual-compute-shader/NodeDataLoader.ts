@@ -22,7 +22,7 @@ export class NodeDataLoader {
 
   private static async _fetchText(
     url: URL,
-    options?: { signal?: AbortSignal }
+    options?: { signal?: AbortSignal },
   ): Promise<string> {
     const response = await fetch(url, { signal: options?.signal });
     return await response.text();
@@ -36,7 +36,7 @@ export class NodeDataLoader {
         complete: (results) => {
           const rows = results.data.filter(
             (row): row is ClassRow =>
-              typeof row?.txId === "string" && typeof row?.class === "string"
+              typeof row?.txId === "string" && typeof row?.class === "string",
           );
 
           // If we accidentally fetched HTML (e.g., index.html), fail loudly.
@@ -63,7 +63,7 @@ export class NodeDataLoader {
   }
 
   private static _randomInitialPosition(
-    spaceScale: number
+    spaceScale: number,
   ): Pick<NodeData, "x" | "y" | "z"> {
     // Initial random position in circle (radius 0.8 * s)
     const angle = Math.random() * Math.PI * 2;
@@ -80,7 +80,7 @@ export class NodeDataLoader {
   private static _mapRowsToNodes(
     rows: ClassRow[],
     maxNodes: number,
-    spaceScale: number
+    spaceScale: number,
   ): NodeData[] {
     const dataRows = rows.slice(0, maxNodes);
     const s = Math.max(0.01, spaceScale);
@@ -104,7 +104,7 @@ export class NodeDataLoader {
   static async loadNodeData(
     maxNodes: number = 10000,
     spaceScale: number = 1,
-    options?: { signal?: AbortSignal }
+    options?: { signal?: AbortSignal },
   ): Promise<NodeData[]> {
     const url = NodeDataLoader._resolveClassesCsvUrl();
     const csvText = await NodeDataLoader._fetchText(url, options);

@@ -46,7 +46,7 @@ describe("RenderTargets", () => {
 
     mockTexture = {
       destroy: mock(() => {}),
-      createView: mock(() => ({} as GPUTextureView)),
+      createView: mock(() => ({}) as GPUTextureView),
     } as unknown as GPUTexture;
 
     mockDevice = {
@@ -55,7 +55,7 @@ describe("RenderTargets", () => {
 
     mockContext = {
       getCurrentTexture: mock(() => ({
-        createView: () => ({} as GPUTextureView),
+        createView: () => ({}) as GPUTextureView,
       })),
     } as unknown as GPUCanvasContext;
 
@@ -110,7 +110,7 @@ describe("RenderTargets", () => {
 
       const calls = (mockDevice.createTexture as any).mock.calls;
       const depthCall = calls.find(
-        (call: any) => call[0].format === "depth24plus"
+        (call: any) => call[0].format === "depth24plus",
       );
       expect(depthCall).toBeDefined();
       expect(depthCall[0].usage).toBe(GPUTextureUsage.RENDER_ATTACHMENT);
@@ -127,7 +127,7 @@ describe("RenderTargets", () => {
 
       const calls = (mockDevice.createTexture as any).mock.calls;
       const msaaCall = calls.find(
-        (call: any) => call[0].format === "rgba8unorm"
+        (call: any) => call[0].format === "rgba8unorm",
       );
       expect(msaaCall).toBeDefined();
     });
@@ -164,16 +164,16 @@ describe("RenderTargets", () => {
             format: "bgra8unorm",
             canvas: mockCanvas,
             sampleCount: 4,
-          })
+          }),
       ).toThrow(
-        /failed to create depth texture \(width: 800, height: 600, format: depth24plus, sampleCount: 4\)/
+        /failed to create depth texture \(width: 800, height: 600, format: depth24plus, sampleCount: 4\)/,
       );
     });
 
     it("should throw when MSAA texture creation fails", () => {
       const depthTexture = {
         destroy: mock(() => {}),
-        createView: mock(() => ({} as GPUTextureView)),
+        createView: mock(() => ({}) as GPUTextureView),
       } as unknown as GPUTexture;
 
       const msaaFailureDevice = {
@@ -194,9 +194,9 @@ describe("RenderTargets", () => {
             format: "bgra8unorm",
             canvas: mockCanvas,
             sampleCount: 4,
-          })
+          }),
       ).toThrow(
-        /failed to create MSAA texture \(width: 800, height: 600, format: bgra8unorm, sampleCount: 4\)/
+        /failed to create MSAA texture \(width: 800, height: 600, format: bgra8unorm, sampleCount: 4\)/,
       );
 
       expect(depthTexture.destroy).toHaveBeenCalledTimes(1);
@@ -306,7 +306,7 @@ describe("RenderTargets", () => {
           }
 
           return mockTexture;
-        }
+        },
       );
 
       resizeObserverCallback?.(
@@ -315,16 +315,16 @@ describe("RenderTargets", () => {
             contentRect: { width: 800, height: 600 },
           } as ResizeObserverEntry,
         ],
-        {} as ResizeObserver
+        {} as ResizeObserver,
       );
 
       expect(() =>
         targets.beginRenderPass({
           commandEncoder: mockCommandEncoder,
           clearColor: new Color(0, 0, 0, 1),
-        })
+        }),
       ).toThrow(
-        /failed to create depth texture \(width: 800, height: 600, format: depth24plus, sampleCount: 4\)/
+        /failed to create depth texture \(width: 800, height: 600, format: depth24plus, sampleCount: 4\)/,
       );
     });
 
@@ -347,7 +347,7 @@ describe("RenderTargets", () => {
           }
 
           return mockTexture;
-        }
+        },
       );
 
       resizeObserverCallback?.(
@@ -356,16 +356,16 @@ describe("RenderTargets", () => {
             contentRect: { width: 800, height: 600 },
           } as ResizeObserverEntry,
         ],
-        {} as ResizeObserver
+        {} as ResizeObserver,
       );
 
       expect(() =>
         targets.beginRenderPass({
           commandEncoder: mockCommandEncoder,
           clearColor: new Color(0, 0, 0, 1),
-        })
+        }),
       ).toThrow(
-        /failed to create depth texture \(width: 800, height: 600, format: depth24plus, sampleCount: 4\)/
+        /failed to create depth texture \(width: 800, height: 600, format: depth24plus, sampleCount: 4\)/,
       );
 
       shouldFail = false;
@@ -375,14 +375,14 @@ describe("RenderTargets", () => {
             contentRect: { width: 800, height: 600 },
           } as ResizeObserverEntry,
         ],
-        {} as ResizeObserver
+        {} as ResizeObserver,
       );
 
       expect(() =>
         targets.beginRenderPass({
           commandEncoder: mockCommandEncoder,
           clearColor: new Color(0, 0, 0, 1),
-        })
+        }),
       ).not.toThrow();
     });
   });

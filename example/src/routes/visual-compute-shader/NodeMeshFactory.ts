@@ -13,7 +13,7 @@ export interface CreateNodeMeshOptions {
 export class NodeMeshFactory {
   static createNodeMesh(
     nodes: NodeData[],
-    options: CreateNodeMeshOptions
+    options: CreateNodeMeshOptions,
   ): InstancedMesh {
     const geometry = new SphereGeometry({
       radius: 1,

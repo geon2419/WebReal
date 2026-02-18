@@ -233,7 +233,7 @@ describe("ComputeShader", () => {
 
       const pipeline = shader.getPipeline();
       expect((pipeline as any).descriptor.compute.entryPoint).toBe(
-        "computeMain"
+        "computeMain",
       );
     });
   });
@@ -260,7 +260,7 @@ describe("ComputeShader", () => {
       const bindGroup = shader.createBindGroup(
         0,
         [{ binding: 0, resource: { buffer: mockBuffer } }],
-        "TestBindGroup"
+        "TestBindGroup",
       );
 
       expect(bindGroup).toBeDefined();

@@ -112,7 +112,7 @@ export class SphereGeometry implements Geometry {
       positions,
       normals,
       uvs,
-      indices
+      indices,
     );
     this._tangents = tangents;
     this._bitangents = bitangents;

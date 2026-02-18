@@ -184,7 +184,7 @@ describe("Matrix4", () => {
       const m = Matrix4.lookAt(
         new Vector3(0, 0, 5),
         new Vector3(0, 0, 0),
-        new Vector3(0, 1, 0)
+        new Vector3(0, 1, 0),
       );
       expect(m.data[14]).toBeCloseTo(-5);
       expect(m.data[15]).toBe(1);
@@ -194,7 +194,7 @@ describe("Matrix4", () => {
       const m = Matrix4.lookAt(
         new Vector3(1, 2, 3),
         new Vector3(1, 2, 3),
-        new Vector3(0, 1, 0)
+        new Vector3(0, 1, 0),
       );
       expectMatrixClose(m, IDENTITY);
     });
@@ -203,7 +203,7 @@ describe("Matrix4", () => {
       const m = Matrix4.lookAt(
         new Vector3(0, 5, 0),
         new Vector3(0, 0, 0),
-        new Vector3(0, 1, 0)
+        new Vector3(0, 1, 0),
       );
       // Should not produce NaN values
       for (let i = 0; i < 16; i++) {
@@ -216,7 +216,7 @@ describe("Matrix4", () => {
       const m = Matrix4.lookAt(
         new Vector3(0, -5, 0),
         new Vector3(0, 0, 0),
-        new Vector3(0, 1, 0)
+        new Vector3(0, 1, 0),
       );
       // Should not produce NaN values
       for (let i = 0; i < 16; i++) {
@@ -290,7 +290,7 @@ describe("Matrix4", () => {
       const v = Matrix4.lookAt(
         new Vector3(5, 3, 10),
         new Vector3(0, 0, 0),
-        new Vector3(0, 1, 0)
+        new Vector3(0, 1, 0),
       );
       const inv = v.inverse();
       const result = v.multiply(inv);
@@ -426,7 +426,7 @@ describe("Matrix4", () => {
       const view = Matrix4.lookAt(
         new Vector3(0, 0, 5),
         new Vector3(0, 0, 0),
-        new Vector3(0, 1, 0)
+        new Vector3(0, 1, 0),
       );
       const proj = Matrix4.perspective(Math.PI / 4, 1, 0.1, 100);
       const vp = proj.multiply(view);
@@ -507,7 +507,7 @@ describe("Matrix4", () => {
       const m = Matrix4.lookAt(
         new Vector3(0, 0, 5),
         new Vector3(0, 0, 0),
-        new Vector3(0, 1, 0)
+        new Vector3(0, 1, 0),
       );
       const forward = new Vector3(0, 0, -1);
       const result = m.transformDirection(forward);

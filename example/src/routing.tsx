@@ -20,7 +20,8 @@ export function Link(props: {
       onClick={(event) => {
         if (event.defaultPrevented) return;
         if (event.button !== 0) return;
-        if (event.metaKey || event.altKey || event.ctrlKey || event.shiftKey) return;
+        if (event.metaKey || event.altKey || event.ctrlKey || event.shiftKey)
+          return;
         event.preventDefault();
         navigate(props.to);
       }}

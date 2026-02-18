@@ -57,7 +57,7 @@ export class SkyboxPass {
   render(
     passEncoder: GPURenderPassEncoder,
     material: SkyboxMaterial,
-    camera: Camera
+    camera: Camera,
   ): void {
     const resources = this._getOrCreateResources(material);
 
@@ -95,7 +95,7 @@ export class SkyboxPass {
    */
   private _createBindGroupEntries(
     uniformBuffer: GPUBuffer,
-    material: SkyboxMaterial
+    material: SkyboxMaterial,
   ): GPUBindGroupEntry[] {
     const textures = material.getTextures(this._device);
     const cubeTexture = material.getCubeTexture();
@@ -133,7 +133,7 @@ export class SkyboxPass {
     ) {
       const bindGroupEntries = this._createBindGroupEntries(
         this._resources.uniformBuffer,
-        material
+        material,
       );
 
       this._resources.bindGroup = this._device.createBindGroup({
@@ -191,7 +191,7 @@ export class SkyboxPass {
 
       const bindGroupEntries = this._createBindGroupEntries(
         uniformBuffer,
-        material
+        material,
       );
 
       const bindGroup = this._device.createBindGroup({

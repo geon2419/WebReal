@@ -161,7 +161,7 @@ export class DirectionalLightHelper extends Mesh {
    */
   constructor(
     light: DirectionalLight,
-    options: DirectionalLightHelperOptions = {}
+    options: DirectionalLightHelperOptions = {},
   ) {
     const size = options.size ?? 1;
     const color = options.color ?? new Color(1, 1, 0); // Yellow default
@@ -183,7 +183,7 @@ export class DirectionalLightHelper extends Mesh {
     this.position.set(
       this.light.position.x,
       this.light.position.y,
-      this.light.position.z
+      this.light.position.z,
     );
     this.helperGeometry.update(this.light);
     this.needsUpdate = true;

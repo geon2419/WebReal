@@ -25,7 +25,7 @@ export class DummyTextures {
       this._blackTexture = this.create1x1Texture(
         device,
         new Uint8Array([0, 0, 0, 255]),
-        "DummyTexture:Black"
+        "DummyTexture:Black",
       );
     }
     return this._blackTexture;
@@ -41,7 +41,7 @@ export class DummyTextures {
       this._whiteTexture = this.create1x1Texture(
         device,
         new Uint8Array([255, 255, 255, 255]),
-        "DummyTexture:White"
+        "DummyTexture:White",
       );
     }
     return this._whiteTexture;
@@ -57,7 +57,7 @@ export class DummyTextures {
       this._normalTexture = this.create1x1Texture(
         device,
         new Uint8Array([128, 128, 255, 255]),
-        "DummyTexture:Normal"
+        "DummyTexture:Normal",
       );
     }
     return this._normalTexture;
@@ -73,7 +73,7 @@ export class DummyTextures {
   private static create1x1Texture(
     device: GPUDevice,
     data: Uint8Array,
-    label: string
+    label: string,
   ): Texture {
     const gpuTexture = device.createTexture({
       label,
@@ -89,7 +89,7 @@ export class DummyTextures {
       { texture: gpuTexture },
       data.buffer,
       { bytesPerRow: 4 },
-      [1, 1, 1]
+      [1, 1, 1],
     );
 
     const gpuSampler = device.createSampler({

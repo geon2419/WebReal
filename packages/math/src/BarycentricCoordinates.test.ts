@@ -68,7 +68,7 @@ describe("BarycentricCoordinates", () => {
         barycentric,
         uv0,
         uv1,
-        uv2
+        uv2,
       );
 
       expect(result.x).toBeCloseTo(0.3); // 0.5*0 + 0.3*1 + 0.2*0
@@ -85,7 +85,7 @@ describe("BarycentricCoordinates", () => {
         barycentric,
         uv0,
         uv1,
-        uv2
+        uv2,
       );
 
       expect(result.x).toBeCloseTo(0.5);
@@ -104,7 +104,7 @@ describe("BarycentricCoordinates", () => {
         barycentric,
         attr0,
         attr1,
-        attr2
+        attr2,
       );
 
       expect(result.x).toBeCloseTo(0.5);
@@ -124,7 +124,7 @@ describe("BarycentricCoordinates", () => {
         barycentric,
         val0,
         val1,
-        val2
+        val2,
       );
 
       expect(result).toBeCloseTo(17); // 0.5*10 + 0.3*20 + 0.2*30

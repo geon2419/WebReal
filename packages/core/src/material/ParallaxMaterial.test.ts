@@ -270,8 +270,8 @@ describe("ParallaxMaterial", () => {
       };
 
       const mockDevice = {
-        createTexture: () => ({} as GPUTexture),
-        createSampler: () => ({} as GPUSampler),
+        createTexture: () => ({}) as GPUTexture,
+        createSampler: () => ({}) as GPUSampler,
         queue: {
           writeTexture: () => {},
         },
@@ -294,7 +294,7 @@ describe("ParallaxMaterial", () => {
       });
 
       expect(() => material.getTextures()).toThrow(
-        "ParallaxMaterial.getTextures() requires a GPUDevice parameter when no normal texture is provided"
+        "ParallaxMaterial.getTextures() requires a GPUDevice parameter when no normal texture is provided",
       );
     });
   });
@@ -385,7 +385,7 @@ describe("ParallaxMaterial", () => {
         new Color(1, 0, 0),
         2.0,
         15,
-        "quadratic"
+        "quadratic",
       );
       pointLight.position.set(3, 4, 5);
       pointLight.updateWorldMatrix(true, false);
@@ -425,7 +425,7 @@ describe("ParallaxMaterial", () => {
       const dirLight = new DirectionalLight(
         new Vector3(0, -1, 0),
         new Color(1, 1, 0.8),
-        1.5
+        1.5,
       );
 
       const buffer = new ArrayBuffer(material.getUniformBufferSize());
@@ -499,7 +499,7 @@ describe("ParallaxMaterial", () => {
 
       const lights = Array.from(
         { length: 6 },
-        () => new PointLight(new Color(1, 1, 1), 1.0)
+        () => new PointLight(new Color(1, 1, 1), 1.0),
       );
 
       const buffer = new ArrayBuffer(material.getUniformBufferSize());

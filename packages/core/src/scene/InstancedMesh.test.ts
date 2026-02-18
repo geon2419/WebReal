@@ -136,10 +136,10 @@ describe("InstancedMesh", () => {
       });
 
       expect(() => mesh.setMatrixAt(0, new Matrix4())).toThrow(
-        /setMatrixAt\(\) is only available in matrix mode/
+        /setMatrixAt\(\) is only available in matrix mode/,
       );
       expect(() => mesh.getMatrixAt(0)).toThrow(
-        /getMatrixAt\(\) is only available in matrix mode/
+        /getMatrixAt\(\) is only available in matrix mode/,
       );
     });
   });
@@ -176,10 +176,10 @@ describe("InstancedMesh", () => {
       const mesh = new InstancedMesh(geometry, material, 10);
 
       expect(() => mesh.setPositionAt(0, 1, 2, 3)).toThrow(
-        /setPositionAt\(\) is only available in position mode/
+        /setPositionAt\(\) is only available in position mode/,
       );
       expect(() => mesh.getPositionAt(0)).toThrow(
-        /getPositionAt\(\) is only available in position mode/
+        /getPositionAt\(\) is only available in position mode/,
       );
     });
   });

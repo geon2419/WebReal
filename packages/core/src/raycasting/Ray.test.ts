@@ -112,7 +112,7 @@ describe("Ray", () => {
       const ray = new Ray(new Vector3(0, 0, 5), new Vector3(0, 0, -1));
       const box = new BoundingBox(
         new Vector3(-1, -1, -1),
-        new Vector3(1, 1, 1)
+        new Vector3(1, 1, 1),
       );
 
       const distance = ray.intersectBox(box);
@@ -125,7 +125,7 @@ describe("Ray", () => {
       const ray = new Ray(new Vector3(5, 5, 5), new Vector3(0, 0, -1));
       const box = new BoundingBox(
         new Vector3(-1, -1, -1),
-        new Vector3(1, 1, 1)
+        new Vector3(1, 1, 1),
       );
 
       const distance = ray.intersectBox(box);
@@ -137,7 +137,7 @@ describe("Ray", () => {
       const ray = new Ray(new Vector3(0, 0, 0), new Vector3(1, 0, 0));
       const box = new BoundingBox(
         new Vector3(-1, -1, -1),
-        new Vector3(1, 1, 1)
+        new Vector3(1, 1, 1),
       );
 
       const distance = ray.intersectBox(box);
@@ -159,7 +159,7 @@ describe("Ray", () => {
       const ray = new Ray(new Vector3(0, 0, 2), new Vector3(1, 0, 0));
       const box = new BoundingBox(
         new Vector3(-1, -1, -1),
-        new Vector3(1, 1, 1)
+        new Vector3(1, 1, 1),
       );
 
       const distance = ray.intersectBox(box);

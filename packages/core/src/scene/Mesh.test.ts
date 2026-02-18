@@ -174,7 +174,7 @@ describe("Mesh", () => {
       const mesh = new Mesh(geometry, material);
 
       expect(() => mesh.getInterleavedVertices()).toThrow(
-        "texture material requires geometry with UV coordinates"
+        "texture material requires geometry with UV coordinates",
       );
     });
 
@@ -193,7 +193,7 @@ describe("Mesh", () => {
       const mesh = new Mesh(geometry, material);
 
       expect(() => mesh.getInterleavedVertices()).toThrow(
-        "parallax material requires geometry with tangents and bitangents"
+        "parallax material requires geometry with tangents and bitangents",
       );
     });
   });

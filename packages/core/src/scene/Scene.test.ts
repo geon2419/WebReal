@@ -173,9 +173,9 @@ describe("Scene", () => {
         scene.setEnvironmentFromPMREM({
           prefilteredMap: undefined as any,
           irradianceMap: {} as any,
-        } as any)
+        } as any),
       ).toThrow(
-        "Scene.setEnvironmentFromPMREM() requires pmrem.prefilteredMap and pmrem.irradianceMap"
+        "Scene.setEnvironmentFromPMREM() requires pmrem.prefilteredMap and pmrem.irradianceMap",
       );
     });
 
@@ -186,9 +186,9 @@ describe("Scene", () => {
         scene.setEnvironmentFromPMREM({
           prefilteredMap: {} as any,
           irradianceMap: undefined as any,
-        } as any)
+        } as any),
       ).toThrow(
-        "Scene.setEnvironmentFromPMREM() requires pmrem.prefilteredMap and pmrem.irradianceMap"
+        "Scene.setEnvironmentFromPMREM() requires pmrem.prefilteredMap and pmrem.irradianceMap",
       );
     });
   });

@@ -324,7 +324,7 @@ export class Matrix4 {
     fovY: number,
     aspect: number,
     near: number,
-    far: number
+    far: number,
   ): Matrix4 {
     const m = new Matrix4();
     // Focal length
@@ -364,7 +364,7 @@ export class Matrix4 {
     bottom: number,
     top: number,
     near: number,
-    far: number
+    far: number,
   ): Matrix4 {
     const m = new Matrix4();
     const e = m._data;

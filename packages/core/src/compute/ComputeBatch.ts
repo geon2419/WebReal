@@ -97,7 +97,7 @@ export class ComputeBatch {
     }
     if (!this._isValidWorkgroups(workgroups)) {
       throw new ComputeShaderError(
-        "Workgroups must be a non-empty array or an object with an x property; all provided counts must be non-negative integers."
+        "Workgroups must be a non-empty array or an object with an x property; all provided counts must be non-negative integers.",
       );
     }
 
@@ -147,7 +147,7 @@ export class ComputeBatch {
     if (this._profiler && this._passMode === "perDispatch") {
       if (this._entries.length > 1) {
         throw new ComputeShaderError(
-          "Profiler requires passMode 'single' or a single dispatch"
+          "Profiler requires passMode 'single' or a single dispatch",
         );
       }
     }
@@ -194,7 +194,7 @@ export class ComputeBatch {
    */
   private _encodeEntry(
     passEncoder: GPUComputePassEncoder,
-    entry: ComputeDispatchOptions
+    entry: ComputeDispatchOptions,
   ): void {
     const pipeline = entry.shader.getPipeline();
     passEncoder.setPipeline(pipeline);
@@ -262,7 +262,7 @@ export class ComputeBatch {
    * @throws {ComputeShaderError} If bind groups are missing or conflicting
    */
   private _collectBindGroups(
-    entry: ComputeDispatchOptions
+    entry: ComputeDispatchOptions,
   ): Array<[number, GPUBindGroup]> {
     const bindGroups = new Map<number, GPUBindGroup>();
     const baseLabel = entry.label ?? this._label;
@@ -281,7 +281,7 @@ export class ComputeBatch {
         const index = this._parseBindGroupIndex(key, "bindGroups");
         if (bindGroups.has(index)) {
           throw new ComputeShaderError(
-            `Bind group ${index} provided in both bindings and bindGroups`
+            `Bind group ${index} provided in both bindings and bindGroups`,
           );
         }
         bindGroups.set(index, bindGroup);
@@ -290,7 +290,7 @@ export class ComputeBatch {
 
     if (bindGroups.size === 0) {
       throw new ComputeShaderError(
-        "At least one bind group must be set for dispatch"
+        "At least one bind group must be set for dispatch",
       );
     }
 
@@ -309,7 +309,7 @@ export class ComputeBatch {
     const index = Number(key);
     if (!Number.isInteger(index) || index < 0) {
       throw new ComputeShaderError(
-        `Invalid bind group index "${key}" in ${source}`
+        `Invalid bind group index "${key}" in ${source}`,
       );
     }
     return index;

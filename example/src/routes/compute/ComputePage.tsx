@@ -60,11 +60,15 @@ export default function ComputePage() {
         buffer = new ComputeBuffer(device, { size: inputData.byteLength });
         buffer.write(inputData);
 
-        const multiplyShader = new ComputeShader(device, { code: MULTIPLY_SHADER });
+        const multiplyShader = new ComputeShader(device, {
+          code: MULTIPLY_SHADER,
+        });
         const addShader = new ComputeShader(device, { code: ADD_SHADER });
 
         const batch = new ComputeBatch(device, { passMode: "perDispatch" });
-        const entries = [{ binding: 0, resource: { buffer: buffer.gpuBuffer } }];
+        const entries = [
+          { binding: 0, resource: { buffer: buffer.gpuBuffer } },
+        ];
         const workgroups = Math.ceil(inputData.length / 64);
 
         batch.add({
@@ -92,7 +96,8 @@ export default function ComputePage() {
         setStatus("Complete");
       } catch (runError) {
         if (cancelled) return;
-        const message = runError instanceof Error ? runError.message : String(runError);
+        const message =
+          runError instanceof Error ? runError.message : String(runError);
         setStatus("Error");
         setError(message);
       } finally {
@@ -111,9 +116,22 @@ export default function ComputePage() {
   }, []);
 
   return (
-    <div style={{ width: "100vw", minHeight: "100vh", padding: 24, boxSizing: "border-box" }}>
+    <div
+      style={{
+        width: "100vw",
+        minHeight: "100vh",
+        padding: 24,
+        boxSizing: "border-box",
+      }}
+    >
       <div style={{ maxWidth: 960, margin: "0 auto" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
           <div>
             <h1 style={{ margin: "0 0 12px" }}>Compute (perDispatch)</h1>
             <p style={{ margin: 0, opacity: 0.75 }}>
@@ -134,25 +152,50 @@ export default function ComputePage() {
             background: "rgba(255,255,255,0.04)",
           }}
         >
-          <div style={{ fontSize: 14, opacity: 0.7, marginBottom: 8 }}>Status</div>
+          <div style={{ fontSize: 14, opacity: 0.7, marginBottom: 8 }}>
+            Status
+          </div>
           <div style={{ fontSize: 18, fontWeight: 600 }}>{status}</div>
 
           {error && (
-            <div style={{ marginTop: 12, color: "#ff9a9a" }}>
-              {error}
-            </div>
+            <div style={{ marginTop: 12, color: "#ff9a9a" }}>{error}</div>
           )}
 
-          <div style={{ marginTop: 16, display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))" }}>
+          <div
+            style={{
+              marginTop: 16,
+              display: "grid",
+              gap: 16,
+              gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+            }}
+          >
             <div>
-              <div style={{ fontSize: 13, opacity: 0.7, marginBottom: 8 }}>Input</div>
-              <pre style={{ margin: 0, padding: 12, background: "rgba(0,0,0,0.4)", borderRadius: 8 }}>
+              <div style={{ fontSize: 13, opacity: 0.7, marginBottom: 8 }}>
+                Input
+              </div>
+              <pre
+                style={{
+                  margin: 0,
+                  padding: 12,
+                  background: "rgba(0,0,0,0.4)",
+                  borderRadius: 8,
+                }}
+              >
                 {JSON.stringify(input, null, 2)}
               </pre>
             </div>
             <div>
-              <div style={{ fontSize: 13, opacity: 0.7, marginBottom: 8 }}>Output</div>
-              <pre style={{ margin: 0, padding: 12, background: "rgba(0,0,0,0.4)", borderRadius: 8 }}>
+              <div style={{ fontSize: 13, opacity: 0.7, marginBottom: 8 }}>
+                Output
+              </div>
+              <pre
+                style={{
+                  margin: 0,
+                  padding: 12,
+                  background: "rgba(0,0,0,0.4)",
+                  borderRadius: 8,
+                }}
+              >
                 {output ? JSON.stringify(output, null, 2) : "Waiting..."}
               </pre>
             </div>

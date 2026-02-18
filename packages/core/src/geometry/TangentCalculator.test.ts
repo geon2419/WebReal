@@ -58,7 +58,7 @@ describe("TangentCalculator", () => {
       positions,
       normals,
       uvs,
-      indices
+      indices,
     );
 
     expect(result.tangents).toBeDefined();
@@ -94,7 +94,7 @@ describe("TangentCalculator", () => {
       positions,
       normals,
       uvs,
-      indices
+      indices,
     );
 
     // Check that tangents are normalized
@@ -129,7 +129,7 @@ describe("TangentCalculator", () => {
       positions,
       normals,
       uvs,
-      indices
+      indices,
     );
 
     // Check first vertex: tangent should be orthogonal to normal

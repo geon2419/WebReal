@@ -101,7 +101,7 @@ export class PlaneGeometry implements Geometry {
       positions,
       normals,
       uvs,
-      indices
+      indices,
     );
     this._tangents = tangents;
     this._bitangents = bitangents;
@@ -218,7 +218,7 @@ export class PlaneGeometry implements Geometry {
   }
 
   private getNormalVector(
-    orientation: PlaneOrientation
+    orientation: PlaneOrientation,
   ): [number, number, number] {
     switch (orientation) {
       case "XY":
@@ -233,7 +233,7 @@ export class PlaneGeometry implements Geometry {
   private getPosition(
     u: number,
     v: number,
-    orientation: PlaneOrientation
+    orientation: PlaneOrientation,
   ): [number, number, number] {
     switch (orientation) {
       case "XY":

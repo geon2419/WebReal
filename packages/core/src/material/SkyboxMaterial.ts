@@ -260,7 +260,7 @@ export class SkyboxMaterial implements Material {
   getTextures(device?: GPUDevice): Texture[] {
     if (!device) {
       throw new Error(
-        "SkyboxMaterial.getTextures() requires a GPUDevice parameter"
+        "SkyboxMaterial.getTextures() requires a GPUDevice parameter",
       );
     }
 
@@ -290,12 +290,12 @@ export class SkyboxMaterial implements Material {
   writeUniformData(
     buffer: DataView,
     offset: number = 0,
-    context?: RenderContext
+    context?: RenderContext,
   ): void {
     // Write inverse view-projection matrix
     if (context?.camera) {
       const viewProjection = context.camera.projectionMatrix.multiply(
-        context.camera.viewMatrix
+        context.camera.viewMatrix,
       );
       const invViewProjection = viewProjection.inverse();
 

@@ -32,8 +32,10 @@ const BYTES_PER_PIXEL_F32 = RGBA_CHANNELS * BYTES_PER_CHANNEL_F32; // 16 bytes
 
 export type HDRFormat = "rgba16float" | "rgba32float";
 
-export interface HDRLoaderOptions
-  extends Omit<TextureOptions, "format" | "srgb"> {
+export interface HDRLoaderOptions extends Omit<
+  TextureOptions,
+  "format" | "srgb"
+> {
   format?: HDRFormat;
   applyExposure?: boolean;
 }
@@ -42,7 +44,10 @@ export interface HDRLoaderOptions
  * Error thrown when HDR loading or parsing fails.
  */
 export class HDRLoaderError extends Error {
-  constructor(message: string, public readonly cause?: unknown) {
+  constructor(
+    message: string,
+    public readonly cause?: unknown,
+  ) {
     super(message);
     this.name = "HDRLoaderError";
   }
@@ -72,7 +77,7 @@ export class HDRLoader {
   static async fromURL(
     device: GPUDevice,
     url: string,
-    options: HDRLoaderOptions = {}
+    options: HDRLoaderOptions = {},
   ): Promise<Texture> {
     if (!device) {
       throw new HDRLoaderError("GPU device is required");
@@ -86,7 +91,7 @@ export class HDRLoader {
 
       if (!response.ok) {
         throw new HDRLoaderError(
-          `Failed to fetch HDR from ${url}: ${response.status} ${response.statusText}`
+          `Failed to fetch HDR from ${url}: ${response.status} ${response.statusText}`,
         );
       }
 
@@ -103,7 +108,7 @@ export class HDRLoader {
       if (error instanceof TypeError) {
         throw new HDRLoaderError(
           `Network error while fetching HDR from ${url}: ${error.message}`,
-          error
+          error,
         );
       }
 
@@ -111,7 +116,7 @@ export class HDRLoader {
         `Unexpected error loading HDR from ${url}: ${
           error instanceof Error ? error.message : String(error)
         }`,
-        error
+        error,
       );
     }
   }
@@ -127,7 +132,7 @@ export class HDRLoader {
   static async fromBuffer(
     device: GPUDevice,
     buffer: ArrayBuffer,
-    options: HDRLoaderOptions = {}
+    options: HDRLoaderOptions = {},
   ): Promise<Texture> {
     this.validateInputs(device, buffer);
     const parsed = this.parseHDRBuffer(buffer);
@@ -135,7 +140,7 @@ export class HDRLoader {
 
     if (width <= 0 || height <= 0) {
       throw new HDRLoaderError(
-        `Invalid texture dimensions: ${width}x${height}`
+        `Invalid texture dimensions: ${width}x${height}`,
       );
     }
 
@@ -151,7 +156,7 @@ export class HDRLoader {
         data,
         exposure,
         format,
-        options.applyExposure
+        options.applyExposure,
       );
 
       const mipLevelCount =
@@ -179,7 +184,7 @@ export class HDRLoader {
           bytesPerRow: width * bytesPerPixel,
           rowsPerImage: height,
         },
-        [width, height, 1]
+        [width, height, 1],
       );
 
       // Generate mipmaps if requested
@@ -196,7 +201,7 @@ export class HDRLoader {
         width,
         height,
         format,
-        mipLevelCount
+        mipLevelCount,
       );
     } catch (error) {
       if (gpuTexture) {
@@ -208,10 +213,8 @@ export class HDRLoader {
       }
 
       throw new HDRLoaderError(
-        `Failed to create HDR texture: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
-        error
+        `Failed to create HDR texture: ${error instanceof Error ? error.message : String(error)}`,
+        error,
       );
     }
   }
@@ -249,15 +252,13 @@ export class HDRLoader {
       if (error instanceof RGBEParserError) {
         throw new HDRLoaderError(
           `Invalid HDR file format: ${error.message}`,
-          error
+          error,
         );
       }
 
       throw new HDRLoaderError(
-        `Failed to parse HDR data: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
-        error
+        `Failed to parse HDR data: ${error instanceof Error ? error.message : String(error)}`,
+        error,
       );
     }
   }
@@ -270,7 +271,7 @@ export class HDRLoader {
    */
   private static validateGPUFeatures(
     device: GPUDevice,
-    format: HDRFormat
+    format: HDRFormat,
   ): void {
     if (
       format === "rgba32float" &&
@@ -278,7 +279,7 @@ export class HDRLoader {
     ) {
       throw new HDRLoaderError(
         "Device does not support 'float32-filterable' feature required for rgba32float format. " +
-          "Use 'rgba16float' format instead or ensure the GPU supports this feature."
+          "Use 'rgba16float' format instead or ensure the GPU supports this feature.",
       );
     }
   }
@@ -295,7 +296,7 @@ export class HDRLoader {
     data: Float32Array,
     exposure: number,
     format: HDRFormat,
-    applyExposure?: boolean
+    applyExposure?: boolean,
   ): { uploadData: Uint16Array | Float32Array; bytesPerPixel: number } {
     const shouldApplyExposure = applyExposure !== false;
 
@@ -331,7 +332,7 @@ export class HDRLoader {
    */
   private static createSampler(
     device: GPUDevice,
-    options: HDRLoaderOptions
+    options: HDRLoaderOptions,
   ): GPUSampler {
     const samplerOptions: GPUSamplerDescriptor = {
       ...DEFAULT_SAMPLER_OPTIONS,

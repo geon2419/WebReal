@@ -28,7 +28,7 @@ export class TangentCalculator {
     positions: Float32Array,
     normals: Float32Array,
     uvs: Float32Array,
-    indices: IndexArray
+    indices: IndexArray,
   ): { tangents: Float32Array; bitangents: Float32Array } {
     const vertexCount = positions.length / 3;
     const tangents = new Float32Array(vertexCount * 3);

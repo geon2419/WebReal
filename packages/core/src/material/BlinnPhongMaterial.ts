@@ -199,7 +199,7 @@ export class BlinnPhongMaterial implements Material {
   getTextures(device?: GPUDevice): Texture[] {
     if (!device) {
       throw new Error(
-        "BlinnPhongMaterial.getTextures() requires a GPUDevice parameter"
+        "BlinnPhongMaterial.getTextures() requires a GPUDevice parameter",
       );
     }
     const displacementTex =
@@ -226,7 +226,7 @@ export class BlinnPhongMaterial implements Material {
   writeUniformData(
     buffer: DataView,
     offset: number = 64,
-    context?: RenderContext
+    context?: RenderContext,
   ): void {
     this._writeModelMatrix(buffer, offset, context);
     this._writeNormalMatrix(buffer, offset, context);
@@ -254,7 +254,7 @@ export class BlinnPhongMaterial implements Material {
   private _writeModelMatrix(
     buffer: DataView,
     offset: number,
-    context?: RenderContext
+    context?: RenderContext,
   ): void {
     if (!context?.mesh) return;
 
@@ -272,7 +272,7 @@ export class BlinnPhongMaterial implements Material {
   private _writeNormalMatrix(
     buffer: DataView,
     offset: number,
-    context?: RenderContext
+    context?: RenderContext,
   ): void {
     if (!context?.mesh) return;
 
@@ -303,7 +303,7 @@ export class BlinnPhongMaterial implements Material {
   private _writeDirectionalLight(
     buffer: DataView,
     offset: number,
-    light: DirectionalLight
+    light: DirectionalLight,
   ): void {
     // Direction at offset+144
     buffer.setFloat32(offset + 144, light.direction.x, true);
@@ -340,7 +340,7 @@ export class BlinnPhongMaterial implements Material {
   private _writePointLight(
     buffer: DataView,
     offset: number,
-    light: PointLight
+    light: PointLight,
   ): void {
     light.updateWorldMatrix(true, false);
     buffer.setFloat32(offset + 144, light.worldMatrix.data[12], true);
@@ -408,7 +408,7 @@ export class BlinnPhongMaterial implements Material {
   private _writeCameraPosition(
     buffer: DataView,
     offset: number,
-    context?: RenderContext
+    context?: RenderContext,
   ): void {
     if (!context?.camera) return;
 

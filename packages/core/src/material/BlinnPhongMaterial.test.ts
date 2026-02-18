@@ -56,10 +56,10 @@ describe("BlinnPhongMaterial", () => {
     expect(material.shininess).toBe(64);
 
     expect(() => material.setShininess(0)).toThrow(
-      "Shininess must be between 1 and 256"
+      "Shininess must be between 1 and 256",
     );
     expect(() => material.setShininess(257)).toThrow(
-      "Shininess must be between 1 and 256"
+      "Shininess must be between 1 and 256",
     );
   });
 
@@ -69,28 +69,28 @@ describe("BlinnPhongMaterial", () => {
     material.setNormalScale(1.5);
     expect(material.normalScale).toBeCloseTo(1.5, 5);
     expect(() => material.setNormalScale(-0.01)).toThrow(
-      "Normal scale must be between 0 and 3"
+      "Normal scale must be between 0 and 3",
     );
     expect(() => material.setNormalScale(3.01)).toThrow(
-      "Normal scale must be between 0 and 3"
+      "Normal scale must be between 0 and 3",
     );
 
     material.setDisplacementScale(2);
     expect(material.displacementScale).toBe(2);
     expect(() => material.setDisplacementScale(-0.01)).toThrow(
-      "Displacement scale must be between 0 and 10"
+      "Displacement scale must be between 0 and 10",
     );
     expect(() => material.setDisplacementScale(10.01)).toThrow(
-      "Displacement scale must be between 0 and 10"
+      "Displacement scale must be between 0 and 10",
     );
 
     material.setDisplacementBias(0.25);
     expect(material.displacementBias).toBeCloseTo(0.25, 5);
     expect(() => material.setDisplacementBias(-1.01)).toThrow(
-      "Displacement bias must be between -1 and 1"
+      "Displacement bias must be between -1 and 1",
     );
     expect(() => material.setDisplacementBias(1.01)).toThrow(
-      "Displacement bias must be between -1 and 1"
+      "Displacement bias must be between -1 and 1",
     );
   });
 
@@ -121,16 +121,16 @@ describe("BlinnPhongMaterial", () => {
   it("should require a GPUDevice for getTextures() in node test env", () => {
     const material = new BlinnPhongMaterial();
     expect(() => material.getTextures()).toThrow(
-      "BlinnPhongMaterial.getTextures() requires a GPUDevice parameter"
+      "BlinnPhongMaterial.getTextures() requires a GPUDevice parameter",
     );
   });
 
   it("should select correct primitive topology based on wireframe", () => {
     expect(
-      new BlinnPhongMaterial({ wireframe: false }).getPrimitiveTopology()
+      new BlinnPhongMaterial({ wireframe: false }).getPrimitiveTopology(),
     ).toBe("triangle-list");
     expect(
-      new BlinnPhongMaterial({ wireframe: true }).getPrimitiveTopology()
+      new BlinnPhongMaterial({ wireframe: true }).getPrimitiveTopology(),
     ).toBe("line-list");
   });
 
@@ -150,33 +150,33 @@ describe("BlinnPhongMaterial", () => {
       // colorAndShininess at offset + 128
       expect(dataView.getFloat32(DEFAULT_OFFSET + 128, true)).toBeCloseTo(
         0.5,
-        5
+        5,
       );
       expect(dataView.getFloat32(DEFAULT_OFFSET + 132, true)).toBeCloseTo(
         0.6,
-        5
+        5,
       );
       expect(dataView.getFloat32(DEFAULT_OFFSET + 136, true)).toBeCloseTo(
         0.7,
-        5
+        5,
       );
       expect(dataView.getFloat32(DEFAULT_OFFSET + 140, true)).toBeCloseTo(
         64,
-        5
+        5,
       );
 
       // displacement params at offset + 224
       expect(dataView.getFloat32(DEFAULT_OFFSET + 224, true)).toBeCloseTo(
         2.5,
-        5
+        5,
       );
       expect(dataView.getFloat32(DEFAULT_OFFSET + 228, true)).toBeCloseTo(
         -0.3,
-        5
+        5,
       );
       expect(dataView.getFloat32(DEFAULT_OFFSET + 232, true)).toBeCloseTo(
         1.8,
-        5
+        5,
       );
     });
 
@@ -202,29 +202,29 @@ describe("BlinnPhongMaterial", () => {
       const directional = new DirectionalLight(
         new Vector3(1, -1, 0),
         new Color(1, 0.5, 0.3),
-        0.8
+        0.8,
       );
       material.writeUniformData(
         dataView,
         DEFAULT_OFFSET,
-        createRenderContext([directional])
+        createRenderContext([directional]),
       );
       expect(dataView.getFloat32(DEFAULT_OFFSET + 208, true)).toBe(0);
       expect(dataView.getFloat32(DEFAULT_OFFSET + 172, true)).toBeCloseTo(
         0.8,
-        5
+        5,
       );
 
       const point = new PointLight(
         new Color(0.8, 0.9, 1.0),
         1.5,
         20,
-        "quadratic"
+        "quadratic",
       );
       material.writeUniformData(
         dataView,
         DEFAULT_OFFSET,
-        createRenderContext([point])
+        createRenderContext([point]),
       );
       expect(dataView.getFloat32(DEFAULT_OFFSET + 208, true)).toBe(1);
       expect(dataView.getFloat32(DEFAULT_OFFSET + 212, true)).toBe(1); // quadratic

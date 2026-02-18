@@ -25,7 +25,7 @@ export class BoxGeometry implements Geometry {
     public readonly depth: number = 2,
     public readonly widthSegments: number = 1,
     public readonly heightSegments: number = 1,
-    public readonly depthSegments: number = 1
+    public readonly depthSegments: number = 1,
   ) {
     const { positions, normals, uvs, indices } = this.generateData();
     this._positions = positions;
@@ -40,7 +40,7 @@ export class BoxGeometry implements Geometry {
       positions,
       normals,
       uvs,
-      indices
+      indices,
     );
     this._tangents = tangents;
     this._bitangents = bitangents;
@@ -92,7 +92,7 @@ export class BoxGeometry implements Geometry {
     positions: number[],
     normals: number[],
     uvs: number[],
-    indices: number[]
+    indices: number[],
   ): void {
     const segmentWidth = width / gridX;
     const segmentHeight = height / gridY;
@@ -168,7 +168,7 @@ export class BoxGeometry implements Geometry {
       positions,
       normals,
       uvs,
-      indices
+      indices,
     ); // px
     this.buildPlane(
       "z",
@@ -184,7 +184,7 @@ export class BoxGeometry implements Geometry {
       positions,
       normals,
       uvs,
-      indices
+      indices,
     ); // nx
     this.buildPlane(
       "x",
@@ -200,7 +200,7 @@ export class BoxGeometry implements Geometry {
       positions,
       normals,
       uvs,
-      indices
+      indices,
     ); // py
     this.buildPlane(
       "x",
@@ -216,7 +216,7 @@ export class BoxGeometry implements Geometry {
       positions,
       normals,
       uvs,
-      indices
+      indices,
     ); // ny
     this.buildPlane(
       "x",
@@ -232,7 +232,7 @@ export class BoxGeometry implements Geometry {
       positions,
       normals,
       uvs,
-      indices
+      indices,
     ); // pz
     this.buildPlane(
       "x",
@@ -248,7 +248,7 @@ export class BoxGeometry implements Geometry {
       positions,
       normals,
       uvs,
-      indices
+      indices,
     ); // nz
 
     return {

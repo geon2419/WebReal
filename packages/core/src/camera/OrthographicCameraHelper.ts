@@ -58,7 +58,7 @@ export class OrthographicCameraHelper extends Mesh {
 
   constructor(
     camera: OrthographicCamera,
-    options: OrthographicCameraHelperOptions = {}
+    options: OrthographicCameraHelperOptions = {},
   ) {
     const frustumColors: FrustumColors = {
       near: options.nearColor ?? new Color(1, 1, 0),

@@ -23,7 +23,7 @@ export class BoundingBox {
    */
   constructor(
     min = new Vector3(Infinity, Infinity, Infinity),
-    max = new Vector3(-Infinity, -Infinity, -Infinity)
+    max = new Vector3(-Infinity, -Infinity, -Infinity),
   ) {
     this.min = min;
     this.max = max;
@@ -98,7 +98,7 @@ export class BoundingBox {
     return new Vector3(
       (this.min.x + this.max.x) * 0.5,
       (this.min.y + this.max.y) * 0.5,
-      (this.min.z + this.max.z) * 0.5
+      (this.min.z + this.max.z) * 0.5,
     );
   }
 
@@ -110,7 +110,7 @@ export class BoundingBox {
     return new Vector3(
       this.max.x - this.min.x,
       this.max.y - this.min.y,
-      this.max.z - this.min.z
+      this.max.z - this.min.z,
     );
   }
 
@@ -123,12 +123,12 @@ export class BoundingBox {
     this.min.set(
       Math.min(this.min.x, point.x),
       Math.min(this.min.y, point.y),
-      Math.min(this.min.z, point.z)
+      Math.min(this.min.z, point.z),
     );
     this.max.set(
       Math.max(this.max.x, point.x),
       Math.max(this.max.y, point.y),
-      Math.max(this.max.z, point.z)
+      Math.max(this.max.z, point.z),
     );
     return this;
   }
@@ -141,7 +141,7 @@ export class BoundingBox {
   union(box: BoundingBox): BoundingBox {
     return new BoundingBox(
       Vector3.min(this.min, box.min),
-      Vector3.max(this.max, box.max)
+      Vector3.max(this.max, box.max),
     );
   }
 
