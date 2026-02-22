@@ -67,6 +67,7 @@ export interface PMREMResult {
  * const material = new PBRMaterial({
  *   prefilteredMap,
  *   irradianceMap,
+ *   envMapIntensity: 1.0,
  *   // brdfLUT is automatically used
  * });
  *
