@@ -9,7 +9,6 @@ import { MeshPass } from "./MeshPass";
 import { MeshResourceCache } from "./MeshResourceCache";
 import { PipelineCache } from "./PipelineCache";
 import { RenderTargets } from "./RenderTargets";
-import { SkyboxPass } from "./SkyboxPass";
 
 /**
  * Renders a scene to the engine canvas using WebGPU.
@@ -31,7 +30,6 @@ export class Renderer {
   private _pipelines: PipelineCache;
   private _meshResources: MeshResourceCache;
   private _meshPass: MeshPass;
-  private _skyboxPass?: SkyboxPass;
 
   /**
    * Creates a new renderer for an engine instance.
@@ -68,18 +66,6 @@ export class Renderer {
     });
   }
 
-  private getSkyboxPass(): SkyboxPass {
-    if (!this._skyboxPass) {
-      this._skyboxPass = new SkyboxPass({
-        device: this.engine.device,
-        format: this.engine.format,
-        sampleCount: this.sampleCount,
-        fallback: this._fallback,
-      });
-    }
-    return this._skyboxPass;
-  }
-
   /**
    * Sets the clear color for the next renders.
    * @param color - Clear color as a Color or RGB/RGBA tuple (0..1)
@@ -94,7 +80,7 @@ export class Renderer {
 
   /**
    * Renders the scene from the given camera.
-   * @param scene - Scene containing meshes, lights, and an optional skybox material
+   * @param scene - Scene containing meshes, lights, and environment settings
    * @param camera - Camera defining the view and projection
    */
   public render(scene: Scene, camera: Camera): void {
@@ -117,11 +103,6 @@ export class Renderer {
       clearColor: this.clearColor,
     });
 
-    if (scene.skyboxMaterial) {
-      const skyboxPass = this.getSkyboxPass();
-      skyboxPass.render(passEncoder, scene.skyboxMaterial, camera);
-    }
-
     this._meshPass.render({
       passEncoder,
       meshes,
@@ -141,7 +122,6 @@ export class Renderer {
     this._renderTargets.dispose();
     this._meshResources.disposeAll();
     this._pipelines.clear();
-    this._skyboxPass?.dispose();
     this._fallback.dispose();
   }
 

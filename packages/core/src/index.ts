@@ -99,4 +99,3 @@ export {
   HDRLoaderError,
   type HDRLoaderOptions,
 } from "./texture";
-export { SkyboxMaterial, type SkyboxMaterialOptions } from "./material";

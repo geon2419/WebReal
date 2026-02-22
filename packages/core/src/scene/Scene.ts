@@ -5,7 +5,6 @@ import { PointLight } from "../light/PointLight";
 import type { Texture } from "../texture";
 import type { CubeTexture } from "../texture/CubeTexture";
 import type { PMREMResult } from "../texture/PMREMGenerator";
-import { SkyboxMaterial } from "../material/SkyboxMaterial";
 
 export interface SceneEnvironmentOptions {
   /** Equirectangular HDR/LDR panorama texture */
@@ -16,10 +15,6 @@ export interface SceneEnvironmentOptions {
   irradianceMap?: CubeTexture;
   /** Environment intensity for IBL reflections (default: 1.0) */
   environmentIntensity?: number;
-  /** Skybox exposure for tone mapping (default: 1.0) */
-  skyboxExposure?: number;
-  /** Skybox roughness for blur effect (default: 0.0) */
-  skyboxRoughness?: number;
 }
 
 /**
@@ -41,11 +36,8 @@ export class Scene extends Object3D {
   private _prefilteredMap?: CubeTexture;
   private _irradianceMap?: CubeTexture;
   private _environmentIntensity: number = 1.0;
-  private _skyboxExposure: number = 1.0;
-  private _skyboxRoughness: number = 0.0;
-  private _skyboxMaterial?: SkyboxMaterial;
 
-  /** Equirectangular environment map texture for skybox background. */
+  /** Equirectangular environment map texture. */
   get equirectangularMap(): Texture | undefined {
     return this._equirectangularMap;
   }
@@ -69,51 +61,15 @@ export class Scene extends Object3D {
     this._environmentIntensity = value;
   }
 
-  /** Skybox exposure value for HDR tone mapping. */
-  get skyboxExposure(): number {
-    return this._skyboxExposure;
-  }
-
-  set skyboxExposure(value: number) {
-    this._skyboxExposure = value;
-    if (this._skyboxMaterial) {
-      this._skyboxMaterial.setExposure(value);
-    }
-  }
-
-  /** Skybox roughness for blur effect (0 = sharp, 1 = maximum blur). */
-  get skyboxRoughness(): number {
-    return this._skyboxRoughness;
-  }
-
-  set skyboxRoughness(value: number) {
-    this._skyboxRoughness = value;
-    if (this._skyboxMaterial) {
-      this._skyboxMaterial.setRoughness(value);
-    }
-  }
-
-  /** Internal skybox material for rendering the environment background (created when environment is set). */
-  get skyboxMaterial(): SkyboxMaterial | undefined {
-    return this._skyboxMaterial;
-  }
-
   /** Checks if IBL (Image-Based Lighting) is fully configured (both prefilteredMap and irradianceMap are set). */
   get hasIBL(): boolean {
     return !!(this._prefilteredMap && this._irradianceMap);
   }
 
-  private _cleanupSkyboxMaterial(): void {
-    if (this._skyboxMaterial) {
-      this._skyboxMaterial.dispose();
-      this._skyboxMaterial = undefined;
-    }
-  }
-
   /**
-   * Sets the environment using PMREM-generated IBL maps for full PBR lighting.
+   * Sets the environment using PMREM-generated IBL maps.
    * @param pmrem - Pre-filtered environment maps from PMREMGenerator.fromEquirectangular()
-   * @param options - Optional configuration for intensity, exposure, and roughness
+   * @param options - Optional configuration for environment intensity
    * @example
    * ```ts
    * const pmrem = await PMREMGenerator.fromEquirectangular(device, hdrTexture);
@@ -130,64 +86,36 @@ export class Scene extends Object3D {
       );
     }
 
-    // Clean up existing skybox material to prevent memory leaks
-    this._cleanupSkyboxMaterial();
-
+    this._equirectangularMap = undefined;
     this._prefilteredMap = pmrem.prefilteredMap;
     this._irradianceMap = pmrem.irradianceMap;
 
     if (options?.environmentIntensity !== undefined) {
       this._environmentIntensity = options.environmentIntensity;
     }
-    if (options?.skyboxExposure !== undefined) {
-      this._skyboxExposure = options.skyboxExposure;
-    }
-    if (options?.skyboxRoughness !== undefined) {
-      this._skyboxRoughness = options.skyboxRoughness;
-    }
-
-    // Create skybox material using the prefiltered cubemap
-    this._skyboxMaterial = new SkyboxMaterial({
-      cubeMap: pmrem.prefilteredMap,
-      exposure: this._skyboxExposure,
-      roughness: this._skyboxRoughness,
-    });
   }
 
   /**
-   * Sets the environment using an equirectangular panorama texture for skybox only (no IBL reflections).
+   * Sets the environment using an equirectangular panorama texture.
    * @param texture - Equirectangular panorama texture (2:1 aspect ratio)
-   * @param options - Optional configuration for exposure and roughness
+   * @param options - Optional configuration for environment intensity
    * @example
    * ```ts
    * const hdrTexture = await HDRLoader.load(device, 'panorama.hdr');
-   * scene.setEnvironmentFromEquirectangular(hdrTexture, { skyboxExposure: 1.2 });
+   * scene.setEnvironmentFromEquirectangular(hdrTexture);
    * ```
    */
   setEnvironmentFromEquirectangular(
     texture: Texture,
     options?: Partial<SceneEnvironmentOptions>,
   ): void {
-    // Clean up existing skybox material to prevent memory leaks
-    this._cleanupSkyboxMaterial();
-
     this._equirectangularMap = texture;
     this._prefilteredMap = undefined;
     this._irradianceMap = undefined;
 
-    if (options?.skyboxExposure !== undefined) {
-      this._skyboxExposure = options.skyboxExposure;
+    if (options?.environmentIntensity !== undefined) {
+      this._environmentIntensity = options.environmentIntensity;
     }
-    if (options?.skyboxRoughness !== undefined) {
-      this._skyboxRoughness = options.skyboxRoughness;
-    }
-
-    // Create skybox material using equirectangular map
-    this._skyboxMaterial = new SkyboxMaterial({
-      equirectangularMap: texture,
-      exposure: this._skyboxExposure,
-      roughness: this._skyboxRoughness,
-    });
   }
 
   /**
@@ -195,9 +123,6 @@ export class Scene extends Object3D {
    * @param options - Complete environment configuration including maps and parameters
    */
   setEnvironment(options: SceneEnvironmentOptions): void {
-    // Clean up existing skybox material to prevent memory leaks
-    this._cleanupSkyboxMaterial();
-
     this._equirectangularMap = options.equirectangularMap;
     this._prefilteredMap = options.prefilteredMap;
     this._irradianceMap = options.irradianceMap;
@@ -205,44 +130,19 @@ export class Scene extends Object3D {
     if (options.environmentIntensity !== undefined) {
       this._environmentIntensity = options.environmentIntensity;
     }
-    if (options.skyboxExposure !== undefined) {
-      this._skyboxExposure = options.skyboxExposure;
-    }
-    if (options.skyboxRoughness !== undefined) {
-      this._skyboxRoughness = options.skyboxRoughness;
-    }
-
-    // Create skybox material based on available textures
-    if (options.prefilteredMap) {
-      this._skyboxMaterial = new SkyboxMaterial({
-        cubeMap: options.prefilteredMap,
-        exposure: this._skyboxExposure,
-        roughness: this._skyboxRoughness,
-      });
-    } else if (options.equirectangularMap) {
-      this._skyboxMaterial = new SkyboxMaterial({
-        equirectangularMap: options.equirectangularMap,
-        exposure: this._skyboxExposure,
-        roughness: this._skyboxRoughness,
-      });
-    }
   }
 
   /**
-   * Clears all environment settings including skybox and IBL maps.
+   * Clears all environment map references.
    */
   clearEnvironment(): void {
-    // Clean up skybox material
-    this._cleanupSkyboxMaterial();
-
-    // Dispose and clear skybox material (owned by Scene), and clear texture references (borrowed resources, not owned by Scene)
     this._equirectangularMap = undefined;
     this._prefilteredMap = undefined;
     this._irradianceMap = undefined;
   }
 
   /**
-   * Disposes all resources owned by this scene (skybox material only, not textures or children).
+   * Disposes resources owned by this scene.
    * @example
    * ```ts
    * engine.stop();

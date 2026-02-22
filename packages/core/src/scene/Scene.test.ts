@@ -6,6 +6,8 @@ import { DirectionalLight } from "../light/DirectionalLight";
 import { PointLight } from "../light/PointLight";
 import { BoxGeometry } from "../geometry/BoxGeometry";
 import { BasicMaterial } from "../material/BasicMaterial";
+import type { Texture } from "../texture";
+import type { CubeTexture } from "../texture/CubeTexture";
 
 describe("Scene", () => {
   describe("scene graph operations", () => {
@@ -166,6 +168,63 @@ describe("Scene", () => {
   });
 
   describe("environment configuration", () => {
+    it("should store PMREM maps and mark IBL as configured", () => {
+      const scene = new Scene();
+      const prefilteredMap = {} as CubeTexture;
+      const irradianceMap = {} as CubeTexture;
+
+      scene.setEnvironmentFromPMREM({ prefilteredMap, irradianceMap } as any, {
+        environmentIntensity: 1.5,
+      });
+
+      expect(scene.equirectangularMap).toBeUndefined();
+      expect(scene.prefilteredMap).toBe(prefilteredMap);
+      expect(scene.irradianceMap).toBe(irradianceMap);
+      expect(scene.environmentIntensity).toBe(1.5);
+      expect(scene.hasIBL).toBe(true);
+    });
+
+    it("should store equirectangular map and clear IBL maps", () => {
+      const scene = new Scene();
+      const prefilteredMap = {} as CubeTexture;
+      const irradianceMap = {} as CubeTexture;
+      const equirectangularMap = {} as Texture;
+
+      scene.setEnvironmentFromPMREM({ prefilteredMap, irradianceMap } as any, {
+        environmentIntensity: 1.5,
+      });
+      scene.setEnvironmentFromEquirectangular(equirectangularMap, {
+        environmentIntensity: 0.8,
+      });
+
+      expect(scene.equirectangularMap).toBe(equirectangularMap);
+      expect(scene.prefilteredMap).toBeUndefined();
+      expect(scene.irradianceMap).toBeUndefined();
+      expect(scene.environmentIntensity).toBe(0.8);
+      expect(scene.hasIBL).toBe(false);
+    });
+
+    it("should clear all environment map references", () => {
+      const scene = new Scene();
+      const prefilteredMap = {} as CubeTexture;
+      const irradianceMap = {} as CubeTexture;
+      const equirectangularMap = {} as Texture;
+
+      scene.setEnvironment({
+        equirectangularMap,
+        prefilteredMap,
+        irradianceMap,
+        environmentIntensity: 2.0,
+      });
+
+      scene.clearEnvironment();
+
+      expect(scene.equirectangularMap).toBeUndefined();
+      expect(scene.prefilteredMap).toBeUndefined();
+      expect(scene.irradianceMap).toBeUndefined();
+      expect(scene.hasIBL).toBe(false);
+    });
+
     it("should throw when setEnvironmentFromPMREM missing prefilteredMap", () => {
       const scene = new Scene();
 
