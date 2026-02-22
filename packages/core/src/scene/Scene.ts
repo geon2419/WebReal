@@ -15,12 +15,15 @@ import { PointLight } from "../light/PointLight";
  */
 export class Scene extends Object3D {
   /**
-   * Disposes resources owned by this scene.
-   * @example
-   * ```ts
-   * engine.stop();
-   * scene.dispose();
-   * ```
+   * No-op placeholder for scene disposal.
+   *
+   * This method currently does nothing and is kept for backwards compatibility.
+   *
+   * For recursively disposing scene graph resources, use {@link Object3D.disposeHierarchy}
+   * (or other relevant disposal APIs) instead.
+   *
+   * @deprecated This method is a no-op. Use {@link Object3D.disposeHierarchy} or other
+   * disposal utilities to release resources.
    */
   dispose(): void {}
 

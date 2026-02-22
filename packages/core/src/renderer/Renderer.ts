@@ -80,7 +80,7 @@ export class Renderer {
 
   /**
    * Renders the scene from the given camera.
-   * @param scene - Scene containing meshes, lights, and environment settings
+   * @param scene - Scene containing meshes, lights, and other scene objects
    * @param camera - Camera defining the view and projection
    */
   public render(scene: Scene, camera: Camera): void {
