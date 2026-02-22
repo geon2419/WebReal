@@ -21,9 +21,9 @@ export interface VertexBufferLayout {
  */
 export interface RenderContext {
   camera: Camera;
-  /** Scene currently being rendered (optional for scene-independent passes like skybox) */
+  /** Scene currently being rendered (optional for non-scene-dependent passes) */
   scene?: Scene;
-  /** Mesh currently being rendered (optional for scene-independent passes like skybox) */
+  /** Mesh currently being rendered (optional for non-mesh passes) */
   mesh?: Mesh;
   /** Lights collected from the scene (collected once per frame by Renderer) */
   lights: Light[];

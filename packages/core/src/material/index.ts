@@ -27,4 +27,3 @@ export {
   type ParallaxPBRMaterialOptions,
 } from "./ParallaxPBRMaterial";
 export { PBRMaterial, type PBRMaterialOptions } from "./PBRMaterial";
-export { SkyboxMaterial, type SkyboxMaterialOptions } from "./SkyboxMaterial";

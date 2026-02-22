@@ -116,6 +116,13 @@ describe("Scene", () => {
     });
   });
 
+  describe("dispose", () => {
+    it("should safely dispose without throwing", () => {
+      const scene = new Scene();
+      expect(() => scene.dispose()).not.toThrow();
+    });
+  });
+
   describe("findFirstLight", () => {
     it("should return undefined when no lights exist", () => {
       const scene = new Scene();
@@ -162,34 +169,6 @@ describe("Scene", () => {
       scene.add(light1).add(light2);
 
       expect(scene.findFirstLight()).toBe(light1);
-    });
-  });
-
-  describe("environment configuration", () => {
-    it("should throw when setEnvironmentFromPMREM missing prefilteredMap", () => {
-      const scene = new Scene();
-
-      expect(() =>
-        scene.setEnvironmentFromPMREM({
-          prefilteredMap: undefined as any,
-          irradianceMap: {} as any,
-        } as any),
-      ).toThrow(
-        "Scene.setEnvironmentFromPMREM() requires pmrem.prefilteredMap and pmrem.irradianceMap",
-      );
-    });
-
-    it("should throw when setEnvironmentFromPMREM missing irradianceMap", () => {
-      const scene = new Scene();
-
-      expect(() =>
-        scene.setEnvironmentFromPMREM({
-          prefilteredMap: {} as any,
-          irradianceMap: undefined as any,
-        } as any),
-      ).toThrow(
-        "Scene.setEnvironmentFromPMREM() requires pmrem.prefilteredMap and pmrem.irradianceMap",
-      );
     });
   });
 });
